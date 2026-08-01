@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rajeshwari Jewellery</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:'DM Sans',sans-serif;
+background:#fafafa;
+color:#222;
+}
+
+a{text-decoration:none;color:inherit;}
+
+header{
+position:sticky;
+top:0;
+z-index:100;
+background:white;
+border-bottom:1px solid #eee;
+padding:15px 40px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+font-family:'Cormorant Garamond',serif;
+font-size:34px;
+font-weight:bold;
+color:#7b1731;
+letter-spacing:1px;
+}
+
+.icons{
+display:flex;
+gap:20px;
+font-size:22px;
+cursor:pointer;
+}
+
+.search{
+margin:30px auto;
+max-width:700px;
+padding:0 20px;
+}
+
+.search input{
+width:100%;
+padding:16px 22px;
+border-radius:50px;
+border:none;
+background:#f2f2f2;
+font-size:15px;
+}
+
+.story-section{
+padding:10px 20px 30px;
+overflow-x:auto;
+white-space:nowrap;
+background:white;
+}
+
+.story{
+display:inline-block;
+text-align:center;
+margin-right:18px;
+cursor:pointer;
+}
+
+.story-ring{
+width:82px;
+height:82px;
+padding:3px;
+border-radius:50%;
+background:linear-gradient(135deg,#f4d06f,#b8860b,#7b1731);
+}
+
+.story img{
+width:100%;
+height:100%;
+border-radius:50%;
+border:4px solid white;
+object-fit:cover;
+}
+
+.story p{
+margin-top:8px;
+font-size:13px;
+}
+
+.hero{
+margin:30px auto;
+width:92%;
+height:420px;
+border-radius:24px;
+overflow:hidden;
+position:relative;
+}
+
+.hero img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.hero-content{
+position:absolute;
+left:60px;
+bottom:60px;
+color:white;
+}
+
+.hero h1{
+font-size:52px;
+margin-bottom:10px;
+}
+
+.hero button{
+margin-top:20px;
+padding:14px 30px;
+border:none;
+border-radius:40px;
+background:#7b1731;
+color:white;
+cursor:pointer;
+font-size:15px;
+}
+
+.feed{
+column-count:4;
+column-gap:18px;
+padding:30px;
+}
+
+@media(max-width:1100px){
+.feed{column-count:3;}
+}
+
+@media(max-width:760px){
+.feed{column-count:2;}
+}
+
+@media(max-width:500px){
+.feed{column-count:1;}
+}
+
+.card{
+display:inline-block;
+width:100%;
+background:white;
+border-radius:22px;
+overflow:hidden;
+margin-bottom:18px;
+position:relative;
+transition:.35s;
+cursor:pointer;
+break-inside:avoid;
+}
+
+.card:hover{
+transform:translateY(-5px);
+box-shadow:0 20px 45px rgba(0,0,0,.1);
+}
+
+.card img{
+width:100%;
+display:block;
+}
+
+.info{
+padding:18px;
+}
+
+.price{
+margin-top:8px;
+font-weight:bold;
+color:#7b1731;
+}
+
+.overlay{
+position:absolute;
+top:12px;
+right:12px;
+display:flex;
+flex-direction:column;
+gap:10px;
+opacity:0;
+transition:.3s;
+}
+
+.card:hover .overlay{
+opacity:1;
+}
+
+.overlay button{
+width:42px;
+height:42px;
+border:none;
+border-radius:50%;
+background:white;
+font-size:18px;
+cursor:pointer;
+box-shadow:0 5px 15px rgba(0,0,0,.15);
+}
+
+.like{
+color:#d12f55;
+}
+
+.heart{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%) scale(0);
+font-size:95px;
+color:#d81b60;
+pointer-events:none;
+opacity:.9;
+}
+
+.animate{
+animation:burst .7s ease;
+}
+
+@keyframes burst{
+
+0%{
+transform:translate(-50%,-50%) scale(.2);
+opacity:0;
+}
+
+40%{
+transform:translate(-50%,-50%) scale(1.3);
+opacity:1;
+}
+
+100%{
+transform:translate(-50%,-50%) scale(1.8);
+opacity:0;
+}
+
+}
+
+footer{
+margin-top:50px;
+padding:50px;
+background:white;
+text-align:center;
+border-top:1px solid #eee;
+}
+
+.badge{
+display:inline-block;
+padding:6px 14px;
+background:#f8edd7;
+border-radius:20px;
+font-size:13px;
+color:#7b1731;
+margin-bottom:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+Rajeshwari
+</div>
+
+<div class="icons">
+🔍
+🤍
+🛍️
+</div>
+
+</header>
+
+<div class="search">
+<input placeholder="Search necklaces, bangles, bridal sets...">
+</div>
+
+<section class="story-section">
+
+<div class="story">
+<div class="story-ring">
+<img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=300">
+</div>
+<p>Bridal</p>
+</div>
+
+<div class="story">
+<div class="story-ring">
+<img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300">
+</div>
+<p>Bangles</p>
+</div>
+
+<div class="story">
+<div class="story-ring">
+<img src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=300">
+</div>
+<p>Necklace</p>
+</div>
+
+<div class="story">
+<div class="story-ring">
+<img src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=300">
+</div>
+<p>Earrings</p>
+</div>
+
+<div class="story">
+<div class="story-ring">
+<img src="https://images.unsplash.com/photo-1627293509201-cd0c780043d6?w=300">
+</div>
+<p>Temple</p>
+</div>
+
+</section>
+
+<section class="hero">
+
+<img src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=1400">
+
+<div class="hero-content">
+
+<div class="badge">
+New Collection
+</div>
+
+<h1>Discover Timeless Jewellery</h1>
+
+<p>Minimal interface. Premium craftsmanship.</p>
+
+<button>Shop Collection</button>
+
+</div>
+
+</section>
+
+<section class="feed">
+
+<div class="card">
+
+<div class="heart">❤</div>
+
+<img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=700">
+
+<div class="overlay">
+
+<button class="like">♡</button>
+
+<button>＋</button>
+
+</div>
+
+<div class="info">
+<h3>Royal Bridal Necklace</h3>
+<div class="price">₹12,999</div>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="heart">❤</div>
+
+<img src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=700">
+
+<div class="overlay">
+
+<button class="like">♡</button>
+
+<button>＋</button>
+
+</div>
+
+<div class="info">
+<h3>Temple Earrings</h3>
+<div class="price">₹2,899</div>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="heart">❤</div>
+
+<img src="https://images.unsplash.com/photo-1627293509201-cd0c780043d6?w=700">
+
+<div class="overlay">
+
+<button class="like">♡</button>
+
+<button>＋</button>
+
+</div>
+
+<div class="info">
+<h3>Premium Bangles</h3>
+<div class="price">₹4,999</div>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="heart">❤</div>
+
+<img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=700">
+
+<div class="overlay">
+
+<button class="like">♡</button>
+
+<button>＋</button>
+
+</div>
+
+<div class="info">
+<h3>Wedding Jewellery Set</h3>
+<div class="price">₹17,999</div>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="heart">❤</div>
+
+<img src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=700">
+
+<div class="overlay">
+
+<button class="like">♡</button>
+
+<button>＋</button>
+
+</div>
+
+<div class="info">
+<h3>Gold Choker</h3>
+<div class="price">₹8,799</div>
+</div>
+
+</div>
+
+</section>
+
+<footer>
+
+<h3>Rajeshwari Jewellery</h3>
+
+<p style="margin-top:15px;color:#777;">
+Elegant jewellery crafted for every celebration.
+</p>
+
+</footer>
+
+<script>
+
+document.querySelectorAll(".card").forEach(card=>{
+
+let lastTap=0;
+
+card.addEventListener("click",function(){
+
+const now=Date.now();
+
+if(now-lastTap<300){
+
+const heart=card.querySelector(".heart");
+
+heart.classList.remove("animate");
+
+void heart.offsetWidth;
+
+heart.classList.add("animate");
+
+const btn=card.querySelector(".like");
+
+btn.innerHTML="❤";
+
+}
+
+lastTap=now;
+
+});
+
+});
+
+</script>
+
+</body>
+</html>

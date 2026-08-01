@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("customer")
+  createdAt DateTime @default(now())
+
+  // ADDED: saved delivery details so checkout can pre-fill
+  phone   String?
+  address String?
+  city    String?
+  state   String?
+  pincode String?
+
+  cartItems     Cart[]
+  wishlistItems Wishlist[]
+  orders        Order[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  price       Float
+  image       String
+  stock       Int
+  keywords    String?
+  createdAt   DateTime @default(now())
+  categories  ProductCategory[]
+
+  cartItems     Cart[]
+  wishlistItems Wishlist[]
+  orderItems    OrderItem[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  products  ProductCategory[]
+}
+
+model ProductCategory {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  categoryId Int
+  product    Product  @relation(fields: [productId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+}
+
+model Cart {
+  id       Int @id @default(autoincrement())
+  quantity Int
+
+  userId    Int
+  productId Int
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Wishlist {
+  id Int @id @default(autoincrement())
+
+  userId    Int
+  productId Int
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+
+  totalAmount Float
+
+  status String @default("Pending")
+
+  // ADDED: payment tracking
+  // paymentMethod: "COD" | "UPI"
+  // paymentStatus: "Pending" | "Paid" | "Refunded"
+  paymentMethod String @default("COD")
+  paymentStatus String @default("Pending")
+
+  fullName String?
+  phone    String?
+  address  String?
+  city     String?
+  state    String?
+  pincode  String?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+}
+
+model OrderItem {
+  id Int @id @default(autoincrement())
+
+  quantity Int
+  price    Float
+
+  orderId   Int
+  productId Int
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}

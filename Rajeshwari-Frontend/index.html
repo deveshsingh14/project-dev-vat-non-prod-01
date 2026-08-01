@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rajeshwari — Bangles & Jewellery</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7a1f3d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rajeshwari">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/favicon-64.png" type="image/png">
+<link rel="stylesheet" href="store.css">
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar" id="topbar">
+  <a class="logo" href="#" onclick="resetFeed(); return false;">
+    <span class="logo-mark">R</span>
+    <span class="logo-text">Rajeshwari<em>Bangles &amp; Jewellery</em></span>
+  </a>
+
+  <div class="search-wrap">
+    <span class="s-ico">⌕</span>
+    <input type="text" id="searchInput" placeholder="Search bangles, earrings, skincare…" autocomplete="off">
+    <button class="s-clear" id="searchClear" onclick="clearSearch()">×</button>
+  </div>
+
+  <nav class="top-actions">
+    <button class="icon-btn" onclick="openWishlist()" title="Saved">
+      <span class="ib-ico">♥</span><span class="ib-label">Saved</span>
+      <span class="count-dot" id="wishCount">0</span>
+    </button>
+    <button class="icon-btn" onclick="openCart()" title="Bag">
+      <span class="ib-ico">🛍</span><span class="ib-label">Bag</span>
+      <span class="count-dot" id="cartCount">0</span>
+    </button>
+    <button class="icon-btn" id="accountBtn" onclick="window.location.href='account.html'" style="display:none;" title="My account">
+      <span class="ib-ico">☺</span><span class="ib-label">Account</span>
+    </button>
+    <button class="icon-btn login-cta" id="loginBtn" onclick="openAuth()">Log in</button>
+    <button class="icon-btn" id="logoutBtn" onclick="logout()" style="display:none;">
+      <span class="ib-ico">⎋</span><span class="ib-label">Log out</span>
+    </button>
+  </nav>
+</header>
+
+<!-- ============ CATEGORY STORIES ============ -->
+<section class="stories-wrap">
+  <div class="stories" id="storiesRail"><!-- filled by JS --></div>
+</section>
+
+<!-- ============ FILTER / SORT BAR ============ -->
+<div class="feed-controls">
+  <div class="chips" id="chipBar"><!-- filled by JS --></div>
+  <select id="sortSelect" onchange="applyFilters()">
+    <option value="new">Newest</option>
+    <option value="priceAsc">Price: low → high</option>
+    <option value="priceDesc">Price: high → low</option>
+  </select>
+</div>
+
+<!-- ============ MASONRY FEED ============ -->
+<main class="feed-area">
+  <div class="masonry" id="masonry"><!-- cards --></div>
+  <div class="feed-end" id="feedEnd" style="display:none;">
+    <span>✦</span> You've explored everything — check back for new arrivals
+  </div>
+</main>
+
+<!-- ============ MOBILE BOTTOM NAV ============ -->
+<nav class="bottom-nav">
+  <button class="bn-item active" onclick="resetFeed()"><span>⌂</span>Home</button>
+  <button class="bn-item" onclick="focusSearch()"><span>⌕</span>Search</button>
+  <button class="bn-item" onclick="openWishlist()"><span>♥</span>Saved</button>
+  <button class="bn-item" onclick="openCart()"><span>🛍</span>Bag</button>
+</nav>
+
+<!-- ============ PRODUCT SHEET ============ -->
+<div class="sheet-back" id="productSheet">
+  <div class="sheet" id="sheetCard">
+    <button class="sheet-close" onclick="closeSheet()">×</button>
+    <div class="sheet-grid" id="sheetGrid"><!-- filled --></div>
+  </div>
+</div>
+
+<!-- ============ CART DRAWER ============ -->
+<div class="drawer-back" id="cartBack" onclick="backdropClose(event,'cart')">
+  <aside class="drawer" id="cartDrawer">
+    <div class="drawer-head">
+      <h2>Your bag</h2>
+      <button class="x-btn" onclick="closeCart()">×</button>
+    </div>
+    <div class="drawer-body" id="cartItems"></div>
+    <div class="drawer-foot" id="cartFoot">
+      <div class="total-row"><span>Total</span><strong id="cartTotal">₹0</strong></div>
+      <button class="btn-solid" onclick="goToCheckout()">Checkout</button>
+    </div>
+  </aside>
+</div>
+
+<!-- ============ WISHLIST DRAWER ============ -->
+<div class="drawer-back" id="wishBack" onclick="backdropClose(event,'wish')">
+  <aside class="drawer" id="wishDrawer">
+    <div class="drawer-head">
+      <h2>Saved</h2>
+      <button class="x-btn" onclick="closeWishlist()">×</button>
+    </div>
+    <div class="drawer-body" id="wishlistItems"></div>
+  </aside>
+</div>
+
+<!-- ============ AUTH MODAL ============ -->
+<div class="sheet-back" id="authModal">
+  <div class="auth-card">
+    <button class="sheet-close" onclick="closeAuth()">×</button>
+    <div class="auth-logo">Rajeshwari</div>
+    <h2 id="authTitle">Welcome back</h2>
+    <p class="auth-sub" id="authSub">Log in to save products and shop.</p>
+    <input type="text" id="authName" placeholder="Full name" style="display:none;">
+    <input type="email" id="authEmail" placeholder="Email address">
+    <input type="password" id="authPassword" placeholder="Password">
+    <button class="btn-solid" id="authBtn" onclick="submitAuth()">Log in</button>
+    <p class="auth-switch">
+      <span id="authSwitchText">New here?</span>
+      <button onclick="toggleAuthMode()" id="authSwitchBtn">Create account</button>
+    </p>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="store.js"></script>
+<script src="pwa.js" defer></script>
+</body>
+</html>

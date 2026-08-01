@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rajeshwari · Admin</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">Rajeshwari<span class="dot">.</span></div>
+      <div class="brand-sub">Admin Console</div>
+    </div>
+
+    <div class="nav-label">Overview</div>
+    <button class="nav-item active" data-view="dashboard"><span class="ico">▚</span> Dashboard</button>
+    <button class="nav-item" data-view="reports"><span class="ico">▤</span> Reports</button>
+
+    <div class="nav-label">Catalog</div>
+    <button class="nav-item" data-view="products"><span class="ico">◧</span> Products</button>
+    <button class="nav-item" data-view="addProduct"><span class="ico">＋</span> Add product</button>
+    <button class="nav-item" data-view="categories"><span class="ico">❖</span> Categories</button>
+
+    <div class="nav-label">Commerce</div>
+    <button class="nav-item" data-view="orders"><span class="ico">▦</span> Orders</button>
+    <button class="nav-item" data-view="payments"><span class="ico">₹</span> Payments</button>
+    <button class="nav-item" data-view="customers"><span class="ico">☺</span> Customers</button>
+
+    <div class="sidebar-foot">
+      Signed in as admin<br>
+      <button class="logout-link" onclick="adminLogout()">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+
+    <div class="topbar">
+      <div>
+        <div class="crumb" id="crumb">Overview</div>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
+        <div class="admin-chip">
+          <div class="avatar" id="adminAvatar">A</div>
+          <div>
+            <div class="who" id="adminName">Admin</div>
+            <div class="role">Administrator</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- DASHBOARD ---------- -->
+    <section class="view active" id="view-dashboard">
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <div class="panel-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Revenue</h3>
+            <div class="range-toggle" id="revRange">
+              <button data-days="7">7d</button>
+              <button data-days="14" class="active">14d</button>
+              <button data-days="30">30d</button>
+            </div>
+          </div>
+          <div class="chart-box"><canvas id="revenueChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Orders by status</h3></div>
+          <div class="chart-box"><canvas id="statusChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="panel" style="padding:0;overflow:hidden;">
+          <div class="panel-head" style="padding:18px 20px 0;"><h3>Recent orders</h3>
+            <button class="btn btn-sm btn-ghost" data-view="orders">View all →</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data" id="recentOrdersTable">
+              <thead><tr><th>Order</th><th>Customer</th><th class="num">Amount</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel" style="padding:0;overflow:hidden;">
+          <div class="panel-head" style="padding:18px 20px 0;"><h3>Low stock</h3>
+            <span class="badge b-warn" id="lowStockCount">0</span>
+          </div>
+          <div class="table-wrap">
+            <table class="data" id="lowStockTable">
+              <thead><tr><th>Product</th><th class="num">Stock</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PRODUCTS ---------- -->
+    <section class="view" id="view-products">
+      <div class="view-head">
+        <div><h2>Products</h2><p>Manage your catalog, stock and pricing.</p></div>
+        <button class="btn btn-primary" data-view="addProduct">＋ Add product</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-field"><span class="s-ico">🔍</span>
+          <input type="text" id="productSearch" placeholder="Search by title or keyword…">
+        </div>
+        <select id="productCategoryFilter"><option value="">All categories</option></select>
+        <select id="productStockFilter">
+          <option value="">All stock</option>
+          <option value="in">In stock</option>
+          <option value="low">Low (≤ 5)</option>
+          <option value="out">Out of stock</option>
+        </select>
+        <button class="btn btn-sm" onclick="exportProductsCSV()">⭳ Export CSV</button>
+      </div>
+
+      <div class="card-table">
+        <div class="table-wrap">
+          <table class="data" id="productsTable">
+            <thead><tr>
+              <th>Product</th><th>Categories</th><th class="num">Price</th>
+              <th class="num">Stock</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ADD PRODUCT ---------- -->
+    <section class="view" id="view-addProduct">
+      <div class="view-head"><div><h2>Add product</h2><p>Create a new catalog item.</p></div></div>
+      <div class="form-card">
+        <div class="form-grid">
+          <label class="field full"><span>Title</span><input type="text" id="productTitle" placeholder="e.g. Kundan Bridal Chooda Set"></label>
+          <label class="field full"><span>Description</span><textarea id="productDescription" placeholder="Short product description"></textarea></label>
+          <label class="field"><span>Price (₹)</span><input type="number" id="productPrice" placeholder="0"></label>
+          <label class="field"><span>Stock</span><input type="number" id="productStock" placeholder="0"></label>
+          <label class="field full"><span>Keywords</span><input type="text" id="productKeywords" placeholder="comma, separated, keywords"></label>
+
+          <label class="field full"><span>Image</span>
+            <input type="text" id="productImage" placeholder="Image URL, or upload below">
+          </label>
+          <label class="field full"><span>Upload image file</span>
+            <input type="file" id="productImageFile" accept="image/*" onchange="uploadProductImage()">
+            <div class="cell-sub" id="uploadStatus" style="margin-top:6px;"></div>
+          </label>
+
+          <div class="field full"><span style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.3px;">Categories</span>
+            <div class="cat-check-grid" id="productCategoryOptions"></div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:8px;">
+          <button class="btn btn-primary" onclick="createProduct()">Create product</button>
+          <button class="btn btn-ghost" onclick="resetProductForm()">Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- CATEGORIES ---------- -->
+    <section class="view" id="view-categories">
+      <div class="view-head"><div><h2>Categories</h2><p>Organise products into collections.</p></div></div>
+      <div class="toolbar">
+        <div class="search-field" style="max-width:320px;flex:none;width:100%;">
+          <input type="text" id="categoryName" placeholder="New category name" style="padding-left:12px;">
+        </div>
+        <button class="btn btn-gold" onclick="createCategory()">Add category</button>
+      </div>
+      <div class="cat-list" id="categoryList"></div>
+    </section>
+
+    <!-- ---------- ORDERS ---------- -->
+    <section class="view" id="view-orders">
+      <div class="view-head"><div><h2>Orders</h2><p>Track and fulfil customer orders.</p></div></div>
+      <div class="toolbar">
+        <div class="search-field"><span class="s-ico">🔍</span>
+          <input type="text" id="orderSearch" placeholder="Search by order # or customer…">
+        </div>
+        <select id="orderStatusFilter">
+          <option value="">All statuses</option>
+          <option>Pending</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option>
+        </select>
+        <button class="btn btn-sm" onclick="exportOrdersCSV()">⭳ Export CSV</button>
+      </div>
+      <div class="card-table">
+        <div class="table-wrap">
+          <table class="data" id="ordersTable">
+            <thead><tr>
+              <th>Order</th><th>Customer</th><th class="num">Items</th>
+              <th class="num">Amount</th><th>Status</th><th>Date</th><th></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PAYMENTS ---------- -->
+    <section class="view" id="view-payments">
+      <div class="view-head"><div><h2>Payments</h2><p>Money in, by order. Derived from order status.</p></div></div>
+      <div class="notice">
+        <span>ⓘ</span>
+        <span>Payments are tracked per order (COD / UPI). Use <strong>Mark paid</strong> when you receive
+        a UPI transfer or COD cash. For automatic confirmation, a payment gateway (e.g. Razorpay)
+        can be connected later without changing this screen.</span>
+      </div>
+      <div class="kpi-grid" id="paymentKpis"></div>
+      <div class="card-table">
+        <div class="table-wrap">
+          <table class="data" id="paymentsTable">
+            <thead><tr>
+              <th>Order</th><th>Customer</th><th class="num">Amount</th>
+              <th>Payment</th><th>Date</th><th></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- CUSTOMERS ---------- -->
+    <section class="view" id="view-customers">
+      <div class="view-head"><div><h2>Customers</h2><p>Everyone who has an account.</p></div></div>
+      <div class="toolbar">
+        <div class="search-field"><span class="s-ico">🔍</span>
+          <input type="text" id="customerSearch" placeholder="Search by name or email…">
+        </div>
+        <button class="btn btn-sm" onclick="exportCustomersCSV()">⭳ Export CSV</button>
+      </div>
+      <div class="card-table">
+        <div class="table-wrap">
+          <table class="data" id="customersTable">
+            <thead><tr>
+              <th>Customer</th><th>Role</th><th class="num">Orders</th>
+              <th class="num">Total spent</th><th>Last order</th><th>Joined</th><th></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- REPORTS ---------- -->
+    <section class="view" id="view-reports">
+      <div class="view-head"><div><h2>Reports</h2><p>Sales performance for a date range.</p></div></div>
+      <div class="toolbar">
+        <label class="field" style="margin:0;"><span>From</span><input type="date" id="reportFrom"></label>
+        <label class="field" style="margin:0;"><span>To</span><input type="date" id="reportTo"></label>
+        <button class="btn btn-primary btn-sm" style="align-self:flex-end;" onclick="runReport()">Run report</button>
+        <button class="btn btn-sm" style="align-self:flex-end;" onclick="window.print()">🖶 Print</button>
+      </div>
+
+      <div class="kpi-grid" id="reportKpis"></div>
+
+      <div class="panel-grid">
+        <div class="panel">
+          <div class="panel-head"><h3>Top products</h3><span class="cell-sub">by revenue</span></div>
+          <div class="table-wrap">
+            <table class="data" id="topProductsTable">
+              <thead><tr><th>Product</th><th class="num">Units</th><th class="num">Revenue</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Sales by category</h3></div>
+          <div class="chart-box short"><canvas id="categoryChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-back" id="editModal">
+  <div class="modal-card">
+    <div class="m-head"><h3>Edit product</h3><button class="x-btn" onclick="closeEdit()">×</button></div>
+    <div class="m-body">
+      <input type="hidden" id="editProductId">
+      <label class="field"><span>Title</span><input type="text" id="editProductTitle"></label>
+      <label class="field"><span>Description</span><textarea id="editProductDescription"></textarea></label>
+      <div class="form-grid">
+        <label class="field"><span>Price (₹)</span><input type="number" id="editProductPrice"></label>
+        <label class="field"><span>Stock</span><input type="number" id="editProductStock"></label>
+      </div>
+      <label class="field"><span>Image URL</span><input type="text" id="editProductImage"></label>
+      <label class="field"><span>Keywords</span><input type="text" id="editProductKeywords"></label>
+      <div class="field"><span style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:6px;display:block;">Categories</span>
+        <div class="cat-check-grid" id="editCategoryOptions"></div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-primary" onclick="updateProduct()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-back" id="detailsModal">
+  <div class="modal-card">
+    <div class="m-head"><h3 id="detailsTitle">Order details</h3><button class="x-btn" onclick="closeDetails()">×</button></div>
+    <div class="m-body" id="detailsBody"></div>
+    <div class="m-foot"><button class="btn btn-ghost" onclick="closeDetails()">Close</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
