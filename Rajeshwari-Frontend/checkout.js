@@ -2,7 +2,7 @@
    delivery details from /users/me, shows the bag summary, and places
    the order with the chosen payment method. */
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://project-dev-vat-non-prod-01.onrender.com";
 // Set this to your real UPI id to render the scan-to-pay QR:
 const UPI_ID = "rajeshwari@upi";
 const UPI_NAME = "Rajeshwari Bangles Jewellery";

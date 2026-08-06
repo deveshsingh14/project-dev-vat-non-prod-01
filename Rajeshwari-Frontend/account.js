@@ -1,6 +1,6 @@
 /* My account — orders history with a status timeline + editable profile. */
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://project-dev-vat-non-prod-01.onrender.com";
 
 function token() { return localStorage.getItem("token"); }
 function authHeaders(json) {

@@ -9,7 +9,7 @@
    reflect GET /wishlist, keyed by product id.
    ============================================================ */
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://project-dev-vat-non-prod-01.onrender.com";
 
 // ---------- state ----------
 let PRODUCTS = [];          // normalized products

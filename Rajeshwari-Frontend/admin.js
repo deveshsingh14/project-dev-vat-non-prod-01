@@ -9,7 +9,7 @@
      GET  /users  (new userRoutes)  GET /users/:id/orders
    ============================================================ */
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://project-dev-vat-non-prod-01.onrender.com";
 const LOW_STOCK = 5;
 
 // ---------- auth guard ----------
