@@ -1,3 +1,4 @@
+require("dotenv").config();
 const bcrypt = require("bcrypt");
 const prisma = require("./src/config/db");
 
@@ -5,13 +6,21 @@ async function resetAdminPassword() {
 
   try {
 
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      console.error("❌ Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env");
+      process.exit(1);
+    }
+
     const hashedPassword =
-      await bcrypt.hash("Admin@123", 10);
+      await bcrypt.hash(adminPassword, 10);
 
     await prisma.user.update({
 
       where: {
-        email: "admin@gmail.com"
+        email: adminEmail
       },
 
       data: {
@@ -21,8 +30,8 @@ async function resetAdminPassword() {
     });
 
     console.log("✅ Admin password reset successfully.");
-    console.log("Email: admin@gmail.com");
-    console.log("Password: btslpatwa");
+    console.log(`Email: ${adminEmail}`);
+    console.log("Password: [SECURELY STORED IN .ENV]");
 
   } catch (error) {
 

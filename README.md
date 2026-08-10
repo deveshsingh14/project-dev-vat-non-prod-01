@@ -311,7 +311,7 @@ Create a `.env` file.
 Example:
 
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/rajeshwari"
+DATABASE_URL="postgresql://<username>:<password>@<neon-db-url>/<dbname>?sslmode=require"
 
 JWT_SECRET="your_secret_key"
 
@@ -354,11 +354,13 @@ Example Development Account
 
 ```
 Email:
-admin@gmail.com
+<set-your-admin-email>
 
 Password:
-Admin@123
+<set-your-admin-password>
 ```
+
+> **Note**: For security, do not push your `.env` or hardcoded credentials to this repository. You can reset the admin password by configuring `ADMIN_EMAIL` and `ADMIN_PASSWORD` in your `.env` file and running `node resetAdminPassword.js`.
 
 ---
 
