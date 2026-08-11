@@ -617,7 +617,7 @@ function finishLogin(jwt) {
   toast("Welcome ✨");
   let payload = null;
   try { payload = JSON.parse(atob(jwt.split(".")[1])); } catch (e) {}
-  if (payload && payload.role === "ADMIN") { window.location.href = "admin.html"; return; }
+  if (payload && (payload.role === "ADMIN" || payload.role === "OWNER")) { window.location.href = "admin.html"; return; }
   updateAuthUI();
   refreshWishlist().then(applyFilters);
   refreshCartCount();

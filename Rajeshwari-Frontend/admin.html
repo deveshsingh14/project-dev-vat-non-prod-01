@@ -247,6 +247,7 @@
           <input type="checkbox" id="promotionToggle" onchange="togglePromotions(this.checked)">
           Enable Owner Promotions
         </label>
+        <button class="btn btn-sm btn-primary" id="btnCreateOwnerModal" style="display:none;" onclick="openOwnerModal()">＋ Create Owner</button>
         <button class="btn btn-sm" onclick="exportCustomersCSV()">⭳ Export CSV</button>
       </div>
       <div class="card-table">
@@ -328,6 +329,21 @@
 </div>
 
 <div id="toast"></div>
+
+<div class="modal-back" id="ownerModal">
+  <div class="modal-card" style="max-width: 400px;">
+    <div class="m-head"><h3 id="ownerTitle">Create Owner Account</h3><button class="x-btn" onclick="closeOwnerModal()">×</button></div>
+    <form class="m-body" id="ownerForm">
+      <label class="field"><span>Name</span><input type="text" id="ownerName" required></label>
+      <label class="field"><span>Email</span><input type="email" id="ownerEmail" required></label>
+      <label class="field"><span>Password</span><input type="password" id="ownerPassword" required></label>
+      <div class="m-foot" style="margin-top:20px; padding:0; border:none; background:none;">
+        <button type="button" class="btn btn-ghost" onclick="closeOwnerModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="admin.js"></script>

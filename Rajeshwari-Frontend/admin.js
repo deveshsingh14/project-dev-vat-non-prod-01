@@ -135,7 +135,11 @@ async function loadAll() {
     
     if (adminUser.role === "ADMIN") {
       document.getElementById("promotionToggleContainer").style.display = "flex";
+      document.getElementById("btnCreateOwnerModal").style.display = "inline-flex";
       loadPromotionStatus();
+    } else if (adminUser.role === "OWNER") {
+      const customersNavBtn = document.querySelector('.nav-item[data-view="customers"]');
+      if(customersNavBtn) customersNavBtn.style.display = "none";
     }
   } catch (err) {
     console.log(err);
@@ -665,6 +669,44 @@ async function togglePromotions(enabled) {
     document.getElementById("promotionToggle").checked = !enabled; // Revert
   }
 }
+
+function openOwnerModal() {
+  document.getElementById("ownerName").value = "";
+  document.getElementById("ownerEmail").value = "";
+  document.getElementById("ownerPassword").value = "";
+  document.getElementById("ownerModal").classList.add("open");
+}
+
+function closeOwnerModal() {
+  document.getElementById("ownerModal").classList.remove("open");
+}
+
+document.getElementById("ownerForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("ownerName").value.trim();
+  const email = document.getElementById("ownerEmail").value.trim();
+  const password = document.getElementById("ownerPassword").value;
+  if (!name || !email || !password) return;
+
+  try {
+    const res = await fetch(`${API_URL}/users/create-owner`, {
+      method: "POST",
+      headers: authHeaders(true),
+      body: JSON.stringify({ name, email, password })
+    });
+    if (res.ok) {
+      toast("Owner created successfully ✨");
+      closeOwnerModal();
+      await loadAll();
+    } else {
+      const data = await res.json();
+      toast(data.message || "Failed to create owner", "err");
+    }
+  } catch (err) {
+    console.log(err);
+    toast("Network error", "err");
+  }
+});
 
 // ============================================================
 //  REPORTS

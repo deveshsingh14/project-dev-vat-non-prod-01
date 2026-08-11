@@ -67,7 +67,7 @@ router.put("/me", authMiddleware, async (req, res) => {
 router.get(
   "/",
   authMiddleware,
-  adminOrOwnerMiddleware,
+  adminMiddleware,
   async (req, res) => {
     try {
       const users = await prisma.user.findMany({
@@ -127,7 +127,7 @@ router.get(
 router.get(
   "/:id/orders",
   authMiddleware,
-  adminOrOwnerMiddleware,
+  adminMiddleware,
   async (req, res) => {
     try {
       const userId = Number(req.params.id);
