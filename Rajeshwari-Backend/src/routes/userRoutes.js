@@ -4,6 +4,8 @@ const prisma = require("../config/db");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
+const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
+const bcrypt = require("bcrypt");
 
 const router = express.Router();
 
@@ -62,7 +64,7 @@ router.put("/me", authMiddleware, async (req, res) => {
 router.get(
   "/",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
     try {
       const users = await prisma.user.findMany({
@@ -122,7 +124,7 @@ router.get(
 router.get(
   "/:id/orders",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
     try {
       const userId = Number(req.params.id);
@@ -143,6 +145,69 @@ router.get(
       res.status(500).json({
         message: "Failed to fetch customer orders"
       });
+    }
+  }
+);
+
+// ---- PROMOTE CUSTOMER TO OWNER (admin only) ----
+router.put(
+  "/:id/promote",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      if (process.env.ENABLE_OWNER_PROMOTION !== "true") {
+        return res.status(403).json({ message: "Owner promotion feature is disabled" });
+      }
+
+      const id = Number(req.params.id);
+      const user = await prisma.user.update({
+        where: { id },
+        data: { role: "OWNER" },
+        select: { id: true, name: true, email: true, role: true }
+      });
+      res.json({ message: "User promoted to OWNER successfully", user });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Failed to promote user" });
+    }
+  }
+);
+
+// ---- CREATE NEW OWNER ACCOUNT (admin only) ----
+router.post(
+  "/create-owner",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const { name, email, password } = req.body;
+
+      if (!name || !email || !password) {
+        return res.status(400).json({ message: "Name, email and password are required" });
+      }
+
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: "OWNER"
+        }
+      });
+
+      const { password: _pw, ...safeUser } = user;
+      res.json({ message: "Owner created successfully", user: safeUser });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Failed to create owner account" });
     }
   }
 );

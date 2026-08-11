@@ -5,8 +5,8 @@ const prisma = require("../config/db");
 const authMiddleware =
   require("../middleware/authMiddleware");
 
-const adminMiddleware =
-  require("../middleware/adminMiddleware");
+const adminOrOwnerMiddleware =
+  require("../middleware/adminOrOwnerMiddleware");
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ const router = express.Router();
 router.post(
   "/",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
 
     try {
@@ -108,7 +108,7 @@ router.get(
 router.delete(
   "/:id",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
 
     try {

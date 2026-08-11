@@ -19,8 +19,8 @@ try {
   adminUser = JSON.parse(atob(token.split(".")[1]));
 } catch (e) { /* invalid token */ }
 
-if (!token || !adminUser || adminUser.role !== "ADMIN") {
-  alert("Admin access required. Please sign in with an admin account.");
+if (!token || !adminUser || (adminUser.role !== "ADMIN" && adminUser.role !== "OWNER")) {
+  alert("Admin or Owner access required. Please sign in with an authorized account.");
   window.location.href = "index.html";
 }
 
@@ -571,12 +571,17 @@ function renderCustomers() {
           <div class="admin-chip" style="border:none;padding:0"><div class="avatar" style="width:34px;height:34px">${esc((c.name || "?")[0].toUpperCase())}</div></div>
           <div><div class="cell-strong">${esc(c.name)}</div><div class="cell-sub">${esc(c.email)}</div></div>
         </td>
-        <td>${c.role === "ADMIN" ? '<span class="badge b-info">Admin</span>' : '<span class="badge b-mute">Customer</span>'}</td>
+        <td>${c.role === "ADMIN" ? '<span class="badge b-info">Admin</span>' : c.role === "OWNER" ? '<span class="badge b-ok">Owner</span>' : '<span class="badge b-mute">Customer</span>'}</td>
         <td class="num">${c.orderCount}</td>
         <td class="num cell-strong">${inr(c.totalSpent)}</td>
         <td class="cell-sub">${shortDate(c.lastOrderAt)}</td>
         <td class="cell-sub">${shortDate(c.createdAt)}</td>
-        <td><button class="btn btn-sm" onclick="viewCustomer(${c.id}, '${esc(c.name)}')">Orders</button></td>
+        <td>
+          <div class="btn-row">
+            <button class="btn btn-sm" onclick="viewCustomer(${c.id}, '${esc(c.name)}')">Orders</button>
+            ${adminUser.role === "ADMIN" && c.role === "CUSTOMER" ? `<button class="btn btn-sm btn-gold" onclick="promoteToOwner(${c.id}, '${esc(c.name)}')">Promote</button>` : ''}
+          </div>
+        </td>
       </tr>`).join("")
     : emptyRow(7, "No customers found");
 }
@@ -602,6 +607,26 @@ function exportCustomersCSV() {
   const rows = [["ID", "Name", "Email", "Role", "Orders", "Total spent", "Joined"]];
   CUSTOMERS.forEach(c => rows.push([c.id, c.name, c.email, c.role, c.orderCount, c.totalSpent, shortDate(c.createdAt)]));
   downloadCSV("customers.csv", rows);
+}
+
+async function promoteToOwner(id, name) {
+  if (!confirm(`Are you sure you want to promote ${name} to OWNER?`)) return;
+  try {
+    const res = await fetch(`${API_URL}/users/${id}/promote`, {
+      method: "PUT",
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast(data.message || "Failed to promote user", "err");
+      return;
+    }
+    toast(`${name} is now an OWNER`);
+    await loadAll();
+  } catch (e) {
+    console.log(e);
+    toast("Couldn't promote user", "err");
+  }
 }
 
 // ============================================================

@@ -3,7 +3,7 @@ const express = require("express");
 const prisma = require("../config/db");
 
 const authMiddleware = require("../middleware/authMiddleware");
-const adminMiddleware = require("../middleware/adminMiddleware");
+const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 
 const router = express.Router();
 
@@ -161,7 +161,7 @@ router.get("/", authMiddleware, async (req, res) => {
 router.get(
   "/admin/all",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
 
     try {
@@ -193,7 +193,7 @@ router.get(
 router.put(
   "/:id/status",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
 
     try {
@@ -277,7 +277,7 @@ router.put(
 router.put(
   "/:id/payment",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
 
     try {

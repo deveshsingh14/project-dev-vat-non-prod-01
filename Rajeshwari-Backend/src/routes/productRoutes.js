@@ -1,6 +1,6 @@
 const upload = require("../middleware/uploadMiddleware");
 const authMiddleware = require("../middleware/authMiddleware");
-const adminMiddleware = require("../middleware/adminMiddleware");
+const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const express = require("express");
 const prisma = require("../config/db");
 
@@ -67,7 +67,7 @@ router.get("/:id", async (req, res) => {
 router.post(
   "/",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
     try {
       const {
@@ -126,7 +126,7 @@ router.post(
 router.put(
   "/:id",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -198,7 +198,7 @@ router.put(
 router.delete(
   "/:id",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -225,7 +225,7 @@ router.delete(
 router.post(
   "/upload",
   authMiddleware,
-  adminMiddleware,
+  adminOrOwnerMiddleware,
   (req, res, next) => {
     upload.single("image")(req, res, (err) => {
       if (err) {
