@@ -579,7 +579,7 @@ function renderCustomers() {
         <td>
           <div class="btn-row">
             <button class="btn btn-sm" onclick="viewCustomer(${c.id}, '${esc(c.name)}')">Orders</button>
-            ${adminUser.role === "ADMIN" && c.role === "CUSTOMER" ? `<button class="btn btn-sm btn-gold" onclick="promoteToOwner(${c.id}, '${esc(c.name)}')">Promote</button>` : ''}
+            ${adminUser.role === "ADMIN" && (c.role === "CUSTOMER" || c.role === "customer") ? `<button class="btn btn-sm btn-gold" onclick="promoteToOwner(${c.id}, '${esc(c.name)}')">Promote</button>` : ''}
           </div>
         </td>
       </tr>`).join("")
