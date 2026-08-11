@@ -242,6 +242,11 @@
         <div class="search-field"><span class="s-ico">🔍</span>
           <input type="text" id="customerSearch" placeholder="Search by name or email…">
         </div>
+        <div style="flex:1"></div>
+        <label id="promotionToggleContainer" style="display:none; align-items:center; gap:8px; font-size:13px; font-weight:500; cursor:pointer;">
+          <input type="checkbox" id="promotionToggle" onchange="togglePromotions(this.checked)">
+          Enable Owner Promotions
+        </label>
         <button class="btn btn-sm" onclick="exportCustomersCSV()">⭳ Export CSV</button>
       </div>
       <div class="card-table">

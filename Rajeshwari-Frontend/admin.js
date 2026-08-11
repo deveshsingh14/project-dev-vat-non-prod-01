@@ -132,6 +132,11 @@ async function loadAll() {
     renderPayments();
     renderCustomers();
     populateCategoryFilters();
+    
+    if (adminUser.role === "ADMIN") {
+      document.getElementById("promotionToggleContainer").style.display = "flex";
+      loadPromotionStatus();
+    }
   } catch (err) {
     console.log(err);
     toast("Couldn't load data — is the API running?", "err");
@@ -626,6 +631,38 @@ async function promoteToOwner(id, name) {
   } catch (e) {
     console.log(e);
     toast("Couldn't promote user", "err");
+  }
+}
+
+async function loadPromotionStatus() {
+  try {
+    const res = await fetch(`${API_URL}/users/promotion-status`, { headers: authHeaders() });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById("promotionToggle").checked = data.enabled;
+    }
+  } catch (e) {
+    console.log("Failed to load promotion status", e);
+  }
+}
+
+async function togglePromotions(enabled) {
+  try {
+    const res = await fetch(`${API_URL}/users/promotion-status`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ enabled })
+    });
+    if (res.ok) {
+      toast(enabled ? "Owner promotions enabled" : "Owner promotions disabled");
+    } else {
+      toast("Failed to update status", "err");
+      document.getElementById("promotionToggle").checked = !enabled; // Revert
+    }
+  } catch (e) {
+    console.log("Failed to toggle promotion status", e);
+    toast("Failed to update status", "err");
+    document.getElementById("promotionToggle").checked = !enabled; // Revert
   }
 }
 

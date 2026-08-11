@@ -9,6 +9,9 @@ const bcrypt = require("bcrypt");
 
 const router = express.Router();
 
+// In-memory toggle for owner promotions, defaults to env var or true
+let ownerPromotionsEnabled = process.env.ENABLE_OWNER_PROMOTION !== "false";
+
 // ---- MY PROFILE (any logged-in user) ----
 // ADDED: lets a customer read their own profile + saved delivery details.
 // Defined before "/:id/orders" so "me" is never treated as an id.
@@ -149,6 +152,30 @@ router.get(
   }
 );
 
+// ---- GET PROMOTION STATUS (admin only) ----
+router.get(
+  "/promotion-status",
+  authMiddleware,
+  adminMiddleware,
+  (req, res) => {
+    res.json({ enabled: ownerPromotionsEnabled });
+  }
+);
+
+// ---- TOGGLE PROMOTION STATUS (admin only) ----
+router.put(
+  "/promotion-status",
+  authMiddleware,
+  adminMiddleware,
+  (req, res) => {
+    if (typeof req.body.enabled !== "boolean") {
+      return res.status(400).json({ message: "Invalid payload, expected boolean 'enabled'" });
+    }
+    ownerPromotionsEnabled = req.body.enabled;
+    res.json({ message: "Promotion status updated", enabled: ownerPromotionsEnabled });
+  }
+);
+
 // ---- PROMOTE CUSTOMER TO OWNER (admin only) ----
 router.put(
   "/:id/promote",
@@ -156,7 +183,7 @@ router.put(
   adminMiddleware,
   async (req, res) => {
     try {
-      if (process.env.ENABLE_OWNER_PROMOTION !== "true") {
+      if (!ownerPromotionsEnabled) {
         return res.status(403).json({ message: "Owner promotion feature is disabled" });
       }
 
