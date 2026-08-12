@@ -570,43 +570,80 @@ function closeAuth() { document.getElementById("authModal").classList.remove("op
 document.getElementById("authModal").addEventListener("click", function (e) {
   if (e.target === this) closeAuth();
 });
-function toggleAuthMode() {
-  isLogin = !isLogin;
-  document.getElementById("authTitle").textContent = isLogin ? "Welcome back" : "Create account";
-  document.getElementById("authSub").textContent = isLogin
-    ? "Log in to save products and shop."
-    : "Sign up to start saving your favourites.";
-  document.getElementById("authBtn").textContent = isLogin ? "Log in" : "Sign up";
-  document.getElementById("authName").style.display = isLogin ? "none" : "block";
-  document.getElementById("authSwitchText").textContent = isLogin ? "New here?" : "Already have an account?";
-  document.getElementById("authSwitchBtn").textContent = isLogin ? "Create account" : "Log in";
-}
-async function submitAuth() {
-  const email = document.getElementById("authEmail").value.trim();
-  const password = document.getElementById("authPassword").value;
-  const name = document.getElementById("authName").value.trim();
-  if (!email || !password || (!isLogin && !name)) { toast("Please fill in all fields"); return; }
+let confirmationResult = null;
 
-  const endpoint = isLogin ? "login" : "register";
-  const body = isLogin ? { email, password } : { name, email, password };
+function toggleSuperadminAuth() {
+  const phoneSection = document.getElementById("phoneAuthSection");
+  const emailSection = document.getElementById("emailAuthSection");
+  if (phoneSection.style.display === "none") {
+    phoneSection.style.display = "block";
+    emailSection.style.display = "none";
+  } else {
+    phoneSection.style.display = "none";
+    emailSection.style.display = "block";
+  }
+}
+
+async function sendOtp() {
+  const phone = document.getElementById("authPhone").value.trim();
+  if (!phone) return toast("Enter phone number with country code (e.g., +91...)");
+  
+  // Setup recaptcha on first click
+  if (!window.recaptchaVerifier) {
+    window.recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
+      'size': 'invisible', // Try invisible first for better UX
+      'callback': () => { }
+    });
+  }
+
   try {
-    const res = await fetch(`${API_URL}/auth/${endpoint}`, {
+    toast("Sending OTP...");
+    confirmationResult = await window.signInWithPhoneNumber(window.firebaseAuth, phone, window.recaptchaVerifier);
+    document.getElementById("step1").style.display = "none";
+    document.getElementById("step2").style.display = "block";
+    toast("OTP Sent!");
+  } catch (error) {
+    console.error(error);
+    toast("Failed to send OTP");
+    if (window.recaptchaVerifier) {
+      window.recaptchaVerifier.render().then(widgetId => window.grecaptcha.reset(widgetId));
+    }
+  }
+}
+
+async function verifyOtp() {
+  const otp = document.getElementById("authOtp").value.trim();
+  if (!otp) return toast("Enter OTP");
+  
+  try {
+    toast("Verifying...");
+    const result = await confirmationResult.confirm(otp);
+    const idToken = await result.user.getIdToken();
+    
+    const res = await fetch(`${API_URL}/auth/phone-login`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ idToken })
     });
     const data = await res.json();
+    if (data.token) return finishLogin(data.token);
+    toast(data.message || "Failed to login");
+  } catch (error) {
+    console.error(error);
+    toast("Invalid OTP");
+  }
+}
 
-    if (!isLogin && res.ok) {
-      // registered — now log them in seamlessly
-      isLogin = true; toggleAuthMode(); toggleAuthMode(); // resync labels
-      const loginRes = await fetch(`${API_URL}/auth/login`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const loginData = await loginRes.json();
-      if (loginData.token) return finishLogin(loginData.token);
-    }
+async function submitEmailAuth() {
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+  if (!email || !password) return toast("Please fill in all fields");
 
+  try {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
     if (data.token) return finishLogin(data.token);
     toast(data.message || "Something went wrong");
   } catch (e) { console.log(e); toast("Couldn't reach the server"); }

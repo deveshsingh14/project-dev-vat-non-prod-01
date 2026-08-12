@@ -1,2 +1,18 @@
-◇ injected env (2) from .env // tip: ⌘ override existing { override: true }
-Server running on port 5001
+◇ injected env (2) from .env // tip: ⌘ enable debugging { debug: true }
+/Users/deveshbaish/project-dev-vat-non-prod-01/Rajeshwari-Backend/src/config/firebase.js:5
+  credential: admin.credential.cert(serviceAccount)
+                               ^
+
+TypeError: Cannot read properties of undefined (reading 'cert')
+    at Object.<anonymous> (/Users/deveshbaish/project-dev-vat-non-prod-01/Rajeshwari-Backend/src/config/firebase.js:5:32)
+    at Module._compile (node:internal/modules/cjs/loader:1829:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1969:10)
+    at Module.load (node:internal/modules/cjs/loader:1552:32)
+    at Module._load (node:internal/modules/cjs/loader:1354:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1575:12)
+    at require (node:internal/modules/helpers:191:16)
+    at Object.<anonymous> (/Users/deveshbaish/project-dev-vat-non-prod-01/Rajeshwari-Backend/src/routes/authRoutes.js:6:15)
+    at Module._compile (node:internal/modules/cjs/loader:1829:14)
+
+Node.js v25.9.0

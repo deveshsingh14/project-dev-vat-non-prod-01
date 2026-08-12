@@ -3,3 +3,6 @@ node_modules
 .env
 
 /src/generated/prisma
+
+# Firebase Admin SDK
+src/config/firebase-service-account.json

@@ -129,21 +129,66 @@
     <div class="auth-card">
       <button class="sheet-close" onclick="closeAuth()">×</button>
       <div class="auth-logo">Rajeshwari</div>
-      <h2 id="authTitle">Welcome back</h2>
-      <p class="auth-sub" id="authSub">Log in to save products and shop.</p>
-      <input type="text" id="authName" placeholder="Full name" style="display:none;">
-      <input type="email" id="authEmail" placeholder="Email address">
-      <input type="password" id="authPassword" placeholder="Password">
-      <button class="btn-solid" id="authBtn" onclick="submitAuth()">Log in</button>
-      <p class="auth-switch">
-        <span id="authSwitchText">New here?</span>
-        <button onclick="toggleAuthMode()" id="authSwitchBtn">Create account</button>
-      </p>
+      
+      <!-- PHONE LOGIN SECTION (Default) -->
+      <div id="phoneAuthSection">
+        <h2 id="authTitle">Sign in / Sign up</h2>
+        <p class="auth-sub" id="authSub">Enter your mobile number to get started.</p>
+        
+        <div id="step1">
+          <input type="text" id="authPhone" placeholder="+91 9876543210" style="margin-bottom: 15px;">
+          <button class="btn-solid" id="getOtpBtn" onclick="sendOtp()">Send OTP</button>
+          <div id="recaptcha-container" style="margin-top: 10px;"></div>
+        </div>
+
+        <div id="step2" style="display:none;">
+          <input type="text" id="authOtp" placeholder="6-digit OTP" style="margin-bottom: 15px;">
+          <button class="btn-solid" id="verifyOtpBtn" onclick="verifyOtp()">Verify & Login</button>
+        </div>
+        
+        <p class="auth-switch" style="margin-top: 20px;">
+          <button onclick="toggleSuperadminAuth()" style="font-size: 11px; color: #888; text-decoration: underline; background: none; border: none; cursor: pointer;">Superadmin Login</button>
+        </p>
+      </div>
+
+      <!-- SUPERADMIN EMAIL LOGIN SECTION -->
+      <div id="emailAuthSection" style="display:none;">
+        <h2>Superadmin Login</h2>
+        <p class="auth-sub">Restricted access.</p>
+        <input type="email" id="authEmail" placeholder="Email address" style="margin-bottom: 10px;">
+        <input type="password" id="authPassword" placeholder="Password" style="margin-bottom: 15px;">
+        <button class="btn-solid" id="authBtn" onclick="submitEmailAuth()">Log in</button>
+        <p class="auth-switch" style="margin-top: 20px;">
+          <button onclick="toggleSuperadminAuth()" style="font-size: 11px; color: #888; text-decoration: underline; background: none; border: none; cursor: pointer;">Back to Phone Login</button>
+        </p>
+      </div>
+
     </div>
   </div>
 
   <div id="toast"></div>
 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyC9YpgkodtXhzVbEFZ1-_hHjL9HFwk00Lc",
+      authDomain: "ego-e-com.firebaseapp.com",
+      projectId: "ego-e-com",
+      storageBucket: "ego-e-com.firebasestorage.app",
+      messagingSenderId: "65700052430",
+      appId: "1:65700052430:web:3647f8ba11ebba63c03f9f",
+      measurementId: "G-HHM62WFRDX"
+    };
+  
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    
+    window.firebaseAuth = auth;
+    window.RecaptchaVerifier = RecaptchaVerifier;
+    window.signInWithPhoneNumber = signInWithPhoneNumber;
+  </script>
   <script src="store.js"></script>
   <script src="pwa.js" defer></script>
 </body>
