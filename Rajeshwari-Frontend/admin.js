@@ -269,6 +269,57 @@ document.getElementById("revRange").addEventListener("click", e => {
 // ============================================================
 //  PRODUCTS
 // ============================================================
+
+function downloadCsvTemplate(e) {
+  e.preventDefault();
+  const headers = ["title", "description", "price", "image", "stock", "keywords", "category"];
+  const sampleData = ["Beautiful Saree", "Silk saree from Banaras", "2500", "https://example.com/saree.jpg", "10", "saree, silk", "Sarees"];
+  const csvContent = headers.join(",") + "\n" + sampleData.join(",");
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", "products_template.csv");
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+async function handleBulkUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    toast("Uploading and processing CSV...");
+    const res = await fetch(`${API_URL}/products/bulk-upload`, {
+      method: "POST",
+      headers: authHeaders(false), // don't set content-type for formData
+      body: formData
+    });
+    handle401(res);
+    const data = await res.json();
+    if (res.ok) {
+      toast(data.message);
+      if (data.errors && data.errors.length) {
+        console.warn("Bulk upload warnings:", data.errors);
+        toast(`Completed with ${data.errors.length} errors. See console.`);
+      }
+      await loadAll();
+    } else {
+      toast(data.message || "Failed to bulk upload", "err");
+    }
+  } catch (error) {
+    console.error(error);
+    toast("Network error during bulk upload", "err");
+  } finally {
+    e.target.value = ""; // reset input
+  }
+}
+
 function populateCategoryFilters() {
   const sel = document.getElementById("productCategoryFilter");
   sel.innerHTML = `<option value="">All categories</option>` +

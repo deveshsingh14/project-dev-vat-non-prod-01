@@ -6,6 +6,74 @@ const prisma = require("../config/db");
 
 const router = express.Router();
 
+const multer = require("multer");
+const fs = require("fs");
+const csv = require("csv-parser");
+
+const csvUpload = multer({ dest: "uploads/csv/" });
+
+// ---- BULK UPLOAD PRODUCTS (ETL) ----
+router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.single("file"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: "No CSV file uploaded" });
+
+  const results = [];
+  fs.createReadStream(req.file.path)
+    .pipe(csv())
+    .on("data", (data) => results.push(data))
+    .on("end", async () => {
+      try {
+        let successCount = 0;
+        let errors = [];
+
+        for (const row of results) {
+          try {
+            const { title, description, price, image, stock, keywords, category } = row;
+            if (!title || !price || !image) {
+              errors.push(`Row missing required fields: ${title}`);
+              continue;
+            }
+
+            let catData = undefined;
+            if (category) {
+              // Create or find category
+              const catName = category.trim().toLowerCase();
+              let catRecord = await prisma.category.findUnique({ where: { name: catName } });
+              if (!catRecord) {
+                catRecord = await prisma.category.create({ data: { name: catName } });
+              }
+              catData = { create: [{ categoryId: catRecord.id }] };
+            }
+
+            await prisma.product.create({
+              data: {
+                title,
+                description: description || "",
+                price: parseFloat(price) || 0,
+                image,
+                stock: parseInt(stock) || 0,
+                keywords: keywords || "",
+                categories: catData
+              }
+            });
+            successCount++;
+          } catch (rowErr) {
+            errors.push(`Error processing ${row.title}: ${rowErr.message}`);
+          }
+        }
+        
+        fs.unlinkSync(req.file.path); // cleanup
+
+        res.json({
+          message: `Successfully uploaded ${successCount} products`,
+          errors: errors.length ? errors : undefined
+        });
+      } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Failed to process CSV" });
+      }
+    });
+});
+
 // ---- GET ALL PRODUCTS (public) ----
 router.get("/", async (req, res) => {
   try {
