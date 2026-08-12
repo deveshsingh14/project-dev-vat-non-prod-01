@@ -580,7 +580,16 @@ function renderCustomers() {
           <div class="admin-chip" style="border:none;padding:0"><div class="avatar" style="width:34px;height:34px">${esc((c.name || "?")[0].toUpperCase())}</div></div>
           <div><div class="cell-strong">${esc(c.name)}</div><div class="cell-sub">${esc(c.email)}</div></div>
         </td>
-        <td>${c.role === "ADMIN" ? '<span class="badge b-info">Admin</span>' : c.role === "OWNER" ? '<span class="badge b-ok">Owner</span>' : '<span class="badge b-mute">Customer</span>'}</td>
+        <td>
+          ${adminUser.role === "ADMIN" && c.email !== "devesh141singh@gmail.com" && c.id !== adminUser.id ? 
+            `<select class="role-select" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; background:var(--surface);" onchange="changeRole(${c.id}, this.value, '${c.role}', '${esc(c.name)}')">
+              <option value="ADMIN" ${c.role === 'ADMIN' ? 'selected' : ''}>Admin</option>
+              <option value="OWNER" ${c.role === 'OWNER' ? 'selected' : ''}>Owner</option>
+              <option value="CUSTOMER" ${c.role === 'CUSTOMER' ? 'selected' : ''}>Customer</option>
+            </select>` :
+            (c.role === "ADMIN" ? '<span class="badge b-info">Admin</span>' : c.role === "OWNER" ? '<span class="badge b-ok">Owner</span>' : '<span class="badge b-mute">Customer</span>')
+          }
+        </td>
         <td class="num">${c.orderCount}</td>
         <td class="num cell-strong">${inr(c.totalSpent)}</td>
         <td class="cell-sub">${shortDate(c.lastOrderAt)}</td>
@@ -588,7 +597,6 @@ function renderCustomers() {
         <td>
           <div class="btn-row">
             <button class="btn btn-sm" onclick="viewCustomer(${c.id}, '${esc(c.name)}')">Orders</button>
-            ${adminUser.role === "ADMIN" && (c.role === "CUSTOMER" || c.role === "customer") ? `<button class="btn btn-sm btn-gold" onclick="promoteToOwner(${c.id}, '${esc(c.name)}')">Promote</button>` : ''}
           </div>
         </td>
       </tr>`).join("")
@@ -618,23 +626,30 @@ function exportCustomersCSV() {
   downloadCSV("customers.csv", rows);
 }
 
-async function promoteToOwner(id, name) {
-  if (!confirm(`Are you sure you want to promote ${name} to OWNER?`)) return;
-  try {
-    const res = await fetch(`${API_URL}/users/${id}/promote`, {
-      method: "PUT",
-      headers: authHeaders()
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      toast(data.message || "Failed to promote user", "err");
-      return;
-    }
-    toast(`${name} is now an OWNER`);
+async function changeRole(id, newRole, oldRole, name) {
+  if (!confirm(`Are you sure you want to change ${name}'s role to ${newRole}?`)) {
+    // Revert the select if they cancel
     await loadAll();
+    return;
+  }
+  try {
+    const res = await fetch(`${API_URL}/users/${id}/role`, {
+      method: "PUT",
+      headers: authHeaders(true),
+      body: JSON.stringify({ role: newRole })
+    });
+    if (res.ok) {
+      toast(`${name} is now an ${newRole}`);
+      await loadAll();
+    } else {
+      const data = await res.json();
+      toast(data.message || "Failed to change role", "err");
+      await loadAll();
+    }
   } catch (e) {
     console.log(e);
-    toast("Couldn't promote user", "err");
+    toast("Network error", "err");
+    await loadAll();
   }
 }
 

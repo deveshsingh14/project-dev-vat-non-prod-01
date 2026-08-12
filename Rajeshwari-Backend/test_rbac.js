@@ -19,6 +19,12 @@ async function runTests() {
       create: { name: 'Admin', email: 'admin_test@test.com', password: adminPass, role: 'ADMIN' }
     });
 
+    const superAdmin = await prisma.user.upsert({
+      where: { email: 'devesh141singh@gmail.com' },
+      update: { role: 'ADMIN', password: adminPass },
+      create: { name: 'Super Admin', email: 'devesh141singh@gmail.com', password: adminPass, role: 'ADMIN' }
+    });
+
     const owner = await prisma.user.upsert({
       where: { email: 'owner_test@test.com' },
       update: { role: 'OWNER', password: ownerPass },
@@ -27,11 +33,12 @@ async function runTests() {
 
     const customer = await prisma.user.upsert({
       where: { email: 'customer_test@test.com' },
-      update: { role: 'customer', password: customerPass }, // Lowercase customer as default
-      create: { name: 'Customer', email: 'customer_test@test.com', password: customerPass, role: 'customer' }
+      update: { role: 'CUSTOMER', password: customerPass },
+      create: { name: 'Customer', email: 'customer_test@test.com', password: customerPass, role: 'CUSTOMER' }
     });
 
     const adminToken = jwt.sign({ id: admin.id, role: admin.role }, JWT_SECRET, { expiresIn: "1h" });
+    const superAdminToken = jwt.sign({ id: superAdmin.id, role: superAdmin.role }, JWT_SECRET, { expiresIn: "1h" });
     const ownerToken = jwt.sign({ id: owner.id, role: owner.role }, JWT_SECRET, { expiresIn: "1h" });
     const customerToken = jwt.sign({ id: customer.id, role: customer.role }, JWT_SECRET, { expiresIn: "1h" });
 
@@ -57,17 +64,29 @@ async function runTests() {
     console.log(`Admin create-owner: ${res.status} (Expected: 200)`);
     if(res.status !== 200) console.log(res.data);
 
-    // Admin promotes a customer
-    res = await runReq('PUT', `/users/${customer.id}/promote`, adminToken);
+    // Admin promotes a customer to owner
+    res = await runReq('PUT', `/users/${customer.id}/role`, adminToken, { role: "OWNER" });
     console.log(`Admin promote customer: ${res.status} (Expected: 200)`);
     if(res.status !== 200) console.log(res.data);
-    // Demote back to customer for other tests
-    await prisma.user.update({ where: { id: customer.id }, data: { role: 'customer' } });
+    
+    // Admin demotes owner back to customer
+    res = await runReq('PUT', `/users/${customer.id}/role`, adminToken, { role: "CUSTOMER" });
+    console.log(`Admin demotes owner: ${res.status} (Expected: 200)`);
+    if(res.status !== 200) console.log(res.data);
+
+    // Admin tries to demote themselves
+    res = await runReq('PUT', `/users/${admin.id}/role`, adminToken, { role: "CUSTOMER" });
+    console.log(`Admin self-demotion: ${res.status} (Expected: 403)`);
+    
+    // Admin tries to demote superadmin
+    res = await runReq('PUT', `/users/${superAdmin.id}/role`, adminToken, { role: "CUSTOMER" });
+    console.log(`Admin demote superadmin: ${res.status} (Expected: 403)`);
 
     // Admin toggles promotion status
     res = await runReq('PUT', '/users/promotion-status', adminToken, { enabled: false });
     console.log(`Admin toggle promotion: ${res.status} (Expected: 200)`);
     if(res.status !== 200) console.log(res.data);
+    
     // Re-enable
     await runReq('PUT', '/users/promotion-status', adminToken, { enabled: true });
 
@@ -77,14 +96,13 @@ async function runTests() {
     if(res.status !== 200) console.log(res.data);
 
     console.log("\n--- Testing Owner Endpoints ---");
-    // Owner tries to list customers (allowed)
+    // Owner tries to list customers
     res = await runReq('GET', '/users', ownerToken);
-    console.log(`Owner lists customers: ${res.status} (Expected: 200)`);
-    if(res.status !== 200) console.log(res.data);
+    console.log(`Owner lists customers: ${res.status} (Expected: 403)`);
 
     // Owner tries to promote (forbidden)
-    res = await runReq('PUT', `/users/${customer.id}/promote`, ownerToken);
-    console.log(`Owner promotes customer: ${res.status} (Expected: 403)`);
+    res = await runReq('PUT', `/users/${customer.id}/role`, ownerToken, { role: "ADMIN" });
+    console.log(`Owner changes role: ${res.status} (Expected: 403)`);
     
     // Owner tries to toggle status (forbidden)
     res = await runReq('PUT', '/users/promotion-status', ownerToken, { enabled: false });

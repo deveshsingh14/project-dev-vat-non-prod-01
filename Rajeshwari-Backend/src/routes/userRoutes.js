@@ -176,27 +176,46 @@ router.put(
   }
 );
 
-// ---- PROMOTE CUSTOMER TO OWNER (admin only) ----
+// ---- CHANGE USER ROLE (admin only) ----
 router.put(
-  "/:id/promote",
+  "/:id/role",
   authMiddleware,
   adminMiddleware,
   async (req, res) => {
     try {
-      if (!ownerPromotionsEnabled) {
+      const id = Number(req.params.id);
+      const { role } = req.body;
+      
+      if (!["ADMIN", "OWNER", "CUSTOMER"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role specified" });
+      }
+
+      if (role === "OWNER" && !ownerPromotionsEnabled) {
         return res.status(403).json({ message: "Owner promotion feature is disabled" });
       }
 
-      const id = Number(req.params.id);
+      // Check self-demotion
+      if (req.user.id === id) {
+        return res.status(403).json({ message: "Cannot change your own role" });
+      }
+
+      // Check Superadmin protection
+      const targetUser = await prisma.user.findUnique({ where: { id } });
+      if (!targetUser) return res.status(404).json({ message: "User not found" });
+
+      if (targetUser.email === "devesh141singh@gmail.com") {
+        return res.status(403).json({ message: "Cannot change the role of the Superadmin" });
+      }
+
       const user = await prisma.user.update({
         where: { id },
-        data: { role: "OWNER" },
+        data: { role },
         select: { id: true, name: true, email: true, role: true }
       });
-      res.json({ message: "User promoted to OWNER successfully", user });
+      res.json({ message: `User role updated to ${role} successfully`, user });
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Failed to promote user" });
+      res.status(500).json({ message: "Failed to update user role" });
     }
   }
 );
