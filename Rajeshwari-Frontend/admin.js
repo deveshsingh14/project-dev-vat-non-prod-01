@@ -621,6 +621,34 @@ async function setPayment(id, paymentStatus) {
 // ============================================================
 //  CUSTOMERS
 // ============================================================
+
+async function promptAddCustomer() {
+  const name = prompt("Enter customer name:");
+  if (!name) return;
+  const email = prompt("Enter customer email:");
+  if (!email) return;
+  const password = prompt("Enter customer password (they can change it later):");
+  if (!password) return;
+
+  try {
+    toast("Creating customer account...");
+    const res = await fetch(`${API_URL}/auth/register`, {
+      method: "POST",
+      headers: authHeaders(true),
+      body: JSON.stringify({ name, email, password })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      toast("Customer created successfully");
+      await loadAll();
+    } else {
+      toast(data.message || "Failed to create customer", "err");
+    }
+  } catch (error) {
+    toast("Network error while creating customer", "err");
+  }
+}
+
 function renderCustomers() {
   const q = document.getElementById("customerSearch").value.toLowerCase().trim();
   const rows = CUSTOMERS.filter(c => !q || `${c.name} ${c.email}`.toLowerCase().includes(q));

@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 
 const prisma = require("../config/db");
 
+const authMiddleware = require("../middleware/authMiddleware");
+const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
+
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
@@ -41,7 +44,8 @@ router.post("/register", async (req, res) => {
       data: {
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        role: "CUSTOMER"
       }
     });
 
@@ -87,6 +91,7 @@ router.post("/login", async (req, res) => {
     });
 
     if (!user) {
+      console.log(`Login failed: user not found for email ${email}`);
       // CHANGED: same generic message for "no user" and "wrong password"
       // so you don't leak which emails are registered.
       return res.status(400).json({
@@ -100,6 +105,7 @@ router.post("/login", async (req, res) => {
     );
 
     if (!isPasswordCorrect) {
+      console.log(`Login failed: wrong password for email ${email}`);
       return res.status(400).json({
         message: "Invalid credentials"
       });
