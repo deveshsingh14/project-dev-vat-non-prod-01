@@ -585,8 +585,12 @@ function toggleSuperadminAuth() {
 }
 
 async function sendOtp() {
-  const phone = document.getElementById("authPhone").value.trim();
-  if (!phone) return toast("Enter phone number with country code (e.g., +91...)");
+  const code = document.getElementById("countryCode").value;
+  let number = document.getElementById("authPhone").value.trim();
+  
+  if (!number || number.length !== 10) return toast("Enter a valid 10-digit mobile number");
+  
+  const phone = code + number;
   
   // Setup recaptcha on first click
   if (!window.recaptchaVerifier) {

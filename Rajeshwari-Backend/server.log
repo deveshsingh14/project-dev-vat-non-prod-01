@@ -1,4 +1,4 @@
-◇ injected env (2) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (2) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
 /Users/deveshbaish/project-dev-vat-non-prod-01/Rajeshwari-Backend/src/config/firebase.js:5
   credential: admin.credential.cert(serviceAccount)
                                ^

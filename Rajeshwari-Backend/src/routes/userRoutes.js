@@ -258,4 +258,49 @@ router.post(
   }
 );
 
+// ---- DELETE USER (admin only) ----
+router.delete(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+
+      // 1. Check self-deletion
+      if (req.user.id === id) {
+        return res.status(403).json({ message: "Cannot delete your own account" });
+      }
+
+      // 2. Check Superadmin protection
+      const targetUser = await prisma.user.findUnique({ where: { id } });
+      if (!targetUser) return res.status(404).json({ message: "User not found" });
+
+      if (targetUser.email === "devesh141singh@gmail.com") {
+        return res.status(403).json({ message: "Cannot delete the Superadmin account" });
+      }
+
+      // 3. Manual cascade delete related records
+      await prisma.cart.deleteMany({ where: { userId: id } });
+      await prisma.wishlist.deleteMany({ where: { userId: id } });
+
+      const userOrders = await prisma.order.findMany({ where: { userId: id }, select: { id: true } });
+      const orderIds = userOrders.map(o => o.id);
+      
+      if (orderIds.length > 0) {
+        await prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } });
+        await prisma.order.deleteMany({ where: { userId: id } });
+      }
+
+      // 4. Finally delete user
+      await prisma.user.delete({ where: { id } });
+
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  }
+);
+
 module.exports = router;

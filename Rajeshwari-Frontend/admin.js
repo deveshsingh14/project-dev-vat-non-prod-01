@@ -597,6 +597,9 @@ function renderCustomers() {
         <td>
           <div class="btn-row">
             <button class="btn btn-sm" onclick="viewCustomer(${c.id}, '${esc(c.name)}')">Orders</button>
+            ${adminUser.role === "ADMIN" && c.email !== "devesh141singh@gmail.com" && c.id !== adminUser.id ? 
+              `<button class="btn btn-sm btn-err" style="background-color: #ffebe9; color: #cf222e; border: 1px solid rgba(207, 34, 46, 0.2);" onclick="deleteCustomer(${c.id}, '${esc(c.name)}')">Delete</button>` : ''
+            }
           </div>
         </td>
       </tr>`).join("")
@@ -650,6 +653,29 @@ async function changeRole(id, newRole, oldRole, name) {
     console.log(e);
     toast("Network error", "err");
     await loadAll();
+  }
+}
+
+async function deleteCustomer(id, name) {
+  if (!confirm(`Are you absolutely sure you want to permanently delete ${name}? This will delete all their orders, wishlist items, and cart data forever.`)) {
+    return;
+  }
+  try {
+    const res = await fetch(`${API_URL}/users/${id}`, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
+    handle401(res);
+    const data = await res.json();
+    if (res.ok) {
+      toast("Customer deleted successfully");
+      await loadAll(); // refresh the list
+    } else {
+      toast(data.message || "Failed to delete customer", "err");
+    }
+  } catch (e) {
+    console.error(e);
+    toast("Failed to connect to server", "err");
   }
 }
 
