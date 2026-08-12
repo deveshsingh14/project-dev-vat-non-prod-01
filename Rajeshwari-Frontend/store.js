@@ -570,84 +570,43 @@ function closeAuth() { document.getElementById("authModal").classList.remove("op
 document.getElementById("authModal").addEventListener("click", function (e) {
   if (e.target === this) closeAuth();
 });
-let confirmationResult = null;
-
-function toggleSuperadminAuth() {
-  const phoneSection = document.getElementById("phoneAuthSection");
-  const emailSection = document.getElementById("emailAuthSection");
-  if (phoneSection.style.display === "none") {
-    phoneSection.style.display = "block";
-    emailSection.style.display = "none";
-  } else {
-    phoneSection.style.display = "none";
-    emailSection.style.display = "block";
-  }
+function toggleAuthMode() {
+  isLogin = !isLogin;
+  document.getElementById("authTitle").textContent = isLogin ? "Welcome back" : "Create account";
+  document.getElementById("authSub").textContent = isLogin
+    ? "Log in to save products and shop."
+    : "Sign up to start saving your favourites.";
+  document.getElementById("authBtn").textContent = isLogin ? "Log in" : "Sign up";
+  document.getElementById("authName").style.display = isLogin ? "none" : "block";
+  document.getElementById("authSwitchText").textContent = isLogin ? "New here?" : "Already have an account?";
+  document.getElementById("authSwitchBtn").textContent = isLogin ? "Create account" : "Log in";
 }
-
-async function sendOtp() {
-  const code = document.getElementById("countryCode").value;
-  let number = document.getElementById("authPhone").value.trim();
-  
-  if (!number || number.length !== 10) return toast("Enter a valid 10-digit mobile number");
-  
-  const phone = code + number;
-  
-  // Setup recaptcha on first click
-  if (!window.recaptchaVerifier) {
-    window.recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
-      'size': 'invisible', // Try invisible first for better UX
-      'callback': () => { }
-    });
-  }
-
-  try {
-    toast("Sending OTP...");
-    confirmationResult = await window.signInWithPhoneNumber(window.firebaseAuth, phone, window.recaptchaVerifier);
-    document.getElementById("step1").style.display = "none";
-    document.getElementById("step2").style.display = "block";
-    toast("OTP Sent!");
-  } catch (error) {
-    console.error(error);
-    toast("Failed to send OTP");
-    if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.render().then(widgetId => window.grecaptcha.reset(widgetId));
-    }
-  }
-}
-
-async function verifyOtp() {
-  const otp = document.getElementById("authOtp").value.trim();
-  if (!otp) return toast("Enter OTP");
-  
-  try {
-    toast("Verifying...");
-    const result = await confirmationResult.confirm(otp);
-    const idToken = await result.user.getIdToken();
-    
-    const res = await fetch(`${API_URL}/auth/phone-login`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken })
-    });
-    const data = await res.json();
-    if (data.token) return finishLogin(data.token);
-    toast(data.message || "Failed to login");
-  } catch (error) {
-    console.error(error);
-    toast("Invalid OTP");
-  }
-}
-
-async function submitEmailAuth() {
+async function submitAuth() {
   const email = document.getElementById("authEmail").value.trim();
   const password = document.getElementById("authPassword").value;
-  if (!email || !password) return toast("Please fill in all fields");
+  const name = document.getElementById("authName").value.trim();
+  if (!email || !password || (!isLogin && !name)) { toast("Please fill in all fields"); return; }
 
+  const endpoint = isLogin ? "login" : "register";
+  const body = isLogin ? { email, password } : { name, email, password };
   try {
-    const res = await fetch(`${API_URL}/auth/login`, {
+    const res = await fetch(`${API_URL}/auth/${endpoint}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
+
+    if (!isLogin && res.ok) {
+      // registered — now log them in seamlessly
+      isLogin = true; toggleAuthMode(); toggleAuthMode(); // resync labels
+      const loginRes = await fetch(`${API_URL}/auth/login`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const loginData = await loginRes.json();
+      if (loginData.token) return finishLogin(loginData.token);
+    }
+
     if (data.token) return finishLogin(data.token);
     toast(data.message || "Something went wrong");
   } catch (e) { console.log(e); toast("Couldn't reach the server"); }
