@@ -28,15 +28,20 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
         for (const row of results) {
           try {
             const { title, description, price, image, stock, keywords, category } = row;
-            if (!title || !price || !image) {
-              errors.push(`Row missing required fields: ${title}`);
+            // Ignore completely empty rows (e.g. from trailing commas in CSV)
+            if (!title && !price && !category) {
+              continue;
+            }
+
+            if (!title || !price) {
+              errors.push(`Row missing required fields (title or price): ${title || "Unknown"}`);
               continue;
             }
 
             let catData = undefined;
             if (category) {
               // Create or find category
-              const catName = category.trim().toLowerCase();
+              const catName = category.trim();
               let catRecord = await prisma.category.findUnique({ where: { name: catName } });
               if (!catRecord) {
                 catRecord = await prisma.category.create({ data: { name: catName } });
