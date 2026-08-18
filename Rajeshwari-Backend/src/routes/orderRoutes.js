@@ -60,12 +60,14 @@ router.post("/checkout", authMiddleware, async (req, res) => {
       }
 
       // decrement stock
-      for (const item of cartItems) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } }
-        });
-      }
+      await Promise.all(
+        cartItems.map(item =>
+          tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } }
+          })
+        )
+      );
 
       let totalAmount = 0;
       cartItems.forEach(item => {
@@ -220,30 +222,37 @@ router.put(
 
         if (!wasCancelled && willBeCancelled) {
           // restock
-          for (const item of order.orderItems) {
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stock: { increment: item.quantity } }
-            });
-          }
+          await Promise.all(
+            order.orderItems.map(item =>
+              tx.product.update({
+                where: { id: item.productId },
+                data: { stock: { increment: item.quantity } }
+              })
+            )
+          );
         }
 
         if (wasCancelled && !willBeCancelled) {
           // taking it back out of stock — verify first
-          for (const item of order.orderItems) {
-            const product = await tx.product.findUnique({
-              where: { id: item.productId }
-            });
-            if (!product || product.stock < item.quantity) {
-              throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };
-            }
-          }
-          for (const item of order.orderItems) {
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stock: { decrement: item.quantity } }
-            });
-          }
+          await Promise.all(
+            order.orderItems.map(async item => {
+              const product = await tx.product.findUnique({
+                where: { id: item.productId }
+              });
+              if (!product || product.stock < item.quantity) {
+                throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };
+              }
+            })
+          );
+
+          await Promise.all(
+            order.orderItems.map(item =>
+              tx.product.update({
+                where: { id: item.productId },
+                data: { stock: { decrement: item.quantity } }
+              })
+            )
+          );
         }
 
         return tx.order.update({
