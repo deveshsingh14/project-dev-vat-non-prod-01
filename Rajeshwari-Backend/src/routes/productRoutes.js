@@ -54,7 +54,7 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
                 title,
                 description: description || "",
                 price: parseFloat(price) || 0,
-                image,
+                image: image && image.trim() ? image.trim() : null,
                 stock: parseInt(stock) || 0,
                 keywords: keywords || "",
                 categories: catData
@@ -158,7 +158,7 @@ router.post(
           title,
           description,
           price: Number(price),
-          image,
+          image: image && image.trim() ? image.trim() : null,
           stock: Number(stock),
           keywords,
           categories: {
@@ -222,7 +222,7 @@ router.put(
             title,
             description,
             price: price !== undefined ? Number(price) : undefined,
-            image,
+            image: image !== undefined ? (image && image.trim() ? image.trim() : null) : undefined,
             stock: stock !== undefined ? Number(stock) : undefined,
             keywords
           }

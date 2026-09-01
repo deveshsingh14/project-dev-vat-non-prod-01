@@ -34,7 +34,7 @@ model Product {
   title       String
   description String
   price       Float
-  image       String
+  image       String?
   stock       Int
   keywords    String?
   createdAt   DateTime @default(now())

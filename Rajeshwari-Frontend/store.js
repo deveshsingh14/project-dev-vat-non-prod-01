@@ -34,8 +34,9 @@ function authHeaders(json) {
   if (json) h["Content-Type"] = "application/json";
   return h;
 }
+const NO_IMAGE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f4ede4'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%23b8a68f' text-anchor='middle' dominant-baseline='middle'%3ENo image%3C/text%3E%3C/svg%3E";
 function imgSrc(image) {
-  if (!image) return "";
+  if (!image) return NO_IMAGE_PLACEHOLDER;
   return image.startsWith("http") ? image : API_URL + image;
 }
 function toast(msg) {

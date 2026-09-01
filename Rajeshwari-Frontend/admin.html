@@ -315,7 +315,11 @@
         <label class="field"><span>Price (₹)</span><input type="number" id="editProductPrice"></label>
         <label class="field"><span>Stock</span><input type="number" id="editProductStock"></label>
       </div>
-      <label class="field"><span>Image URL</span><input type="text" id="editProductImage"></label>
+      <label class="field"><span>Image URL</span><input type="text" id="editProductImage" placeholder="Image URL, or upload below"></label>
+      <label class="field"><span>Upload image file</span>
+        <input type="file" id="editProductImageFile" accept="image/*" onchange="uploadEditProductImage()">
+        <div class="cell-sub" id="editUploadStatus" style="margin-top:6px;"></div>
+      </label>
       <label class="field"><span>Keywords</span><input type="text" id="editProductKeywords"></label>
       <div class="field"><span style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:6px;display:block;">Categories</span>
         <div class="cat-check-grid" id="editCategoryOptions"></div>

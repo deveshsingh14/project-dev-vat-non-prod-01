@@ -42,8 +42,9 @@ function esc(v) {
 function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
 // ADDED: uploaded images are stored as relative paths (/uploads/xyz.jpg).
 // Prefix the API origin so they load from the backend, not this page's origin.
+const NO_IMAGE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f4ede4'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%23b8a68f' text-anchor='middle' dominant-baseline='middle'%3ENo image%3C/text%3E%3C/svg%3E";
 function imgSrc(image) {
-  if (!image) return "";
+  if (!image) return NO_IMAGE_PLACEHOLDER;
   return image.startsWith("http") ? image : API_URL + image;
 }
 function shortDate(d) { return d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "—"; }
@@ -423,9 +424,26 @@ function openEdit(p) {
   const checked = new Set((p.categories || []).map(c => c.category.id));
   document.getElementById("editCategoryOptions").innerHTML = CATEGORIES.map(c => `
     <label class="cat-option"><input type="checkbox" value="${c.id}" ${checked.has(c.id) ? "checked" : ""}> ${esc(c.name)}</label>`).join("");
+  document.getElementById("editProductImageFile").value = "";
+  document.getElementById("editUploadStatus").textContent = "";
   document.getElementById("editModal").classList.add("open");
 }
 function closeEdit() { document.getElementById("editModal").classList.remove("open"); }
+async function uploadEditProductImage() {
+  const file = document.getElementById("editProductImageFile").files[0];
+  if (!file) return;
+  const status = document.getElementById("editUploadStatus");
+  status.innerHTML = `<span class="spinner"></span> Uploading…`;
+  try {
+    const fd = new FormData(); fd.append("image", file);
+    const res = await fetch(`${API_URL}/products/upload`, { method: "POST", headers: authHeaders(), body: fd });
+    const data = await res.json();
+    if (data.imageUrl) {
+      document.getElementById("editProductImage").value = data.imageUrl;
+      status.textContent = "Uploaded ✓";
+    } else { status.textContent = data.message || "Upload failed"; }
+  } catch (e) { console.log(e); status.textContent = "Upload failed"; }
+}
 async function updateProduct() {
   const id = val("editProductId");
   const categoryIds = [...document.querySelectorAll("#editCategoryOptions input:checked")].map(i => Number(i.value));
