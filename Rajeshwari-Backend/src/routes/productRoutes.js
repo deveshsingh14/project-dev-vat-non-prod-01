@@ -279,6 +279,7 @@ router.delete(
       await prisma.cart.deleteMany({ where: { productId: id } });
       await prisma.wishlist.deleteMany({ where: { productId: id } });
       await prisma.orderItem.deleteMany({ where: { productId: id } });
+      await prisma.productCategory.deleteMany({ where: { productId: id } });
 
       await prisma.product.delete({ where: { id } });
 
