@@ -51,18 +51,32 @@ frontend via GitHub Pages).
     `manifest.json`, `package.json`, and `package-lock.json` are still
     valid JSON after the edits.
 
-## Pending (in order)
+- **Pincode-based order restriction**
+  - New `pincode_restriction` (singleton enabled/disabled toggle) and
+    `serviceable_pincode` (allow-list) tables, plus `/pincode-restrictions`
+    routes (GET / PUT toggle / POST add / DELETE remove), ADMIN/OWNER-only.
+  - Enforced only at `POST /orders/checkout`. The delivery details are
+    now saved to the user's profile *before* the restriction check runs
+    (previously that save happened after order creation), so a blocked
+    customer's address is still saved even though their order isn't
+    placed — browsing, cart, and saving an address were never blocked
+    either way.
+  - Off by default (`enabled: false`, empty allow-list) — every pincode
+    can check out until you add pincodes and flip the toggle in the new
+    "Delivery areas" admin panel section.
+  - Tested locally end-to-end with a throwaway customer account: checkout
+    succeeds with restriction off regardless of pincode; with it on, a
+    non-listed pincode gets a 403 and the cart is left untouched, *and*
+    the address was confirmed saved to the profile; a listed pincode
+    still succeeds. Also checked: non-admin/owner tokens get 403 from all
+    four `/pincode-restrictions` routes, and an invalid (non-6-digit)
+    pincode is rejected with 400. Cleaned up the test orders/user
+    afterward and restored product stock.
 
-1. **Pincode-based order restriction**
-   - New `enabled` toggle + serviceable-pincode allow-list, managed by
-     ADMIN/OWNER from a new admin panel section.
-   - Enforced only at `POST /orders/checkout` (order placement) —
-     browsing, cart, and saving a delivery address/profile stay
-     unaffected, so customers outside the list can still see and save
-     an address; they just can't place an order until you add their
-     pincode or turn the restriction off.
-   - Off by default until pincodes are added and the toggle is flipped
-     on.
+## Pending
+
+Nothing outstanding right now — all three requested changes plus the
+delete-product bug fix are implemented, tested, and pushed.
 
 ## Notes / things surfaced along the way (not acted on unless listed above)
 

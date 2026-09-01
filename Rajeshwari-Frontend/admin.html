@@ -35,6 +35,7 @@
     <button class="nav-item" data-view="orders"><span class="ico">▦</span> Orders</button>
     <button class="nav-item" data-view="payments"><span class="ico">₹</span> Payments</button>
     <button class="nav-item" data-view="customers"><span class="ico">☺</span> Customers</button>
+    <button class="nav-item" data-view="deliveryAreas"><span class="ico">⌖</span> Delivery areas</button>
 
     <div class="sidebar-foot">
       Signed in as admin<br>
@@ -268,6 +269,29 @@
             <tbody></tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- ---------- DELIVERY AREAS ---------- -->
+    <section class="view" id="view-deliveryAreas">
+      <div class="view-head">
+        <div><h2>Delivery areas</h2><p>Limit checkout to pincodes you currently serve. Customers outside the list can still browse and save their address.</p></div>
+      </div>
+      <div class="notice">
+        <span>ⓘ</span>
+        <span>When the restriction is <strong>off</strong>, every pincode can check out — this is the default. Turn it
+        <strong>on</strong> once you've added the pincodes you deliver to; turn it back off any time to lift the limit.</span>
+      </div>
+      <div class="form-card">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600;">
+          <input type="checkbox" id="pincodeRestrictionToggle" onchange="togglePincodeRestriction(this.checked)">
+          Restrict checkout to the pincodes below
+        </label>
+        <div class="btn-row" style="margin-top:16px;">
+          <input type="text" id="newPincodeInput" placeholder="6-digit pincode" maxlength="6" style="max-width:180px;">
+          <button class="btn btn-primary" onclick="addServiceablePincode()">＋ Add pincode</button>
+        </div>
+        <div class="chip-row" id="pincodeList" style="margin-top:16px; display:flex; flex-wrap:wrap; gap:8px;"></div>
       </div>
     </section>
 

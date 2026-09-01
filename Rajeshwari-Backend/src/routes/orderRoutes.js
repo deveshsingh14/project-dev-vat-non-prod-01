@@ -35,6 +35,28 @@ router.post("/checkout", authMiddleware, async (req, res) => {
       });
     }
 
+    // Remember these delivery details on the user profile regardless of
+    // what happens below, so a restricted customer's address isn't lost
+    // and next checkout still pre-fills. Best-effort, fire-and-forget.
+    prisma.user.update({
+      where: { id: req.user.id },
+      data: { phone, address, city, state, pincode }
+    }).catch(() => {});
+
+    // Delivery-area restriction: browsing, cart and saving the address
+    // above are never blocked — this only blocks placing the order.
+    const restriction = await prisma.pincodeRestriction.findUnique({ where: { id: 1 } });
+    if (restriction && restriction.enabled) {
+      const serviceable = await prisma.serviceablePincode.findUnique({
+        where: { pincode: pincode.trim() }
+      });
+      if (!serviceable) {
+        return res.status(403).json({
+          message: "We don't deliver to this pincode yet. Your address has been saved — we'll notify you as we expand."
+        });
+      }
+    }
+
     const method = paymentMethod === "UPI" ? "UPI" : "COD";
 
     const order = await prisma.$transaction(async (tx) => {
@@ -103,13 +125,6 @@ router.post("/checkout", authMiddleware, async (req, res) => {
 
       return created;
     });
-
-    // Also remember these delivery details on the user profile,
-    // so next checkout pre-fills. Best-effort — not part of the txn.
-    prisma.user.update({
-      where: { id: req.user.id },
-      data: { phone, address, city, state, pincode }
-    }).catch(() => {});
 
     res.json({
       message: "Order placed successfully",

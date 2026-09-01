@@ -10,6 +10,7 @@ const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
+const pincodeRoutes = require("./routes/pincodeRoutes");
 
 
 const app = express();
@@ -26,6 +27,7 @@ app.use("/cart", cartRoutes);
 app.use("/wishlist", wishlistRoutes);
 app.use("/orders", orderRoutes);
 app.use("/users", userRoutes);
+app.use("/pincode-restrictions", pincodeRoutes);
 
 
 app.get("/", (req, res) => {

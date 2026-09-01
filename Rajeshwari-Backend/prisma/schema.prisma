@@ -125,6 +125,24 @@ model Order {
   @@map("order")
 }
 
+// Singleton row (id is always 1) toggling whether checkout is limited
+// to the ServiceablePincode allow-list below.
+model PincodeRestriction {
+  id        Int      @id @default(1)
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@map("pincode_restriction")
+}
+
+model ServiceablePincode {
+  id        Int      @id @default(autoincrement())
+  pincode   String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("serviceable_pincode")
+}
+
 model OrderItem {
   id Int @id @default(autoincrement())
 

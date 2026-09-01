@@ -29,6 +29,7 @@ let PRODUCTS = [];
 let ORDERS = [];
 let CUSTOMERS = [];
 let CATEGORIES = [];
+let PINCODE_SETTING = { enabled: false, pincodes: [] };
 let productById = {};
 let charts = {};
 
@@ -90,7 +91,8 @@ const titles = {
   dashboard: ["Overview", "Dashboard"], reports: ["Overview", "Reports"],
   products: ["Catalog", "Products"], addProduct: ["Catalog", "Add product"],
   categories: ["Catalog", "Categories"], orders: ["Commerce", "Orders"],
-  payments: ["Commerce", "Payments"], customers: ["Commerce", "Customers"]
+  payments: ["Commerce", "Payments"], customers: ["Commerce", "Customers"],
+  deliveryAreas: ["Commerce", "Delivery areas"]
 };
 function showView(view) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
@@ -113,16 +115,18 @@ function adminLogout() { localStorage.removeItem("token"); window.location.href 
 // ============================================================
 async function loadAll() {
   try {
-    const [products, orders, customers, categories] = await Promise.all([
+    const [products, orders, customers, categories, pincodeSetting] = await Promise.all([
       api("/products"),
       api("/orders/admin/all", { headers: authHeaders() }),
       api("/users", { headers: authHeaders() }).catch(() => []),
-      api("/categories")
+      api("/categories"),
+      api("/pincode-restrictions", { headers: authHeaders() }).catch(() => ({ enabled: false, pincodes: [] }))
     ]);
     PRODUCTS = products || [];
     ORDERS = orders || [];
     CUSTOMERS = customers || [];
     CATEGORIES = categories || [];
+    PINCODE_SETTING = pincodeSetting || { enabled: false, pincodes: [] };
     productById = {};
     PRODUCTS.forEach(p => (productById[p.id] = p));
 
@@ -132,6 +136,7 @@ async function loadAll() {
     renderOrders();
     renderPayments();
     renderCustomers();
+    renderDeliveryAreas();
     populateCategoryFilters();
     
     if (adminUser.role === "ADMIN") {
@@ -499,6 +504,54 @@ async function deleteCategory(id) {
     toast("Category deleted");
     await loadAll();
   } catch (e) { console.log(e); toast("Couldn't delete", "err"); }
+}
+
+// ============================================================
+//  DELIVERY AREAS (pincode restriction)
+// ============================================================
+function renderDeliveryAreas() {
+  document.getElementById("pincodeRestrictionToggle").checked = !!PINCODE_SETTING.enabled;
+  const pincodes = PINCODE_SETTING.pincodes || [];
+  document.getElementById("pincodeList").innerHTML = pincodes.length
+    ? pincodes.map(p => `
+      <span class="chip">${esc(p)}
+        <a href="#" onclick="removeServiceablePincode('${esc(p)}'); return false;" style="color:inherit; margin-left:6px; text-decoration:none;" aria-label="Remove ${esc(p)}">×</a>
+      </span>`).join("")
+    : `<span class="cell-sub">No pincodes added yet.</span>`;
+}
+async function togglePincodeRestriction(checked) {
+  try {
+    const data = await api("/pincode-restrictions/toggle", {
+      method: "PUT", headers: authHeaders(true), body: JSON.stringify({ enabled: checked })
+    });
+    PINCODE_SETTING.enabled = data.enabled;
+    toast(data.enabled ? "Checkout restricted to listed pincodes" : "Restriction turned off — every pincode can check out");
+  } catch (e) {
+    console.log(e);
+    toast("Couldn't update the restriction", "err");
+    document.getElementById("pincodeRestrictionToggle").checked = !!PINCODE_SETTING.enabled;
+  }
+}
+async function addServiceablePincode() {
+  const pincode = val("newPincodeInput").trim();
+  if (!/^\d{6}$/.test(pincode)) return toast("Enter a valid 6-digit pincode", "err");
+  try {
+    await api("/pincode-restrictions", { method: "POST", headers: authHeaders(true), body: JSON.stringify({ pincode }) });
+    document.getElementById("newPincodeInput").value = "";
+    toast("Pincode added");
+    const data = await api("/pincode-restrictions", { headers: authHeaders() });
+    PINCODE_SETTING = data;
+    renderDeliveryAreas();
+  } catch (e) { console.log(e); toast("Couldn't add pincode", "err"); }
+}
+async function removeServiceablePincode(pincode) {
+  try {
+    await api(`/pincode-restrictions/${pincode}`, { method: "DELETE", headers: authHeaders() });
+    toast("Pincode removed");
+    const data = await api("/pincode-restrictions", { headers: authHeaders() });
+    PINCODE_SETTING = data;
+    renderDeliveryAreas();
+  } catch (e) { console.log(e); toast("Couldn't remove pincode", "err"); }
 }
 
 // ============================================================
