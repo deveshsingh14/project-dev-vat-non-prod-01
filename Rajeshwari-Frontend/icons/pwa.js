@@ -55,7 +55,7 @@
     card.innerHTML = `
       <div class="pwa-ico">R</div>
       <div class="pwa-copy">
-        <strong>Install Rajeshwari</strong>
+        <strong>Install Radha</strong>
         <span>Add to your home screen for faster shopping</span>
       </div>
       <button class="pwa-yes" id="pwaYes">Install</button>

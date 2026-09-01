@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || "rajeshwari_dev_secret_key";
+const JWT_SECRET = process.env.JWT_SECRET || "radha_dev_secret_key";
 
 async function runTests() {
   try {

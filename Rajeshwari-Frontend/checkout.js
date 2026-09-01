@@ -4,8 +4,8 @@
 
 const API_URL = "https://project-dev-vat-non-prod-01.onrender.com";
 // Set this to your real UPI id to render the scan-to-pay QR:
-const UPI_ID = "rajeshwari@upi";
-const UPI_NAME = "Rajeshwari Bangles Jewellery";
+const UPI_ID = "radha@upi";
+const UPI_NAME = "Radha Bangles Jewellery";
 
 function token() { return localStorage.getItem("token"); }
 function authHeaders(json) {

@@ -1,5 +1,5 @@
 /* ============================================================
-   Rajeshwari — service worker
+   Radha — service worker
    Strategy:
      app shell (html/css/js/icons) -> stale-while-revalidate
      product images                -> cache-first (they never change)
@@ -10,8 +10,8 @@
    ============================================================ */
 
 const CACHE_VERSION = "v1";
-const SHELL_CACHE = `rajeshwari-shell-${CACHE_VERSION}`;
-const IMG_CACHE = `rajeshwari-img-${CACHE_VERSION}`;
+const SHELL_CACHE = `radha-shell-${CACHE_VERSION}`;
+const IMG_CACHE = `radha-img-${CACHE_VERSION}`;
 
 const SHELL_ASSETS = [
   "index.html",

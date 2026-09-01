@@ -35,15 +35,25 @@ frontend via GitHub Pages).
   - Tested locally: created a product with a category, deleted it →
     `200 Product deleted` (previously `500`). Cleaned up test data.
 
+- **Rename Rajeshwari → Radha, branding only** (commit pending push)
+  - Per your decision: the two top-level folders `Rajeshwari-Backend`/
+    `Rajeshwari-Frontend` stay as-is since Render's dashboard root
+    directory points at them; renaming those would need a coordinated
+    update on your end and wasn't done here.
+  - Changed: page titles, logo text, PWA manifest name/short_name, UPI
+    display name (`radha@upi` / "Radha Bangles Jewellery"), service
+    worker cache-key prefixes, `package.json`/`package-lock.json` name,
+    README title/description, code comments, and the dev-only JWT
+    fallback secret strings in `test_auth.js`/`test_rbac.js`.
+  - Verified: `grep -ri rajeshwari` across the repo now only matches the
+    intentionally-kept folder-path references (README structure diagram,
+    `cd Rajeshwari-Backend`, the GitHub Pages workflow path). Confirmed
+    `manifest.json`, `package.json`, and `package-lock.json` are still
+    valid JSON after the edits.
+
 ## Pending (in order)
 
-1. **Rename Rajeshwari → Radha, branding only** (per your decision — the
-   two top-level folders `Rajeshwari-Backend`/`Rajeshwari-Frontend` stay
-   as-is since Render's dashboard root directory points at them; renaming
-   those would need a coordinated update on your end and isn't happening
-   here). Covers: page titles, logo text, PWA manifest name, UPI display
-   name, `package.json` name, README, code comments/log strings.
-2. **Pincode-based order restriction**
+1. **Pincode-based order restriction**
    - New `enabled` toggle + serviceable-pincode allow-list, managed by
      ADMIN/OWNER from a new admin panel section.
    - Enforced only at `POST /orders/checkout` (order placement) —

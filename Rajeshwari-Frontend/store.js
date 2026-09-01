@@ -1,5 +1,5 @@
 /* ============================================================
-   Rajeshwari storefront — explore feed engine
+   Radha storefront — explore feed engine
    Talks to the same backend as before:
      GET /products, /categories
      POST/GET/PUT/DELETE /cart      (auth)
@@ -556,7 +556,7 @@ function shareProduct(e, id) {
   const p = PRODUCTS.find(x => x.id === id);
   if (!p) return;
   if (navigator.share) {
-    navigator.share({ title: p.title, text: `${p.title} — ${inr(p.price)} at Rajeshwari Bangles & Jewellery` })
+    navigator.share({ title: p.title, text: `${p.title} — ${inr(p.price)} at Radha Bangles & Jewellery` })
       .catch(() => {});
   } else {
     toast("Sharing isn't supported on this browser");

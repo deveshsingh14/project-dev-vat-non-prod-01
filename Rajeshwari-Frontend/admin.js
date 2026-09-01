@@ -1,5 +1,5 @@
 /* ============================================================
-   Rajeshwari Admin — dashboard logic (self-contained)
+   Radha Admin — dashboard logic (self-contained)
    Works against the existing backend:
      GET  /products                 GET  /orders/admin/all
      POST /products                 PUT  /orders/:id/status

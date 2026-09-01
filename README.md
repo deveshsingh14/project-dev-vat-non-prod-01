@@ -3,9 +3,9 @@ This is our personal space to store Codes. Me and Vatsal will share this as clou
 
 # Here is an LLM generated short readme file.
 
-# 💍 Rajeshwari – Bangles & Jewellery E-Commerce Platform
+# 💍 Radha – Bangles & Jewellery E-Commerce Platform
 
-A full-stack e-commerce platform for **Rajeshwari – Bangles & Jewellery**, designed for bridal jewellery, cosmetics, and fashion accessories. The application provides a modern customer shopping experience along with a powerful admin dashboard for inventory, category, and order management.
+A full-stack e-commerce platform for **Radha – Bangles & Jewellery**, designed for bridal jewellery, cosmetics, and fashion accessories. The application provides a modern customer shopping experience along with a powerful admin dashboard for inventory, category, and order management.
 
 ---
 
