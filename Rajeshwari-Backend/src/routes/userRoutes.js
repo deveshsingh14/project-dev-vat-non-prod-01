@@ -203,7 +203,8 @@ router.put(
       const targetUser = await prisma.user.findUnique({ where: { id } });
       if (!targetUser) return res.status(404).json({ message: "User not found" });
 
-      if (targetUser.email === "devesh141singh@gmail.com") {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (adminEmail && targetUser.email === adminEmail) {
         return res.status(403).json({ message: "Cannot change the role of the Superadmin" });
       }
 
@@ -276,7 +277,8 @@ router.delete(
       const targetUser = await prisma.user.findUnique({ where: { id } });
       if (!targetUser) return res.status(404).json({ message: "User not found" });
 
-      if (targetUser.email === "devesh141singh@gmail.com") {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (adminEmail && targetUser.email === adminEmail) {
         return res.status(403).json({ message: "Cannot delete the Superadmin account" });
       }
 
