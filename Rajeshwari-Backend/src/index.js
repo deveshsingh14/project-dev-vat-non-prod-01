@@ -17,6 +17,10 @@ const REQUIRED_ENV_VARS = [
 const missingEnvVars = REQUIRED_ENV_VARS.filter((name) => !process.env[name]);
 
 if (missingEnvVars.length > 0) {
+  // Deliberately plain console.error, not the pino logger: pino-pretty
+  // runs its formatting on a worker thread, so a log call immediately
+  // before process.exit() can get lost if the process exits before the
+  // transport flushes. This message is too important to risk that.
   console.error(
     `Missing required environment variable(s): ${missingEnvVars.join(", ")}. ` +
     `Set them in .env (locally) or in the Render dashboard (production) before starting the server.`
@@ -36,6 +40,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
 const pincodeRoutes = require("./routes/pincodeRoutes");
 const prisma = require("./config/db");
+const logger = require("./config/logger");
 const errorHandler = require("./middleware/errorHandler");
 
 
@@ -90,7 +95,7 @@ app.get("/health", async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(503).json({
       status: "error",
       db: "disconnected",

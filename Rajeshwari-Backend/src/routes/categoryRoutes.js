@@ -1,6 +1,7 @@
 const express = require("express");
 
 const prisma = require("../config/db");
+const logger = require("../config/logger");
 
 const authMiddleware =
   require("../middleware/authMiddleware");
@@ -52,7 +53,7 @@ router.post(
 
     } catch (error) {
 
-      console.log(error);
+      logger.error(error);
 
       res.status(500).json({
 
@@ -88,7 +89,7 @@ router.get(
 
     } catch (error) {
 
-      console.log(error);
+      logger.error(error);
 
       res.status(500).json({
 
@@ -139,7 +140,7 @@ router.delete(
 
     } catch (error) {
 
-      console.log(error);
+      logger.error(error);
 
       res.status(500).json({
 

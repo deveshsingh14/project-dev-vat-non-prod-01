@@ -1,6 +1,7 @@
 const express = require("express");
 
 const prisma = require("../config/db");
+const logger = require("../config/logger");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
@@ -22,7 +23,7 @@ router.get("/", authMiddleware, adminOrOwnerMiddleware, async (req, res) => {
       pincodes: pincodes.map(p => p.pincode)
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({ message: "Failed to fetch pincode restriction settings" });
   }
 });
@@ -43,7 +44,7 @@ router.put("/toggle", authMiddleware, adminOrOwnerMiddleware, async (req, res) =
 
     res.json({ enabled: setting.enabled });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({ message: "Failed to update the restriction toggle" });
   }
 });
@@ -64,7 +65,7 @@ router.post("/", authMiddleware, adminOrOwnerMiddleware, async (req, res) => {
 
     res.json(created);
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({ message: "Failed to add pincode" });
   }
 });
@@ -78,7 +79,7 @@ router.delete("/:pincode", authMiddleware, adminOrOwnerMiddleware, async (req, r
 
     res.json({ message: "Pincode removed" });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({ message: "Failed to remove pincode" });
   }
 });

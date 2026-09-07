@@ -1,6 +1,7 @@
 const express = require("express");
 
 const prisma = require("../config/db");
+const logger = require("../config/logger");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
@@ -28,7 +29,7 @@ router.get("/me", authMiddleware, async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({ message: "Failed to fetch profile" });
   }
 });
@@ -55,7 +56,7 @@ router.put("/me", authMiddleware, async (req, res) => {
     });
     res.json(user);
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({ message: "Failed to update profile" });
   }
 });
@@ -115,7 +116,7 @@ router.get(
 
       res.json(customers);
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({
         message: "Failed to fetch customers"
       });
@@ -144,7 +145,7 @@ router.get(
 
       res.json(orders);
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({
         message: "Failed to fetch customer orders"
       });
@@ -215,7 +216,7 @@ router.put(
       });
       res.json({ message: `User role updated to ${role} successfully`, user });
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({ message: "Failed to update user role" });
     }
   }
@@ -253,7 +254,7 @@ router.post(
       const { password: _pw, ...safeUser } = user;
       res.json({ message: "Owner created successfully", user: safeUser });
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({ message: "Failed to create owner account" });
     }
   }
@@ -299,7 +300,7 @@ router.delete(
 
       res.json({ message: "User deleted successfully" });
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({ message: "Failed to delete user" });
     }
   }

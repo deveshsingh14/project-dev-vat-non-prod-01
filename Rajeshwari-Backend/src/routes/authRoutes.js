@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const prisma = require("../config/db");
+const logger = require("../config/logger");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
@@ -60,7 +61,7 @@ router.post("/register", registerLimiter, async (req, res) => {
 
   } catch (error) {
 
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Registration failed"
@@ -134,7 +135,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
   } catch (error) {
 
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Login failed"

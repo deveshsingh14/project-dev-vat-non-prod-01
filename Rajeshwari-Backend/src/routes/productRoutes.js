@@ -3,6 +3,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const express = require("express");
 const prisma = require("../config/db");
+const logger = require("../config/logger");
 const cloudinary = require("../config/cloudinary");
 const { z } = require("zod");
 const { validateBody } = require("../middleware/validate");
@@ -105,7 +106,7 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
           errors: errors.length ? errors : undefined
         });
       } catch (e) {
-        console.error(e);
+        logger.error(e);
         res.status(500).json({ message: "Failed to process CSV" });
       }
     });
@@ -147,7 +148,7 @@ router.get("/", async (req, res) => {
       totalPages: Math.ceil(total / limit)
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({
       message: "Error fetching products"
     });
@@ -182,7 +183,7 @@ router.get("/:id", async (req, res) => {
 
     res.json(product);
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({
       message: "Error fetching product"
     });
@@ -236,7 +237,7 @@ router.post(
       // one would throw "Cannot set headers after they are sent".
       res.json(product);
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({
         message: "Something went wrong"
       });
@@ -314,7 +315,7 @@ router.put(
 
       res.json(updatedProduct);
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({
         message: "Error updating product"
       });
@@ -340,7 +341,7 @@ router.delete(
 
       res.json({ message: "Product deleted" });
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({
         message: "Error deleting product"
       });
@@ -391,7 +392,7 @@ router.post(
         imageUrl: result.secure_url
       });
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({
         message: "Upload failed"
       });

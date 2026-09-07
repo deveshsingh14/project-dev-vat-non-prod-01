@@ -1,6 +1,7 @@
 const express = require("express");
 
 const prisma = require("../config/db");
+const logger = require("../config/logger");
 
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -56,7 +57,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
   } catch (error) {
 
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to add to cart"
@@ -86,7 +87,7 @@ router.get("/", authMiddleware, async (req, res) => {
 
   } catch (error) {
 
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to fetch cart"
@@ -124,7 +125,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 
   } catch (error) {
 
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to remove cart item"
@@ -171,7 +172,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
 
   } catch (error) {
 
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to update quantity"

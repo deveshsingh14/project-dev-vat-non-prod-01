@@ -1,6 +1,7 @@
 const express = require("express");
 
 const prisma = require("../config/db");
+const logger = require("../config/logger");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
@@ -142,7 +143,7 @@ router.post("/checkout", authMiddleware, async (req, res) => {
       });
     }
 
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Checkout failed"
@@ -168,7 +169,7 @@ router.get("/", authMiddleware, async (req, res) => {
     res.json(orders);
 
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(500).json({ message: "Failed to fetch orders" });
   }
 
@@ -213,7 +214,7 @@ router.get(
       });
 
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({ message: "Failed to fetch all orders" });
     }
 
@@ -306,7 +307,7 @@ router.put(
         });
       }
 
-      console.log(error);
+      logger.error(error);
       res.status(500).json({ message: "Failed to update order status" });
     }
 
@@ -339,7 +340,7 @@ router.put(
       res.json(order);
 
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       res.status(500).json({ message: "Failed to update payment status" });
     }
 
