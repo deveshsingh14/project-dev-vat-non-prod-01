@@ -27,15 +27,6 @@ function toast(msg) {
   t.textContent = msg; t.classList.add("show");
   clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200);
 }
-function handle401(res) {
-  if (res.status === 401) {
-    localStorage.removeItem("token");
-    toast("Session expired — please log in again");
-    setTimeout(() => (window.location.href = "index.html"), 1200);
-    return true;
-  }
-  return false;
-}
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "index.html";
