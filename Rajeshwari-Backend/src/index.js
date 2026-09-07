@@ -35,6 +35,7 @@ const wishlistRoutes = require("./routes/wishlistRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
 const pincodeRoutes = require("./routes/pincodeRoutes");
+const prisma = require("./config/db");
 
 
 const app = express();
@@ -75,6 +76,26 @@ app.use("/pincode-restrictions", pincodeRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend Working");
+});
+
+// ADDED: a real health check — the old GET / only proved the process
+// was up, not whether it could actually reach the database.
+app.get("/health", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      status: "ok",
+      db: "connected",
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(503).json({
+      status: "error",
+      db: "disconnected",
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
