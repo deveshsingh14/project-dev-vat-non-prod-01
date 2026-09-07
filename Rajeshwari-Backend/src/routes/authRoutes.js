@@ -6,10 +6,11 @@ const prisma = require("../config/db");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
+const { loginLimiter, registerLimiter } = require("../middleware/authRateLimiter");
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+router.post("/register", registerLimiter, async (req, res) => {
 
   try {
 
@@ -69,7 +70,7 @@ router.post("/register", async (req, res) => {
 
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
 
   try {
 
