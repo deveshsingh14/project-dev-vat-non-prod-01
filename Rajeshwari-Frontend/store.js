@@ -69,10 +69,13 @@ async function boot() {
   renderSkeletons();
   try {
     const [prodRes, catRes] = await Promise.all([
-      fetch(`${API_URL}/products`),
+      // CHANGED: /products is now paginated (default limit=50); request
+      // a limit generous enough to still get the whole catalog in one
+      // call, since the storefront filters/searches client-side.
+      fetch(`${API_URL}/products?limit=200`),
       fetch(`${API_URL}/categories`)
     ]);
-    PRODUCTS = (await prodRes.json()).map(normalizeProduct);
+    PRODUCTS = (await prodRes.json()).items.map(normalizeProduct);
     CATEGORIES = await catRes.json();
   } catch (e) {
     console.log(e);

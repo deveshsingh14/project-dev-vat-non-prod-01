@@ -86,19 +86,40 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
 });
 
 // ---- GET ALL PRODUCTS (public) ----
+// CHANGED: paginated — an unbounded findMany was returning the entire
+// catalog (with nested categories) on every request, which was the
+// single biggest scalability landmine as the catalog grows. Defaults
+// (page=1, limit=50) are chosen generously so existing callers that
+// don't pass these params yet keep working unchanged for a catalog
+// this size; a caller that wants a specific page passes ?page=&limit=.
 router.get("/", async (req, res) => {
   try {
-    const products = await prisma.product.findMany({
-      include: {
-        categories: {
-          include: {
-            category: true
-          }
-        }
-      }
-    });
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
 
-    res.json(products);
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        include: {
+          categories: {
+            include: {
+              category: true
+            }
+          }
+        },
+        orderBy: { id: "asc" },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      prisma.product.count()
+    ]);
+
+    res.json({
+      items: products,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({

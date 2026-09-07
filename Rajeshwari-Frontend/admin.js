@@ -102,15 +102,19 @@ function adminLogout() { localStorage.removeItem("token"); window.location.href 
 // ============================================================
 async function loadAll() {
   try {
+    // CHANGED: /products and /orders/admin/all are now paginated
+    // (default limit=50); request a limit generous enough to still get
+    // everything in one call, since the admin dashboard's tables/charts
+    // assume the full list today.
     const [products, orders, customers, categories, pincodeSetting] = await Promise.all([
-      api("/products"),
-      api("/orders/admin/all", { headers: authHeaders() }),
+      api("/products?limit=200"),
+      api("/orders/admin/all?limit=200", { headers: authHeaders() }),
       api("/users", { headers: authHeaders() }).catch(() => []),
       api("/categories"),
       api("/pincode-restrictions", { headers: authHeaders() }).catch(() => ({ enabled: false, pincodes: [] }))
     ]);
-    PRODUCTS = products || [];
-    ORDERS = orders || [];
+    PRODUCTS = (products && products.items) || [];
+    ORDERS = (orders && orders.items) || [];
     CUSTOMERS = customers || [];
     CATEGORIES = categories || [];
     PINCODE_SETTING = pincodeSetting || { enabled: false, pincodes: [] };

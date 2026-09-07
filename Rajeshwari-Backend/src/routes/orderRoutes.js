@@ -175,6 +175,9 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 // ---- GET ALL ORDERS (admin) ----
+// CHANGED: paginated, same reasoning as GET /products — this was an
+// unbounded findMany over the entire order history on every admin
+// dashboard load.
 router.get(
   "/admin/all",
   authMiddleware,
@@ -183,17 +186,31 @@ router.get(
 
     try {
 
-      const orders = await prisma.order.findMany({
-        include: {
-          user: {
-            select: { id: true, name: true, email: true }
-          },
-          orderItems: { include: { product: true } }
-        },
-        orderBy: { createdAt: "desc" }
-      });
+      const page = Math.max(1, parseInt(req.query.page) || 1);
+      const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
 
-      res.json(orders);
+      const [orders, total] = await Promise.all([
+        prisma.order.findMany({
+          include: {
+            user: {
+              select: { id: true, name: true, email: true }
+            },
+            orderItems: { include: { product: true } }
+          },
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * limit,
+          take: limit
+        }),
+        prisma.order.count()
+      ]);
+
+      res.json({
+        items: orders,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      });
 
     } catch (error) {
       console.log(error);
