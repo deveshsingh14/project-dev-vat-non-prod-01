@@ -637,19 +637,6 @@ function updateAuthUI() {
   if (acct) acct.style.display = authed ? "flex" : "none";
 }
 
-// ADDED: when the 7-day JWT expires, API calls start returning 401.
-// Instead of failing silently, log out gracefully and reopen login.
-function handle401(res) {
-  if (res && res.status === 401 && token()) {
-    localStorage.removeItem("token");
-    savedProductIds = new Set(); WISHLIST = [];
-    updateAuthUI(); updateWishCount(); refreshCartCount(); applyFilters();
-    toast("Session expired — please log in again");
-    openAuth();
-    return true;
-  }
-  return false;
-}
 
 // ---------- boot ----------
 boot();

@@ -306,7 +306,7 @@ async function handleBulkUpload(e) {
       headers: authHeaders(false), // don't set content-type for formData
       body: formData
     });
-    handle401(res);
+    if (handle401(res)) return;
     const data = await res.json();
     if (res.ok) {
       toast(data.message);
@@ -815,7 +815,7 @@ async function deleteCustomer(id, name) {
       method: "DELETE",
       headers: authHeaders()
     });
-    handle401(res);
+    if (handle401(res)) return;
     const data = await res.json();
     if (res.ok) {
       toast("Customer deleted successfully");
