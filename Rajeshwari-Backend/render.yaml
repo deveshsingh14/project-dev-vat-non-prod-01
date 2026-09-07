@@ -1,0 +1,41 @@
+# Render deploy config for the backend, as code — reviewable via PR
+# instead of only living in Render's dashboard.
+#
+# NOTE: adding this file does NOT change how the live service is
+# configured. Render only reads render.yaml for a "Blueprint" deploy
+# (a new service created from this file, or an existing service
+# explicitly linked to it in the dashboard). This service currently
+# deploys from the dashboard's own settings — switching it to be
+# managed by this file is a separate, deliberate step, not something
+# that happens automatically just because this file exists in the repo.
+#
+# Env var values are never stored here (see below, and the root
+# directory is `Rajeshwari-Backend/` — same as the dashboard's current
+# root directory setting).
+services:
+  - type: web
+    name: radha-backend
+    runtime: node
+    plan: free
+    rootDir: Rajeshwari-Backend
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    envVars:
+      # Values are set in the Render dashboard (Settings > Environment),
+      # never in this file or in git — `sync: false` tells Render that.
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ENABLE_OWNER_PROMOTION
+        sync: false
