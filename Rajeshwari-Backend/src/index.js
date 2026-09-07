@@ -15,7 +15,26 @@ const pincodeRoutes = require("./routes/pincodeRoutes");
 
 const app = express();
 
-app.use(cors());
+// CHANGED: cors() with no options reflected every origin. Restricted to
+// the actual deployed frontend + local dev server. `!origin` covers
+// non-browser clients (curl, server-to-server, mobile apps) that don't
+// send an Origin header at all — those were never something CORS could
+// protect against anyway.
+const ALLOWED_ORIGINS = [
+  "https://deveshsingh14.github.io",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500"
+];
+
+app.use(cors({
+  // CHANGED: reject with `false`, not an Error — an Error here reaches
+  // Express's default error handler and returns a 500 (with a stack
+  // trace outside production), when a disallowed origin should just
+  // get no CORS headers and let the browser block it client-side.
+  origin: (origin, callback) => {
+    callback(null, !origin || ALLOWED_ORIGINS.includes(origin));
+  }
+}));
 app.use(express.json());
 
 app.use("/uploads", express.static("uploads"));
