@@ -4,8 +4,34 @@ const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const express = require("express");
 const prisma = require("../config/db");
 const cloudinary = require("../config/cloudinary");
+const { z } = require("zod");
+const { validateBody } = require("../middleware/validate");
 
 const router = express.Router();
+
+// Product.description is a required (non-nullable) String in the
+// schema, but a blank one is fine — only title/price/stock actually
+// need to reject bad input; those were previously ungated, so
+// title:undefined or price:"abc" silently created a broken row
+// (empty title, price: NaN) instead of a clean 400.
+const productCreateSchema = z.object({
+  title: z.string().trim().min(1, "Title is required"),
+  description: z.string().default(""),
+  price: z.coerce.number().positive("Price must be a positive number"),
+  stock: z.coerce.number().int("Stock must be a whole number").nonnegative("Stock must not be negative"),
+  image: z.string().nullish(),
+  keywords: z.string().nullish(),
+  categoryIds: z.array(z.coerce.number().int()).optional()
+});
+
+// Same shape, every field optional — PUT /:id only updates what's sent.
+// `description` needs its `.default("")` stripped back out here: Zod
+// applies a field's default whenever it's absent, even on a .partial()
+// schema, which was silently clobbering an existing description to ""
+// on any partial update that didn't include it.
+const productUpdateSchema = productCreateSchema.partial().extend({
+  description: z.string().optional()
+});
 
 const multer = require("multer");
 const fs = require("fs");
@@ -168,6 +194,7 @@ router.post(
   "/",
   authMiddleware,
   adminOrOwnerMiddleware,
+  validateBody(productCreateSchema),
   async (req, res) => {
     try {
       const {
@@ -184,9 +211,9 @@ router.post(
         data: {
           title,
           description,
-          price: Number(price),
+          price,
           image: image && image.trim() ? image.trim() : null,
-          stock: Number(stock),
+          stock,
           keywords,
           categories: {
             create: (categoryIds || []).map(id => ({
@@ -227,6 +254,7 @@ router.put(
   "/:id",
   authMiddleware,
   adminOrOwnerMiddleware,
+  validateBody(productUpdateSchema),
   async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -248,9 +276,9 @@ router.put(
           data: {
             title,
             description,
-            price: price !== undefined ? Number(price) : undefined,
+            price,
             image: image !== undefined ? (image && image.trim() ? image.trim() : null) : undefined,
-            stock: stock !== undefined ? Number(stock) : undefined,
+            stock,
             keywords
           }
         });
