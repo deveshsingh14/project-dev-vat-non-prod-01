@@ -36,6 +36,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
 const pincodeRoutes = require("./routes/pincodeRoutes");
 const prisma = require("./config/db");
+const errorHandler = require("./middleware/errorHandler");
 
 
 const app = express();
@@ -97,6 +98,13 @@ app.get("/health", async (req, res) => {
     });
   }
 });
+
+// ADDED: registered last, after every route — a safety net for
+// whatever reaches Express without a route already having handled it
+// (unawaited async errors, malformed JSON bodies, anything thrown by
+// middleware), not a replacement for the try/catch blocks in the
+// route files.
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
