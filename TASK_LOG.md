@@ -73,10 +73,59 @@ frontend via GitHub Pages).
     pincode is rejected with 400. Cleaned up the test orders/user
     afterward and restored product stock.
 
+- **Bug fix: uploaded product images disappeared after every backend
+  restart/redeploy**
+  - Root cause: `POST /products/upload` wrote images to the backend's
+    local disk (`uploads/`) via multer, served through
+    `express.static("uploads")`. Render's filesystem is ephemeral — any
+    file written at runtime (i.e. every image an admin ever uploaded
+    through the panel) is wiped on the next restart/redeploy. Only the
+    handful of images already committed to git survived.
+  - Fixed by moving image storage to Cloudinary: `uploadMiddleware.js`
+    now uses `multer.memoryStorage()` instead of `diskStorage`, and the
+    `/products/upload` route uploads the in-memory buffer straight to
+    Cloudinary (`src/config/cloudinary.js`) and returns its absolute
+    `secure_url`. No frontend change needed — `imgSrc()` in
+    store.js/admin.js/checkout.js/account.js already passed absolute
+    URLs through unchanged.
+  - Data migration: the 6 product images that had survived from an
+    earlier migration (still present in `uploads/` and referenced by
+    Product rows) were uploaded to Cloudinary and their DB `image`
+    fields updated to the new Cloudinary URLs, via a one-off script
+    (run once, then deleted — not part of the codebase).
+  - **8 products already had dangling `/uploads/...` references from
+    before this fix** — those specific files were already wiped by a
+    prior restart and are unrecoverable. They'll show broken/no image
+    until an admin re-uploads through the panel (now durable). Affected:
+    Garnier Facewash (28), Mamaearth facewash (30), Fair and Lovely
+    facewash (29), Biotique Facewash (32 and 73), Vaseline Complete 10
+    (7), Mamaearth Vitamin C daily Facewash (13), Everyouth Chocolate
+    and Cherry Scrub (27).
+  - New required env vars: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
+    `CLOUDINARY_API_SECRET` — set locally in `.env` (git-ignored) and
+    must also be added to the Render dashboard's environment variables
+    for the backend service, or production uploads will fail. Placeholder
+    documented in `.env.example` and `README.md`.
+  - Tested end-to-end: uploaded a real image through `/products/upload`
+    with a valid admin token → got back a Cloudinary URL → confirmed
+    that URL still returns `200` even with the backend process killed
+    (`kill -9`), proving persistence no longer depends on the backend
+    process/disk. Regression-checked: non-image file still rejected
+    with `400`, unauthenticated upload still rejected with `401`.
+    Verified `GET /products/:id` returns the new Cloudinary URLs for
+    migrated products via the live API. Cleaned up the test image from
+    Cloudinary afterward.
+  - **Caught mid-task**: real Cloudinary credentials were briefly pasted
+    into the git-tracked `.env.example` instead of the git-ignored
+    `.env`. Fixed before anything was committed — moved the real values
+    to `.env`, restored `.env.example` to placeholders. Nothing was
+    ever pushed with the real secret in it.
+
 ## Pending
 
 Nothing outstanding right now — all three requested changes plus the
-delete-product bug fix are implemented, tested, and pushed.
+delete-product bug fix, the pincode restriction feature, and the
+image-persistence fix are implemented, tested, and pushed.
 
 ## Notes / things surfaced along the way (not acted on unless listed above)
 

@@ -3,6 +3,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const express = require("express");
 const prisma = require("../config/db");
+const cloudinary = require("../config/cloudinary");
 
 const router = express.Router();
 
@@ -323,12 +324,22 @@ router.post(
         });
       }
 
-      // CHANGED: return a RELATIVE path. The frontend prefixes API_URL
-      // itself (see imgSrc in store.js / admin), so images keep working
-      // no matter where the API is deployed.
+      // CHANGED: images now go to Cloudinary instead of local disk —
+      // Render's filesystem is ephemeral, so anything written to local
+      // disk at runtime was being wiped on every backend restart/
+      // redeploy. Cloudinary's URL is absolute and survives restarts;
+      // the frontend's imgSrc() already passes absolute URLs through
+      // unchanged.
+      const b64 = req.file.buffer.toString("base64");
+      const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+
+      const result = await cloudinary.uploader.upload(dataUri, {
+        folder: "radha-products"
+      });
+
       res.json({
         message: "Image uploaded successfully",
-        imageUrl: `/uploads/${req.file.filename}`
+        imageUrl: result.secure_url
       });
     } catch (error) {
       console.log(error);

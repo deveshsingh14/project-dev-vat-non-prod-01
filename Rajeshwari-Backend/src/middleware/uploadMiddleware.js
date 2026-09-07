@@ -1,31 +1,11 @@
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
 
-// ADDED: make sure the uploads folder exists — multer does NOT create
-// it, and a missing folder makes every upload fail with ENOENT.
-const UPLOAD_DIR = "uploads/";
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-
-  filename: (req, file, cb) => {
-    // CHANGED: don't trust the original filename. Keep only its
-    // extension (whitelisted below) and generate our own name, so
-    // weird characters or path tricks in the upload name can't matter.
-    const ext = path.extname(file.originalname).toLowerCase();
-    const uniqueName =
-      Date.now() + "-" + Math.round(Math.random() * 1e6) + ext;
-    cb(null, uniqueName);
-  }
-
-});
+// CHANGED: uploaded images now go straight to Cloudinary (see
+// productRoutes.js), so multer just needs the file in memory rather
+// than writing it to local disk — Render's disk is wiped on every
+// restart/redeploy, which was silently losing every uploaded image.
+const storage = multer.memoryStorage();
 
 // ADDED: only allow real image types
 const fileFilter = (req, file, cb) => {

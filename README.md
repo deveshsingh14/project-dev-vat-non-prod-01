@@ -316,7 +316,19 @@ DATABASE_URL="postgresql://<username>:<password>@<neon-db-url>/<dbname>?sslmode=
 JWT_SECRET="your_secret_key"
 
 PORT=5000
+
+# Product image storage (Cloudinary) — required, see "Product Images" below
+CLOUDINARY_CLOUD_NAME="your_cloud_name"
+CLOUDINARY_API_KEY="your_api_key"
+CLOUDINARY_API_SECRET="your_api_secret"
 ```
+
+> **Credential handling**: `.env` is git-ignored and must never be committed —
+> only `.env.example` (placeholders) is tracked. The Cloudinary keys above
+> come from your Cloudinary dashboard (Settings → API Keys). For the
+> deployed backend, set the same three variables in the Render dashboard's
+> environment variables for this service — `.env` on your machine never
+> reaches Render on its own.
 
 ---
 
@@ -366,17 +378,19 @@ Password:
 
 # 📷 Product Images
 
-Images are served from
+Uploaded product images are stored on **Cloudinary**, not on the backend's
+local disk. This matters because Render's filesystem is ephemeral — a file
+written to local disk at runtime is wiped on the next restart/redeploy, so
+local storage silently lost every admin-uploaded image. Cloudinary URLs
+(`https://res.cloudinary.com/...`) are absolute and independent of the
+backend process, so they survive restarts.
 
-```
-/uploads
-```
-
-Example
-
-```
-http://localhost:5000/uploads/product.jpg
-```
+The 6 product images that survived from an earlier data migration have
+been moved to Cloudinary too, so every product's `image` field is now
+either a Cloudinary URL or empty — none should point at local `/uploads/`
+going forward. The `/uploads` static route is kept only for backward
+compatibility with any old link still floating around; new uploads (via
+the admin panel's image picker) always go to Cloudinary.
 
 ---
 
