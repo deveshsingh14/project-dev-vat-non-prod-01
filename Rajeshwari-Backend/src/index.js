@@ -1,5 +1,29 @@
 require("dotenv").config();
 
+// ADDED: fail loudly at boot if a required env var is missing, instead
+// of failing cryptically later — e.g. a missing CLOUDINARY_* var used
+// to mean uploads silently threw "Upload failed" until you noticed the
+// var was never set. Checked before requiring anything below, since
+// several of those (e.g. config/cloudinary.js) read process.env at
+// import time.
+const REQUIRED_ENV_VARS = [
+  "DATABASE_URL",
+  "JWT_SECRET",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET"
+];
+
+const missingEnvVars = REQUIRED_ENV_VARS.filter((name) => !process.env[name]);
+
+if (missingEnvVars.length > 0) {
+  console.error(
+    `Missing required environment variable(s): ${missingEnvVars.join(", ")}. ` +
+    `Set them in .env (locally) or in the Render dashboard (production) before starting the server.`
+  );
+  process.exit(1);
+}
+
 const express = require("express");
 const cors = require("cors");
 
