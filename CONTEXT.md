@@ -24,27 +24,50 @@ starting a new session, especially after an IDE/chat restart.
   filesystem is ephemeral). Requires `CLOUDINARY_CLOUD_NAME`,
   `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` in `.env` locally *and*
   in the Render dashboard's environment variables for the backend
-  service — see TASK_LOG.md and README.md "Product Images" section.
+  service (confirmed set and working in production as of 2026-09-07)
+  — see TASK_LOG.md and README.md "Product Images" section.
+- Backend now validates required env vars at boot (`DATABASE_URL`,
+  `JWT_SECRET`, `CLOUDINARY_*`) and exits with a clear message naming
+  the missing one, rather than failing cryptically later.
+- CORS is restricted to `https://deveshsingh14.github.io` and
+  `localhost:5500`/`127.0.0.1:5500` (`ALLOWED_ORIGINS` in
+  `src/index.js`) — if a new frontend origin, staging domain, or local
+  dev port is ever added, it needs to be added there or its requests
+  will silently get no CORS headers (blocked client-side by the
+  browser, not a server error).
+- `/auth/login` and `/auth/register` are rate-limited (10/15min,
+  5/hour per IP) — relevant if a future admin bulk-onboards many users
+  from one IP and hits the register limit.
+- Shared frontend helpers (`API_URL`, `esc()`, `imgSrc()`,
+  `NO_IMAGE_PLACEHOLDER`, `handle401`) live in `Rajeshwari-Frontend/
+  api.js`, loaded before every page script — add new shared logic
+  there, not copy-pasted into store.js/admin.js/checkout.js/account.js.
+- A full best-practices audit ("Radha Scaling Audit") was done — Phase
+  1 (quick wins) is complete; Phase 2 (structural: centralized error
+  handling, pagination on GET /products and GET /orders/admin/all,
+  input validation layer, structured logging, onDelete cascades in
+  schema.prisma, render.yaml, monitoring, backend CI) and Phase 3 (real
+  test framework, service layer, caching) are scoped but not started —
+  see TASK_LOG.md for the full Phase 1 breakdown.
 
 ## Active task
 
-_Nothing in progress right now._ Image-persistence fix is committed and
-pushed (commit `be9a9f9`). One follow-up still needed from you:
-
-- **Add the 3 Cloudinary env vars to the Render dashboard** (Settings →
-  Environment) for the backend service — local `.env` doesn't reach
-  Render on its own. Until you do, uploads will fail in production even
-  though they work locally.
-- 8 products have images that were already unrecoverably lost to this
-  bug before the fix landed — they need a manual re-upload through the
-  admin panel whenever convenient: Garnier Facewash, Mamaearth facewash,
-  Fair and Lovely facewash, Biotique Facewash (x2), Vaseline Complete 10,
-  Mamaearth Vitamin C daily Facewash, Everyouth Chocolate and Cherry
-  Scrub.
+_Nothing in progress right now._ Phase 1 of the scaling audit is
+committed and pushed (10 commits, `8c4894d`..`0def478`).
 
 ## Open questions / decisions pending
 
-_None._
+- Whether/when to start **Phase 2** of the scaling audit (structural
+  fixes — see above). Not urgent, but worth deciding on a timeline
+  before the catalog/order volume grows much further, since the
+  unpaginated `GET /products`/`GET /orders/admin/all` are the biggest
+  landmines in there.
+- 8 products still have images unrecoverably lost to the pre-fix
+  image-persistence bug and need a manual re-upload through the admin
+  panel whenever convenient: Garnier Facewash, Mamaearth facewash, Fair
+  and Lovely facewash, Biotique Facewash (x2), Vaseline Complete 10,
+  Mamaearth Vitamin C daily Facewash, Everyouth Chocolate and Cherry
+  Scrub.
 
 ## Last updated
 

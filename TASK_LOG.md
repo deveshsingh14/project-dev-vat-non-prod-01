@@ -121,11 +121,78 @@ frontend via GitHub Pages).
     to `.env`, restored `.env.example` to placeholders. Nothing was
     ever pushed with the real secret in it.
 
+- **Radha Scaling Audit — Phase 1 (quick wins)**
+  - Full codebase audit (33 findings across security/error-handling/
+    scalability/code-quality/testing/config/db/ops/frontend) published
+    as an artifact; Phase 1 — the small-effort, highest-leverage
+    items — implemented as 9 separate commits:
+    1. Removed the hardcoded JWT secret in `test_auth.js` (now reads
+       `process.env.JWT_SECRET`) and deleted `reset_password.js`
+       entirely — it hardcoded a live account's email + a literal new
+       password, and duplicated the already-existing, properly
+       env-driven `resetAdminPassword.js`.
+    2. Restricted CORS (`src/index.js`) to the real frontend origins
+       (`https://deveshsingh14.github.io`, `localhost:5500`/
+       `127.0.0.1:5500` for local dev) instead of `cors()` reflecting
+       every origin. Rejects with `callback(null, false)`, not an
+       Error, so a disallowed origin gets a clean 200 with no CORS
+       header rather than a 500.
+    3. Added `express-rate-limit` to `POST /auth/login` (10/15min) and
+       `POST /auth/register` (5/hour) per IP.
+    4. `npm audit fix` — 9 vulnerabilities (1 high) → 6 (all moderate,
+       all transitive through firebase-admin).
+    5. Removed the unused Firebase Admin wiring (`src/config/
+       firebase.js` + the `firebase-admin` dependency) — confirmed
+       zero importers anywhere and no planned-use mention first. This
+       also fully cleared the remaining moderate vulnerabilities:
+       `npm audit` is now 0/0/0/0. The local, git-ignored
+       `firebase-service-account.json` was left on disk in case it's
+       needed again.
+    6. Added boot-time validation in `src/index.js` for `DATABASE_URL`,
+       `JWT_SECRET`, and the 3 `CLOUDINARY_*` vars — exits with a
+       clear message naming exactly which var is missing, instead of
+       failing cryptically later (this is exactly what happened with
+       the Cloudinary rollout above).
+    7. Consolidated `API_URL`, `esc()`, `NO_IMAGE_PLACEHOLDER`, and
+       `imgSrc()` — previously identical copies in `store.js`,
+       `admin.js`, `checkout.js`, `account.js` — into the shared
+       `api.js` (already home to `handle401`).
+    8. Added `@@index` to the frequently-filtered FK columns (`Cart`,
+       `Wishlist`, `Order`, `OrderItem`, `ProductCategory`) via a
+       hand-written migration (generated with the read-only
+       `prisma migrate diff`, applied with `prisma migrate deploy` —
+       never `migrate dev`, per the drift note below).
+    9. Added a real `GET /health` that runs `SELECT 1` through Prisma
+       and returns `{status, db, timestamp}` — 200 when connected, 503
+       when not.
+  - Tested end-to-end after every single item against the real dev
+    DB/API before moving to the next (details in each commit message):
+    boot with/without required env vars, CORS allowed vs. disallowed
+    origin, rate limits tripping at the 11th/6th request while a
+    single normal request is unaffected, `npm audit` before/after,
+    server still boots after removing firebase-admin, `node --check`
+    on api.js concatenated with each page script (catches duplicate-
+    declaration errors a browser's shared global scope would hit),
+    `imgSrc()`/`esc()` output verified identical to pre-refactor
+    behavior, all 9 new indexes confirmed present via a direct
+    `pg_indexes` query, `/health` returns 200 connected and 503
+    disconnected (tested against a deliberately broken `DATABASE_URL`
+    in a throwaway `.env` copy, restored and verified byte-for-byte
+    afterward). Final full pass across all 9 changes together before
+    pushing.
+  - Phase 2 (structural: centralized error middleware, pagination,
+    input validation, structured logging, onDelete cascades,
+    render.yaml, monitoring, backend CI) and Phase 3 (real test
+    framework, service layer, caching) are documented in the audit but
+    not started — see CONTEXT.md.
+
 ## Pending
 
-Nothing outstanding right now — all three requested changes plus the
-delete-product bug fix, the pincode restriction feature, and the
-image-persistence fix are implemented, tested, and pushed.
+Nothing outstanding right now — all three original requested changes,
+the delete-product bug fix, the pincode restriction feature, the
+image-persistence fix, and Phase 1 of the scaling audit are
+implemented, tested, and pushed. Phase 2/3 of the audit are scoped
+but not scheduled — see CONTEXT.md.
 
 ## Notes / things surfaced along the way (not acted on unless listed above)
 
