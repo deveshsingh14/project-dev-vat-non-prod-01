@@ -332,11 +332,9 @@ router.delete(
     try {
       const id = Number(req.params.id);
 
-      await prisma.cart.deleteMany({ where: { productId: id } });
-      await prisma.wishlist.deleteMany({ where: { productId: id } });
-      await prisma.orderItem.deleteMany({ where: { productId: id } });
-      await prisma.productCategory.deleteMany({ where: { productId: id } });
-
+      // CHANGED: cart/wishlist/orderItem/productCategory rows for this
+      // product now cascade-delete at the DB level (onDelete: Cascade
+      // in schema.prisma) — no need to manually delete them first.
       await prisma.product.delete({ where: { id } });
 
       res.json({ message: "Product deleted" });

@@ -283,17 +283,9 @@ router.delete(
         return res.status(403).json({ message: "Cannot delete the Superadmin account" });
       }
 
-      // 3. Manual cascade delete related records
-      await prisma.cart.deleteMany({ where: { userId: id } });
-      await prisma.wishlist.deleteMany({ where: { userId: id } });
-
-      const userOrders = await prisma.order.findMany({ where: { userId: id }, select: { id: true } });
-      const orderIds = userOrders.map(o => o.id);
-      
-      if (orderIds.length > 0) {
-        await prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } });
-        await prisma.order.deleteMany({ where: { userId: id } });
-      }
+      // 3. Cart/wishlist/order(+items) for this user now cascade-delete
+      // at the DB level (onDelete: Cascade in schema.prisma) — no need
+      // to manually delete them first.
 
       // 4. Finally delete user
       await prisma.user.delete({ where: { id } });

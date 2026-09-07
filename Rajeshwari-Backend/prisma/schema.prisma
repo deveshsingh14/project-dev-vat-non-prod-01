@@ -60,8 +60,8 @@ model ProductCategory {
   id         Int      @id @default(autoincrement())
   productId  Int
   categoryId Int
-  product    Product  @relation(fields: [productId], references: [id])
-  category   Category @relation(fields: [categoryId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([categoryId])
@@ -75,8 +75,8 @@ model Cart {
   userId    Int
   productId Int
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -91,8 +91,8 @@ model Wishlist {
   userId    Int
   productId Int
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -122,7 +122,7 @@ model Order {
   pincode  String?
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   orderItems OrderItem[]
 
@@ -159,8 +159,8 @@ model OrderItem {
   orderId   Int
   productId Int
 
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([productId])
