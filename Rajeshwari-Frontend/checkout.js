@@ -2,7 +2,7 @@
    delivery details from /users/me, shows the bag summary, and places
    the order with the chosen payment method. */
 
-const API_URL = "https://project-dev-vat-non-prod-01.onrender.com";
+// API_URL, esc(), NO_IMAGE_PLACEHOLDER and imgSrc() live in api.js.
 // Set this to your real UPI id to render the scan-to-pay QR:
 const UPI_ID = "radha@upi";
 const UPI_NAME = "Radha Bangles Jewellery";
@@ -13,17 +13,7 @@ function authHeaders(json) {
   if (json) h["Content-Type"] = "application/json";
   return h;
 }
-function esc(v) {
-  if (v === null || v === undefined) return "";
-  return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
 function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
-const NO_IMAGE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f4ede4'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%23b8a68f' text-anchor='middle' dominant-baseline='middle'%3ENo image%3C/text%3E%3C/svg%3E";
-function imgSrc(image) {
-  if (!image) return NO_IMAGE_PLACEHOLDER;
-  return image.startsWith("http") ? image : API_URL + image;
-}
 function toast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg; t.classList.add("show");
