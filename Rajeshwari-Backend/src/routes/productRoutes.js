@@ -164,6 +164,15 @@ router.get("/:id", async (req, res) => {
   try {
     const id = Number(req.params.id);
 
+    // ADDED: a non-numeric id (e.g. /products/abc) previously reached
+    // Prisma as NaN and threw a raw PrismaClientValidationError instead
+    // of a clean 400.
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
+        message: "Invalid product id"
+      });
+    }
+
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
