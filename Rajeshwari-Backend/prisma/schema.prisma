@@ -63,6 +63,8 @@ model ProductCategory {
   product    Product  @relation(fields: [productId], references: [id])
   category   Category @relation(fields: [categoryId], references: [id])
 
+  @@index([productId])
+  @@index([categoryId])
   @@map("product_category")
 }
 
@@ -78,6 +80,8 @@ model Cart {
 
   createdAt DateTime @default(now())
 
+  @@index([userId])
+  @@index([productId])
   @@map("cart")
 }
 
@@ -92,6 +96,8 @@ model Wishlist {
 
   createdAt DateTime @default(now())
 
+  @@index([userId])
+  @@index([productId])
   @@map("wishlist")
 }
 
@@ -122,6 +128,7 @@ model Order {
 
   createdAt DateTime @default(now())
 
+  @@index([userId])
   @@map("order")
 }
 
@@ -155,5 +162,7 @@ model OrderItem {
   order   Order   @relation(fields: [orderId], references: [id])
   product Product @relation(fields: [productId], references: [id])
 
+  @@index([orderId])
+  @@index([productId])
   @@map("order_item")
 }
