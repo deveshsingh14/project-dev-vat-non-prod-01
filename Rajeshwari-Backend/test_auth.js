@@ -1,7 +1,8 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 async function test() {
-  const token = jwt.sign({ id: 6, role: 'ADMIN' }, 'radha_dev_secret_key');
+  const token = jwt.sign({ id: 6, role: 'ADMIN' }, process.env.JWT_SECRET);
   console.log("Token:", token);
   
   const res = await fetch('http://localhost:5000/users', {
