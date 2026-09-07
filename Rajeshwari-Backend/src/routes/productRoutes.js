@@ -24,6 +24,7 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
       try {
         let successCount = 0;
         let errors = [];
+        const categoryCache = new Map();
 
         for (const row of results) {
           try {
@@ -42,9 +43,13 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
             if (category) {
               // Create or find category
               const catName = category.trim();
-              let catRecord = await prisma.category.findUnique({ where: { name: catName } });
+              let catRecord = categoryCache.get(catName);
               if (!catRecord) {
-                catRecord = await prisma.category.create({ data: { name: catName } });
+                catRecord = await prisma.category.findUnique({ where: { name: catName } });
+                if (!catRecord) {
+                  catRecord = await prisma.category.create({ data: { name: catName } });
+                }
+                categoryCache.set(catName, catRecord);
               }
               catData = { create: [{ categoryId: catRecord.id }] };
             }
