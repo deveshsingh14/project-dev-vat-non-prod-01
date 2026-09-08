@@ -76,32 +76,41 @@ starting a new session, especially after an IDE/chat restart.
   (fails on high+ vulns) plus lint/test `--if-present` on push/PR to
   main (paths-scoped to Rajeshwari-Backend/). No lint/test script
   exists in package.json yet, so those steps currently no-op.
+- **Sentry error monitoring is live.** `SENTRY_DSN` in `.env` (optional
+  — app runs fine without it, just with no error reporting) makes
+  `src/config/logger.js` wrap `logger.error` to also call
+  `Sentry.captureException` — every route's existing error logging
+  already reports to Sentry automatically, no per-route changes
+  needed. Confirmed working end-to-end (you checked the Sentry
+  dashboard yourself for the test events). `SENTRY_DSN` also needs to
+  be added to the Render dashboard's env vars for production
+  reporting to work, same as Cloudinary was.
+- `GET /products/:id` now rejects a non-numeric id with a clean 400
+  instead of throwing a raw Prisma error — the same
+  `Number(req.params.id)`-with-no-check pattern likely exists on other
+  `:id` routes (PUT/DELETE `/products/:id`, `/orders/:id/status`,
+  `/users/:id`, etc.), not swept, only the one that was flagged.
 - A full best-practices audit ("Radha Scaling Audit") was done — Phase
-  1 (quick wins, all 9 items) and Phase 2 (structural, items 1-6 and 8
-  of 8) are complete. Phase 2 item 7 (Sentry error monitoring) and
-  Phase 3 (real test framework, service layer, caching) are scoped but
-  not started — see below and TASK_LOG.md for the full breakdown.
+  1 (all 9 items) and Phase 2 (all 8 items, including Sentry) are both
+  **complete**. Phase 3 (real test framework, service layer, caching)
+  is scoped but not started — see TASK_LOG.md for the full breakdown.
 
 ## Active task
 
 _Nothing in progress right now._ Phase 1 (10 commits, `8c4894d`..
-`b494b26`) and Phase 2 items 1-6/8 (7 commits, `d097b28`..`77cd8db`)
+`b494b26`) and Phase 2, all 8 items (9 commits, `d097b28`..latest),
 of the scaling audit are committed and pushed.
 
 ## Open questions / decisions pending
 
-- **Phase 2 item 7 (Sentry error monitoring)** is blocked on you: it
-  needs a new external account + DSN, which the task explicitly said
-  to check on before proceeding. Decide whenever convenient — free
-  tier is fine to start.
 - Whether/when to start **Phase 3** of the audit (real test framework,
   a thin service layer to remove repeated CRUD/cascade boilerplate,
   a caching layer). Not urgent.
-- A small, pre-existing, unrelated bug surfaced while testing Phase 2:
-  `GET /products/:id` with a non-numeric id (e.g. `/products/abc`)
-  throws a raw Prisma validation error instead of a clean 400/404.
-  Noticed only because the new structured logger made it visible;
-  worth a quick fix whenever convenient.
+- Whether to sweep the non-numeric-id-crashes-a-route pattern across
+  the other `:id` routes beyond the one already fixed.
+- Remember to add `SENTRY_DSN` to the Render dashboard's env vars if
+  you haven't yet — local `.env` doesn't reach production on its own
+  (same lesson as Cloudinary).
 - 8 products still have images unrecoverably lost to the pre-fix
   image-persistence bug and need a manual re-upload through the admin
   panel whenever convenient: Garnier Facewash, Mamaearth facewash, Fair
@@ -111,4 +120,4 @@ of the scaling audit are committed and pushed.
 
 ## Last updated
 
-2026-09-07
+2026-09-08

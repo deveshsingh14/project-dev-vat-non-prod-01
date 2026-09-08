@@ -321,14 +321,24 @@ PORT=5000
 CLOUDINARY_CLOUD_NAME="your_cloud_name"
 CLOUDINARY_API_KEY="your_api_key"
 CLOUDINARY_API_SECRET="your_api_secret"
+
+# Error monitoring (Sentry) — optional, from your Sentry project's DSN
+SENTRY_DSN="your_sentry_dsn"
 ```
 
 > **Credential handling**: `.env` is git-ignored and must never be committed —
 > only `.env.example` (placeholders) is tracked. The Cloudinary keys above
-> come from your Cloudinary dashboard (Settings → API Keys). For the
-> deployed backend, set the same three variables in the Render dashboard's
-> environment variables for this service — `.env` on your machine never
-> reaches Render on its own.
+> come from your Cloudinary dashboard (Settings → API Keys), and
+> `SENTRY_DSN` from your Sentry project's Settings → Client Keys (DSN).
+> For the deployed backend, set the same variables in the Render
+> dashboard's environment variables for this service — `.env` on your
+> machine never reaches Render on its own.
+
+> **Error monitoring**: without `SENTRY_DSN` set, the app runs exactly
+> as before — errors just aren't reported anywhere external. When it's
+> set, every error already logged via `logger.error(...)` (see
+> `src/config/logger.js`) is also reported to Sentry, with no other
+> code changes needed anywhere.
 
 ---
 

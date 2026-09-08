@@ -256,31 +256,55 @@ frontend via GitHub Pages).
     every step run locally and confirmed passing/no-op. Final full
     pass across every Phase 2 change together (plus Phase 1 features)
     before pushing.
-  - Item 7 (Sentry error monitoring) is intentionally **not started**
-    — it needs a new external account/DSN, which the task explicitly
-    said to check on first. See CONTEXT.md.
-  - **Surfaced along the way (not fixed, out of scope)**: `GET
-    /products/:id` with a non-numeric id (e.g. `/products/abc`) throws
-    a `PrismaClientValidationError` (`Number("abc")` → `NaN` passed
-    straight to `findUnique`) instead of a clean 400/404. Pre-existing,
-    unrelated to anything in Phase 1 or 2 — just noticed because the
-    new structured logger made the error visible and readable for the
-    first time.
+  - **Surfaced along the way, fixed separately**: `GET /products/:id`
+    with a non-numeric id (e.g. `/products/abc`) was throwing a raw
+    `PrismaClientValidationError` (`Number("abc")` → `NaN` passed
+    straight to `findUnique`) instead of a clean 400/404 — noticed
+    because the new structured logger made the error visible for the
+    first time. Fixed with a `Number.isInteger(id)` check returning a
+    clean 400. Tested: `/products/abc` and `/products/1.5` → 400; a
+    valid existing id → 200; a valid but nonexistent id still → 404.
+    Same `Number(req.params.id)`-with-no-check pattern likely exists
+    on other `:id` routes (PUT/DELETE `/products/:id`,
+    `/orders/:id/status`, `/users/:id`, etc.) — not swept, only the
+    one that was actually flagged.
+
+- **Radha Scaling Audit — Phase 2 item 7 (Sentry error monitoring)**
+  - Installed `@sentry/node`. `src/config/logger.js` now initializes
+    Sentry (`Sentry.init({ dsn: process.env.SENTRY_DSN })`) only if
+    `SENTRY_DSN` is set, then wraps `logger.error` so every existing
+    `logger.error(err)` call — already present in every route's catch
+    block from item 4 — also reports to Sentry via
+    `Sentry.captureException`, with no changes needed in any route
+    file. `SENTRY_DSN` is deliberately **not** in the boot-time
+    required-env-vars list: it's optional, and the app runs exactly as
+    before (just with no error reporting) if it's absent.
+  - Tested end-to-end: sent 2 standalone test events directly via the
+    SDK (`Sentry.flush()` confirmed delivery — `true`, meaning the DSN
+    is valid and the transport succeeded), then triggered a real error
+    through the running app (malformed JSON → errorHandler.js →
+    `logger.error` → the wrapper → Sentry) to exercise the actual
+    integration path, not just the SDK in isolation. Confirmed normal
+    routes (GET /products, GET /health) still 200 with Sentry active.
+    **You confirmed** all 3 test events actually appeared in the
+    Sentry dashboard's Issues list — closes the loop I couldn't verify
+    myself (no access to your Sentry account).
+  - This completes Phase 2 of the scaling audit (all 8 items).
 
 ## Pending
 
 Nothing outstanding right now from the original requests, the
 delete-product bug fix, the pincode restriction feature, the
-image-persistence fix, or Phase 1/2 (items 1-6, 8) of the scaling
-audit — all implemented, tested, and pushed.
+image-persistence fix, or Phase 1/2 (all 8 items) of the scaling
+audit — all implemented, tested, and pushed. Phase 2 is fully
+complete.
 
 Still open:
-- **Phase 2 item 7** (Sentry error monitoring) — needs your decision
-  on creating a Sentry account before it's implemented.
 - **Phase 3** of the audit (real test framework, service layer,
   caching) — scoped but not scheduled.
-- The pre-existing `GET /products/:id` non-numeric-id bug noted above
-  — small, unrelated fix whenever it's worth doing.
+- The same non-numeric-id-crashes-a-route pattern noted above likely
+  exists on other `:id` routes beyond the one fixed — a sweep across
+  them whenever it's worth doing.
 
 ## Notes / things surfaced along the way (not acted on unless listed above)
 
