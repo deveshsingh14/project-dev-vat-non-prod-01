@@ -77,6 +77,7 @@ async function boot() {
     ]);
     PRODUCTS = (await prodRes.json()).items.map(normalizeProduct);
     CATEGORIES = await catRes.json();
+    categoryCoverMap = null; // Invalidate map when products reload
   } catch (e) {
     console.log(e);
     document.getElementById("masonry").innerHTML =
@@ -101,10 +102,22 @@ function renderSkeletons() {
 // ============================================================
 //  CATEGORY STORIES + CHIPS  (driven by the real DB categories)
 // ============================================================
+let categoryCoverMap = null;
 function categoryCover(cat) {
   // First product image in this category becomes the story face.
-  const p = PRODUCTS.find(pr => pr.categoryList.includes(cat.name));
-  return p ? imgSrc(p.image) : "";
+  // Precompute map to avoid O(N*M) lookup
+  if (!categoryCoverMap) {
+    categoryCoverMap = {};
+    for (const pr of PRODUCTS) {
+      if (!pr.categoryList) continue;
+      for (const c of pr.categoryList) {
+        if (!categoryCoverMap[c]) {
+          categoryCoverMap[c] = imgSrc(pr.image);
+        }
+      }
+    }
+  }
+  return categoryCoverMap[cat.name] || "";
 }
 function renderStories() {
   const rail = document.getElementById("storiesRail");
