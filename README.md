@@ -452,7 +452,7 @@ the admin panel's image picker) always go to Cloudinary.
 
 # 👨‍💻 Developed By
 
-**Vatsal Patwa**
+**Devesh**
 
 MS Library & Information Science  
 Indian Statistical Institute, Bangalore
