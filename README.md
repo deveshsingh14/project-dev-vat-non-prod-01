@@ -453,10 +453,6 @@ the admin panel's image picker) always go to Cloudinary.
 # 👨‍💻 Developed By
 
 **Devesh**
-
-MS Library & Information Science  
-Indian Statistical Institute, Bangalore
-
 ---
 
 # 📄 License
