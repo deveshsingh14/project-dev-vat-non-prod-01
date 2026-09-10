@@ -31,6 +31,7 @@ let CUSTOMERS = [];
 let CATEGORIES = [];
 let PINCODE_SETTING = { enabled: false, pincodes: [] };
 let productById = {};
+let orderById = {};
 let charts = {};
 
 // ---------- helpers ----------
@@ -120,6 +121,8 @@ async function loadAll() {
     PINCODE_SETTING = pincodeSetting || { enabled: false, pincodes: [] };
     productById = {};
     PRODUCTS.forEach(p => (productById[p.id] = p));
+    orderById = {};
+    ORDERS.forEach(o => (orderById[o.id] = o));
 
     renderDashboard();
     renderProducts();
@@ -582,13 +585,13 @@ function renderOrders() {
 async function updateOrderStatus(id, status) {
   try {
     await api(`/orders/${id}/status`, { method: "PUT", headers: authHeaders(true), body: JSON.stringify({ status }) });
-    const o = ORDERS.find(o => o.id === id); if (o) o.status = status;
+    const o = orderById[id]; if (o) o.status = status;
     toast(`Order #${id} → ${status}`);
     renderDashboard(); renderPayments();
   } catch (e) { console.log(e); toast("Couldn't update status", "err"); }
 }
 function viewOrder(id) {
-  const o = ORDERS.find(o => o.id === id); if (!o) return;
+  const o = orderById[id]; if (!o) return;
   document.getElementById("detailsTitle").textContent = `Order #${o.id}`;
   const items = (o.orderItems || []).map(i => `
     <div class="order-line">
@@ -673,7 +676,7 @@ async function setPayment(id, paymentStatus) {
       method: "PUT", headers: authHeaders(true),
       body: JSON.stringify({ paymentStatus })
     });
-    const o = ORDERS.find(o => o.id === id);
+    const o = orderById[id];
     if (o) o.paymentStatus = paymentStatus;
     toast(`Order #${id} payment → ${paymentStatus}`);
     renderPayments();
