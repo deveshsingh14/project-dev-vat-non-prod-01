@@ -58,7 +58,14 @@ router.post("/checkout", authMiddleware, async (req, res) => {
       }
     }
 
-    const method = paymentMethod === "UPI" ? "UPI" : "COD";
+    // CHANGED: online UPI prepay is temporarily disabled (the QR shown
+    // at checkout was never wired to a real UPI id, so it never
+    // actually collected payment) — force COD regardless of what's
+    // sent, so a direct API call can't bypass the UI's disabled
+    // option either. Re-enable by restoring
+    // `paymentMethod === "UPI" ? "UPI" : "COD"` once a real UPI id or
+    // payment gateway is wired up.
+    const method = "COD";
 
     const order = await prisma.$transaction(async (tx) => {
 

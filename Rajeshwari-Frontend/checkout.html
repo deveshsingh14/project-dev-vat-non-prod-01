@@ -59,6 +59,10 @@
               <div class="po-sub">Pay in cash or UPI when your order arrives.</div>
             </div>
           </label>
+          <!-- Online UPI prepay is temporarily disabled — UPI_ID in
+               checkout.js was never set to a real UPI id, so this QR
+               was never collecting real payment. Re-enable once a real
+               UPI id (or a real payment gateway) is wired up.
           <label class="pay-opt" id="opt-UPI">
             <input type="radio" name="pay" value="UPI" onchange="pickPay('UPI')">
             <div>
@@ -66,12 +70,15 @@
               <div class="po-sub">Pay now by scanning our UPI QR. We confirm your payment before dispatch.</div>
             </div>
           </label>
+          -->
         </div>
+        <!--
         <div class="upi-box" id="upiBox" style="display:none;">
           <img id="upiQr" alt="UPI QR code">
           <p>Scan with any UPI app (GPay, PhonePe, Paytm).<br>
           Use your <strong>order number</strong> as the payment note after placing the order.</p>
         </div>
+        -->
       </div>
     </div>
 

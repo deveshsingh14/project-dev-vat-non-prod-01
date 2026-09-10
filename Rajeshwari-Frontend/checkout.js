@@ -46,10 +46,9 @@ async function boot() {
 
   await loadSummary();
 
-  // UPI QR
-  const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&cu=INR`;
-  document.getElementById("upiQr").src =
-    `https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${encodeURIComponent(upiUrl)}`;
+  // UPI QR generation is disabled along with the UPI payment option
+  // in checkout.html (see the comment there) — nothing to do here
+  // while it's disabled.
 }
 function setVal(id, v) { if (v) document.getElementById(id).value = v; }
 
@@ -88,8 +87,13 @@ async function loadSummary() {
 function pickPay(method) {
   payMethod = method;
   document.getElementById("opt-COD").classList.toggle("sel", method === "COD");
-  document.getElementById("opt-UPI").classList.toggle("sel", method === "UPI");
-  document.getElementById("upiBox").style.display = method === "UPI" ? "block" : "none";
+  // opt-UPI / upiBox are commented out in checkout.html while online
+  // UPI prepay is disabled (see the comment there) — guard instead of
+  // assuming they exist, so this doesn't throw if pickPay ever runs.
+  const optUpi = document.getElementById("opt-UPI");
+  if (optUpi) optUpi.classList.toggle("sel", method === "UPI");
+  const upiBox = document.getElementById("upiBox");
+  if (upiBox) upiBox.style.display = method === "UPI" ? "block" : "none";
 }
 
 async function placeOrder() {
