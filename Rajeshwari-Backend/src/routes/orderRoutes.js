@@ -92,10 +92,7 @@ router.post("/checkout", authMiddleware, async (req, res) => {
         )
       );
 
-      let totalAmount = 0;
-      cartItems.forEach(item => {
-        totalAmount += item.product.price * item.quantity;
-      });
+      const totalAmount = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
       const created = await tx.order.create({
         data: {
