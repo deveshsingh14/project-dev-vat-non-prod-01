@@ -15,7 +15,7 @@
 let PRODUCTS = [];          // normalized products
 let CATEGORIES = [];
 let WISHLIST = [];          // raw wishlist rows {id, productId, product}
-let savedProductIds = new Set();
+let savedProductIds = new Map(); // maps productId -> wishlistItemId
 let activeCategory = "";    // category name; "" = all
 let searchQuery = "";
 let isLogin = true;
@@ -368,13 +368,13 @@ document.getElementById("productSheet").addEventListener("click", function (e) {
 //  WISHLIST  (one system: the API)
 // ============================================================
 async function refreshWishlist() {
-  if (!token()) { WISHLIST = []; savedProductIds = new Set(); updateWishCount(); return; }
+  if (!token()) { WISHLIST = []; savedProductIds = new Map(); updateWishCount(); return; }
   try {
     const res = await fetch(`${API_URL}/wishlist`, { headers: authHeaders() });
     if (handle401(res)) return;
     if (!res.ok) return;
     WISHLIST = await res.json();
-    savedProductIds = new Set(WISHLIST.map(w => w.productId ?? w.product?.id));
+    savedProductIds = new Map(WISHLIST.map(w => [w.productId ?? w.product?.id, w.id]));
     updateWishCount();
   } catch (e) { console.log(e); }
 }
@@ -407,10 +407,10 @@ async function saveToWishlist(id) {
   } catch (e) { console.log(e); }
 }
 async function removeSave(productId) {
-  const row = WISHLIST.find(w => (w.productId ?? w.product?.id) === productId);
-  if (!row) return;
+  const wishlistItemId = savedProductIds.get(productId);
+  if (!wishlistItemId) return;
   try {
-    await fetch(`${API_URL}/wishlist/${row.id}`, { method: "DELETE", headers: authHeaders() });
+    await fetch(`${API_URL}/wishlist/${wishlistItemId}`, { method: "DELETE", headers: authHeaders() });
     await refreshWishlist();
     applyFilters();
     renderWishlistDrawer();
@@ -630,7 +630,7 @@ function finishLogin(jwt) {
 }
 function logout() {
   localStorage.removeItem("token");
-  savedProductIds = new Set(); WISHLIST = [];
+  savedProductIds = new Map(); WISHLIST = [];
   updateAuthUI(); updateWishCount(); refreshCartCount(); applyFilters();
   toast("Logged out");
 }
