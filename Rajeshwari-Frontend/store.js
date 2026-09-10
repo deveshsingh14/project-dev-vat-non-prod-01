@@ -79,7 +79,7 @@ async function boot() {
     CATEGORIES = await catRes.json();
     categoryCoverMap = null; // Invalidate map when products reload
   } catch (e) {
-    console.log(e);
+    console.error("Error loading storefront data:", e);
     document.getElementById("masonry").innerHTML =
       `<div class="empty-feed" style="column-span:all"><div class="big">⚠</div>
        Couldn't reach the store. Is the backend running?</div>`;
@@ -376,7 +376,9 @@ async function refreshWishlist() {
     WISHLIST = await res.json();
     savedProductIds = new Map(WISHLIST.map(w => [w.productId ?? w.product?.id, w.id]));
     updateWishCount();
-  } catch (e) { console.log(e); }
+  } catch (e) {
+    console.error("Error refreshing wishlist:", e);
+  }
 }
 function updateWishCount() {
   const el = document.getElementById("wishCount");
@@ -404,7 +406,10 @@ async function saveToWishlist(id) {
       syncSheetHeart(id);
       toast("Saved ♥");
     }
-  } catch (e) { console.log(e); }
+  } catch (e) {
+    console.error("Error saving to wishlist:", e);
+    toast("Couldn't save to wishlist");
+  }
 }
 async function removeSave(productId) {
   const wishlistItemId = savedProductIds.get(productId);
@@ -416,7 +421,10 @@ async function removeSave(productId) {
     renderWishlistDrawer();
     syncSheetHeart(productId);
     toast("Removed from saved");
-  } catch (e) { console.log(e); }
+  } catch (e) {
+    console.error("Error removing from wishlist:", e);
+    toast("Couldn't remove from saved");
+  }
 }
 function syncSheetHeart(id) {
   const h = document.getElementById("sheetHeart");
@@ -471,7 +479,9 @@ async function refreshCartCount() {
     const n = items.reduce((s, i) => s + i.quantity, 0);
     el.textContent = n || "";
     el.dataset.zero = n ? "0" : "1";
-  } catch (e) { console.log(e); }
+  } catch (e) {
+    console.error("Error refreshing cart count:", e);
+  }
 }
 async function addToCart(productId, silent) {
   if (!token()) { openAuth(); return; }
@@ -485,7 +495,10 @@ async function addToCart(productId, silent) {
       if (!silent) toast("Added to bag 🛍");
       refreshCartCount();
     }
-  } catch (e) { console.log(e); }
+  } catch (e) {
+    console.error("Error adding to cart:", e);
+    if (!silent) toast("Couldn't add to bag");
+  }
 }
 function quickAdd(e, id) { e.stopPropagation(); addToCart(id); }
 
@@ -528,7 +541,10 @@ async function loadCartDrawer() {
       </div>`;
     }).join("");
     document.getElementById("cartTotal").textContent = inr(total);
-  } catch (e) { console.log(e); }
+  } catch (e) {
+    console.error("Error loading cart drawer:", e);
+    toast("Couldn't load cart");
+  }
 }
 async function changeQty(cartItemId, qty) {
   if (qty < 1) return removeCartItem(cartItemId);
@@ -538,13 +554,19 @@ async function changeQty(cartItemId, qty) {
       body: JSON.stringify({ quantity: qty })
     });
     loadCartDrawer(); refreshCartCount();
-  } catch (e) { console.log(e); }
+  } catch (e) {
+    console.error("Error changing quantity:", e);
+    toast("Couldn't update quantity");
+  }
 }
 async function removeCartItem(cartItemId) {
   try {
     await fetch(`${API_URL}/cart/${cartItemId}`, { method: "DELETE", headers: authHeaders() });
     loadCartDrawer(); refreshCartCount();
-  } catch (e) { console.log(e); }
+  } catch (e) {
+    console.error("Error removing cart item:", e);
+    toast("Couldn't remove item");
+  }
 }
 function goToCheckout() { window.location.href = "checkout.html"; }
 
@@ -615,7 +637,10 @@ async function submitAuth() {
 
     if (data.token) return finishLogin(data.token);
     toast(data.message || "Something went wrong");
-  } catch (e) { console.log(e); toast("Couldn't reach the server"); }
+  } catch (e) {
+    console.error("Error submitting authentication:", e);
+    toast("Couldn't reach the server");
+  }
 }
 function finishLogin(jwt) {
   localStorage.setItem("token", jwt);

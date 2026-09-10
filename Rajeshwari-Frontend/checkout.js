@@ -42,7 +42,7 @@ async function boot() {
       setVal("state", me.state);
       setVal("pincode", me.pincode);
     }
-  } catch (e) { console.log(e); }
+  } catch (e) { console.error("Error:", e); }
 
   await loadSummary();
 
@@ -81,7 +81,7 @@ async function loadSummary() {
     }).join("");
     document.getElementById("subTotal").textContent = inr(total);
     document.getElementById("grandTotal").textContent = inr(total);
-  } catch (e) { console.log(e); }
+  } catch (e) { console.error("Error:", e); }
 }
 
 function pickPay(method) {
@@ -136,7 +136,7 @@ async function placeOrder() {
         : `Keep ${inr(data.order.totalAmount)} ready — pay when your order arrives.`;
     window.scrollTo({ top: 0 });
   } catch (e) {
-    console.log(e);
+    console.error("Error:", e);
     toast("Couldn't reach the server");
     btn.disabled = false; btn.textContent = "Place order";
   }

@@ -142,7 +142,7 @@ async function loadAll() {
       if(customersNavBtn) customersNavBtn.style.display = "none";
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     toast("Couldn't load data — is the API running?", "err");
   }
 }
@@ -379,7 +379,7 @@ async function createProduct() {
     resetProductForm();
     await loadAll();
     showView("products");
-  } catch (e) { console.log(e); toast("Couldn't create product", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't create product", "err"); }
 }
 function resetProductForm() {
   ["productTitle", "productDescription", "productPrice", "productImage", "productStock", "productKeywords"].forEach(id => document.getElementById(id).value = "");
@@ -399,7 +399,7 @@ async function uploadProductImage() {
       document.getElementById("productImage").value = data.imageUrl;
       status.textContent = "Uploaded ✓";
     } else { status.textContent = data.message || "Upload failed"; }
-  } catch (e) { console.log(e); status.textContent = "Upload failed"; }
+  } catch (e) { console.error("Error:", e); status.textContent = "Upload failed"; }
 }
 async function deleteProduct(id) {
   if (!confirm("Delete this product? This cannot be undone.")) return;
@@ -407,7 +407,7 @@ async function deleteProduct(id) {
     await api(`/products/${id}`, { method: "DELETE", headers: authHeaders() });
     toast("Product deleted");
     await loadAll();
-  } catch (e) { console.log(e); toast("Couldn't delete", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't delete", "err"); }
 }
 function val(id) { return document.getElementById(id).value; }
 
@@ -441,7 +441,7 @@ async function uploadEditProductImage() {
       document.getElementById("editProductImage").value = data.imageUrl;
       status.textContent = "Uploaded ✓";
     } else { status.textContent = data.message || "Upload failed"; }
-  } catch (e) { console.log(e); status.textContent = "Upload failed"; }
+  } catch (e) { console.error("Error:", e); status.textContent = "Upload failed"; }
 }
 async function updateProduct() {
   const id = val("editProductId");
@@ -456,7 +456,7 @@ async function updateProduct() {
     toast("Product updated");
     closeEdit();
     await loadAll();
-  } catch (e) { console.log(e); toast("Couldn't update", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't update", "err"); }
 }
 function exportProductsCSV() {
   const rows = [["ID", "Title", "Price", "Stock", "Categories", "Keywords"]];
@@ -489,7 +489,7 @@ async function createCategory() {
     document.getElementById("categoryName").value = "";
     toast("Category added");
     await loadAll();
-  } catch (e) { console.log(e); toast("Couldn't add category", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't add category", "err"); }
 }
 async function deleteCategory(id) {
   if (!confirm("Delete this category?")) return;
@@ -497,7 +497,7 @@ async function deleteCategory(id) {
     await api(`/categories/${id}`, { method: "DELETE", headers: authHeaders() });
     toast("Category deleted");
     await loadAll();
-  } catch (e) { console.log(e); toast("Couldn't delete", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't delete", "err"); }
 }
 
 // ============================================================
@@ -521,7 +521,7 @@ async function togglePincodeRestriction(checked) {
     PINCODE_SETTING.enabled = data.enabled;
     toast(data.enabled ? "Checkout restricted to listed pincodes" : "Restriction turned off — every pincode can check out");
   } catch (e) {
-    console.log(e);
+    console.error("Error:", e);
     toast("Couldn't update the restriction", "err");
     document.getElementById("pincodeRestrictionToggle").checked = !!PINCODE_SETTING.enabled;
   }
@@ -536,7 +536,7 @@ async function addServiceablePincode() {
     const data = await api("/pincode-restrictions", { headers: authHeaders() });
     PINCODE_SETTING = data;
     renderDeliveryAreas();
-  } catch (e) { console.log(e); toast("Couldn't add pincode", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't add pincode", "err"); }
 }
 async function removeServiceablePincode(pincode) {
   try {
@@ -545,7 +545,7 @@ async function removeServiceablePincode(pincode) {
     const data = await api("/pincode-restrictions", { headers: authHeaders() });
     PINCODE_SETTING = data;
     renderDeliveryAreas();
-  } catch (e) { console.log(e); toast("Couldn't remove pincode", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't remove pincode", "err"); }
 }
 
 // ============================================================
@@ -588,7 +588,7 @@ async function updateOrderStatus(id, status) {
     const o = orderById[id]; if (o) o.status = status;
     toast(`Order #${id} → ${status}`);
     renderDashboard(); renderPayments();
-  } catch (e) { console.log(e); toast("Couldn't update status", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't update status", "err"); }
 }
 function viewOrder(id) {
   const o = orderById[id]; if (!o) return;
@@ -680,7 +680,7 @@ async function setPayment(id, paymentStatus) {
     if (o) o.paymentStatus = paymentStatus;
     toast(`Order #${id} payment → ${paymentStatus}`);
     renderPayments();
-  } catch (e) { console.log(e); toast("Couldn't update payment", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't update payment", "err"); }
 }
 
 // ============================================================
@@ -765,7 +765,7 @@ async function viewCustomer(id, name) {
         </div>`).join("")
       : "<div class='empty'><div class='big'>✦</div>No orders yet</div>";
     document.getElementById("detailsModal").classList.add("open");
-  } catch (e) { console.log(e); toast("Couldn't load customer orders", "err"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't load customer orders", "err"); }
 }
 function exportCustomersCSV() {
   const rows = [["ID", "Name", "Email", "Role", "Orders", "Total spent", "Joined"]];
@@ -794,7 +794,7 @@ async function changeRole(id, newRole, oldRole, name) {
       await loadAll();
     }
   } catch (e) {
-    console.log(e);
+    console.error("Error:", e);
     toast("Network error", "err");
     await loadAll();
   }
@@ -818,7 +818,7 @@ async function deleteCustomer(id, name) {
       toast(data.message || "Failed to delete customer", "err");
     }
   } catch (e) {
-    console.error(e);
+    console.error("Error:", e);
     toast("Failed to connect to server", "err");
   }
 }
@@ -831,7 +831,7 @@ async function loadPromotionStatus() {
       document.getElementById("promotionToggle").checked = data.enabled;
     }
   } catch (e) {
-    console.log("Failed to load promotion status", e);
+    console.error("Failed to load promotion status", e);
   }
 }
 
@@ -849,7 +849,7 @@ async function togglePromotions(enabled) {
       document.getElementById("promotionToggle").checked = !enabled; // Revert
     }
   } catch (e) {
-    console.log("Failed to toggle promotion status", e);
+    console.error("Failed to toggle promotion status", e);
     toast("Failed to update status", "err");
     document.getElementById("promotionToggle").checked = !enabled; // Revert
   }
@@ -888,7 +888,7 @@ document.getElementById("ownerForm")?.addEventListener("submit", async (e) => {
       toast(data.message || "Failed to create owner", "err");
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     toast("Network error", "err");
   }
 });

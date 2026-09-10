@@ -101,7 +101,7 @@ async function loadOrders() {
         </div>
       </div>`).join("");
   } catch (e) {
-    console.log(e);
+    console.error("Error:", e);
     box.innerHTML = `<div class="empty-feed"><div class="big">⚠</div>Couldn't load your orders.</div>`;
   }
 }
@@ -116,7 +116,7 @@ async function loadProfile() {
     set("pfName", me.name); set("pfEmail", me.email);
     set("pfPhone", me.phone); set("pfAddress", me.address);
     set("pfCity", me.city); set("pfState", me.state); set("pfPincode", me.pincode);
-  } catch (e) { console.log(e); }
+  } catch (e) { console.error("Error:", e); }
 }
 function set(id, v) { document.getElementById(id).value = v || ""; }
 function get(id) { return document.getElementById(id).value.trim(); }
@@ -135,7 +135,7 @@ async function saveProfile() {
     if (!res.ok) return toast(data.message || "Couldn't save");
     toast("Profile saved ✓");
     document.getElementById("helloTitle").textContent = `Hi, ${data.name?.split(" ")[0]} ✨`;
-  } catch (e) { console.log(e); toast("Couldn't reach the server"); }
+  } catch (e) { console.error("Error:", e); toast("Couldn't reach the server"); }
 }
 
 loadOrders();
