@@ -116,7 +116,10 @@ async function loadProfile() {
     set("pfName", me.name); set("pfEmail", me.email);
     set("pfPhone", me.phone); set("pfAddress", me.address);
     set("pfCity", me.city); set("pfState", me.state); set("pfPincode", me.pincode);
-  } catch (e) { console.error("Error:", e); }
+  } catch (e) {
+    console.error("Error:", e);
+    toast("Couldn't load profile data");
+  }
 }
 function set(id, v) { document.getElementById(id).value = v || ""; }
 function get(id) { return document.getElementById(id).value.trim(); }
