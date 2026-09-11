@@ -93,7 +93,7 @@ router.post("/login", loginLimiter, async (req, res) => {
     });
 
     if (!user) {
-      console.log(`Login failed: user not found for email ${email}`);
+      logger.warn(`Login failed: user not found for email ${email}`);
       // CHANGED: same generic message for "no user" and "wrong password"
       // so you don't leak which emails are registered.
       return res.status(400).json({
@@ -107,7 +107,7 @@ router.post("/login", loginLimiter, async (req, res) => {
     );
 
     if (!isPasswordCorrect) {
-      console.log(`Login failed: wrong password for email ${email}`);
+      logger.warn(`Login failed: wrong password for email ${email}`);
       return res.status(400).json({
         message: "Invalid credentials"
       });
