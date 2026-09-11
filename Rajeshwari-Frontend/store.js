@@ -378,6 +378,7 @@ async function refreshWishlist() {
     updateWishCount();
   } catch (e) {
     console.error("Error refreshing wishlist:", e);
+    toast("Couldn't refresh wishlist");
   }
 }
 function updateWishCount() {
@@ -481,6 +482,7 @@ async function refreshCartCount() {
     el.dataset.zero = n ? "0" : "1";
   } catch (e) {
     console.error("Error refreshing cart count:", e);
+    toast("Couldn't refresh cart count");
   }
 }
 async function addToCart(productId, silent) {
