@@ -42,7 +42,7 @@ async function boot() {
       setVal("state", me.state);
       setVal("pincode", me.pincode);
     }
-  } catch (e) { console.error("Error:", e); }
+  } catch (e) { console.error("Error loading user profile:", e); toast("Couldn't load user profile"); }
 
   await loadSummary();
 
@@ -81,7 +81,7 @@ async function loadSummary() {
     }).join("");
     document.getElementById("subTotal").textContent = inr(total);
     document.getElementById("grandTotal").textContent = inr(total);
-  } catch (e) { console.error("Error:", e); }
+  } catch (e) { console.error("Error loading order summary:", e); toast("Couldn't load order summary"); }
 }
 
 function pickPay(method) {
