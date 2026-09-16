@@ -271,16 +271,18 @@ router.put(
 
         if (wasCancelled && !willBeCancelled) {
           // taking it back out of stock — verify first
-          await Promise.all(
-            order.orderItems.map(async item => {
-              const product = await tx.product.findUnique({
-                where: { id: item.productId }
-              });
-              if (!product || product.stock < item.quantity) {
-                throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };
-              }
-            })
-          );
+          const productIds = order.orderItems.map(item => item.productId);
+          const products = await tx.product.findMany({
+            where: { id: { in: productIds } }
+          });
+          const productMap = new Map(products.map(p => [p.id, p]));
+
+          for (const item of order.orderItems) {
+            const product = productMap.get(item.productId);
+            if (!product || product.stock < item.quantity) {
+              throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };
+            }
+          }
 
           await Promise.all(
             order.orderItems.map(item =>

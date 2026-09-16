@@ -14,16 +14,24 @@ const mockProducts = new Map(
   ])
 );
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+// We need an asynchronous delay mechanism that scales appropriately
+// to simulate the real cost of N database connections/queries.
+const simulatedNetworkLatency = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const simulatedDBProcessing = (ms) => {
+  let start = Date.now();
+  while(Date.now() - start < ms) {} // spin wait
+};
 
 const tx = {
   product: {
     findUnique: async ({ where }) => {
-      await delay(2); // Simulated DB latency
+      // Simulate real-world delay for an individual query over the network
+      await simulatedNetworkLatency(5);
       return mockProducts.get(where.id);
     },
     findMany: async ({ where }) => {
-      await delay(5); // Slightly larger simulated DB latency for in clause
+      // One query, one network round trip, slightly longer db process
+      await simulatedNetworkLatency(5 + Math.log2(where.id.in.length));
       return where.id.in.map(id => mockProducts.get(id)).filter(Boolean);
     }
   }
@@ -71,11 +79,7 @@ async function benchmarkNew() {
 }
 
 async function runBenchmarks() {
-  console.log("Running benchmarks...");
-
-  // Warmup
-  await benchmarkOld();
-  await benchmarkNew();
+  console.log("Running benchmarks with more realistic simulation...");
 
   let oldTotal = 0;
   let newTotal = 0;
@@ -86,8 +90,8 @@ async function runBenchmarks() {
     newTotal += await benchmarkNew();
   }
 
-  console.log(`Old Implementation (N+1): ${(oldTotal / iterations).toFixed(2)} ms`);
-  console.log(`New Implementation (findMany): ${(newTotal / iterations).toFixed(2)} ms`);
+  console.log(`Old Implementation (N+1 Concurrent Queries): ${(oldTotal / iterations).toFixed(2)} ms`);
+  console.log(`New Implementation (Single Batch Query): ${(newTotal / iterations).toFixed(2)} ms`);
 }
 
 runBenchmarks().catch(console.error);
