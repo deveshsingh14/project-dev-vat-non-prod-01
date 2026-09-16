@@ -1,97 +1,60 @@
 const { performance } = require('perf_hooks');
 
-// Mock data
-const numItems = 100;
-const orderItems = Array.from({ length: numItems }, (_, i) => ({
-  productId: i + 1,
-  quantity: 2
-}));
-
-const mockProducts = new Map(
-  Array.from({ length: numItems }, (_, i) => [
-    i + 1,
-    { id: i + 1, title: `Product ${i + 1}`, stock: 10 }
-  ])
-);
-
-// We need an asynchronous delay mechanism that scales appropriately
-// to simulate the real cost of N database connections/queries.
-const simulatedNetworkLatency = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const simulatedDBProcessing = (ms) => {
-  let start = Date.now();
-  while(Date.now() - start < ms) {} // spin wait
-};
-
-const tx = {
-  product: {
-    findUnique: async ({ where }) => {
-      // Simulate real-world delay for an individual query over the network
-      await simulatedNetworkLatency(5);
-      return mockProducts.get(where.id);
-    },
-    findMany: async ({ where }) => {
-      // One query, one network round trip, slightly longer db process
-      await simulatedNetworkLatency(5 + Math.log2(where.id.in.length));
-      return where.id.in.map(id => mockProducts.get(id)).filter(Boolean);
-    }
-  }
-};
-
-const order = { orderItems };
-
-async function benchmarkOld() {
-  const start = performance.now();
-
-  await Promise.all(
-    order.orderItems.map(async item => {
-      const product = await tx.product.findUnique({
-        where: { id: item.productId }
-      });
-      if (!product || product.stock < item.quantity) {
-        throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };
-      }
-    })
-  );
-
-  const end = performance.now();
-  return end - start;
-}
-
-async function benchmarkNew() {
-  const start = performance.now();
-
-  const productIds = order.orderItems.map(item => item.productId);
-  const products = await tx.product.findMany({
-    where: { id: { in: productIds } }
+const ORDERS = [];
+for (let i = 0; i < 100000; i++) {
+  ORDERS.push({
+    createdAt: new Date().toISOString(),
+    status: "Delivered",
+    totalAmount: Math.random() * 1000,
+    orderItems: [
+      { quantity: Math.floor(Math.random() * 5) + 1 },
+      { quantity: Math.floor(Math.random() * 5) + 1 },
+      { quantity: Math.floor(Math.random() * 5) + 1 }
+    ]
   });
+}
+const inRange = ORDERS;
 
-  const productMap = new Map(products.map(p => [p.id, p]));
+function runReduce() {
+  const start = performance.now();
+  const { revenue, units } = inRange.reduce(
+    (acc, o) => {
+      acc.revenue += o.totalAmount;
+      acc.units += (o.orderItems || []).reduce((n, i) => n + i.quantity, 0);
+      return acc;
+    },
+    { revenue: 0, units: 0 }
+  );
+  const end = performance.now();
+  return { revenue, units, time: end - start };
+}
 
-  for (const item of order.orderItems) {
-    const product = productMap.get(item.productId);
-    if (!product || product.stock < item.quantity) {
-      throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };
+function runLoop() {
+  const start = performance.now();
+  let revenue = 0;
+  let units = 0;
+  for (let i = 0; i < inRange.length; i++) {
+    const o = inRange[i];
+    revenue += o.totalAmount;
+    if (o.orderItems) {
+      for (let j = 0; j < o.orderItems.length; j++) {
+        units += o.orderItems[j].quantity;
+      }
     }
   }
-
   const end = performance.now();
-  return end - start;
+  return { revenue, units, time: end - start };
 }
 
-async function runBenchmarks() {
-  console.log("Running benchmarks with more realistic simulation...");
+for(let i=0; i<10; i++) { runReduce(); runLoop(); }
 
-  let oldTotal = 0;
-  let newTotal = 0;
-  const iterations = 5;
+let redTime = 0;
+let loopTime = 0;
 
-  for (let i = 0; i < iterations; i++) {
-    oldTotal += await benchmarkOld();
-    newTotal += await benchmarkNew();
-  }
-
-  console.log(`Old Implementation (N+1 Concurrent Queries): ${(oldTotal / iterations).toFixed(2)} ms`);
-  console.log(`New Implementation (Single Batch Query): ${(newTotal / iterations).toFixed(2)} ms`);
+for(let i=0; i<100; i++) {
+  redTime += runReduce().time;
+  loopTime += runLoop().time;
 }
 
-runBenchmarks().catch(console.error);
+console.log(`Reduce time: ${redTime / 100} ms`);
+console.log(`Loop time: ${loopTime / 100} ms`);

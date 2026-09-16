@@ -1,93 +1,64 @@
 const { performance } = require('perf_hooks');
 
-// Mock data
-const numItems = 100;
-const orderItems = Array.from({ length: numItems }, (_, i) => ({
-  productId: i + 1,
-  quantity: 2
-}));
-
-const mockProducts = new Map(
-  Array.from({ length: numItems }, (_, i) => [
-    i + 1,
-    { id: i + 1, title: `Product ${i + 1}`, stock: 10 }
-  ])
-);
-
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const tx = {
-  product: {
-    findUnique: async ({ where }) => {
-      await delay(2); // Simulated DB latency
-      return mockProducts.get(where.id);
-    },
-    findMany: async ({ where }) => {
-      await delay(5); // Slightly larger simulated DB latency for in clause
-      return where.id.in.map(id => mockProducts.get(id)).filter(Boolean);
-    }
-  }
-};
-
-const order = { orderItems };
-
-async function benchmarkOld() {
-  const start = performance.now();
-
-  await Promise.all(
-    order.orderItems.map(async item => {
-      const product = await tx.product.findUnique({
-        where: { id: item.productId }
-      });
-      if (!product || product.stock < item.quantity) {
-        throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };
-      }
-    })
-  );
-
-  const end = performance.now();
-  return end - start;
-}
-
-async function benchmarkNew() {
-  const start = performance.now();
-
-  const productIds = order.orderItems.map(item => item.productId);
-  const products = await tx.product.findMany({
-    where: { id: { in: productIds } }
+// Generate mock data
+const ORDERS = [];
+for (let i = 0; i < 100000; i++) {
+  ORDERS.push({
+    createdAt: new Date().toISOString(),
+    status: "Delivered",
+    totalAmount: Math.random() * 1000,
+    orderItems: [
+      { quantity: Math.floor(Math.random() * 5) + 1 },
+      { quantity: Math.floor(Math.random() * 5) + 1 },
+      { quantity: Math.floor(Math.random() * 5) + 1 }
+    ]
   });
+}
 
-  const productMap = new Map(products.map(p => [p.id, p]));
+const from = new Date(Date.now() - 1000000);
+const to = new Date(Date.now() + 1000000);
 
-  for (const item of order.orderItems) {
-    const product = productMap.get(item.productId);
-    if (!product || product.stock < item.quantity) {
-      throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };
-    }
-  }
+const inRange = ORDERS.filter(o => {
+  const d = new Date(o.createdAt);
+  return d >= from && d <= to && o.status !== "Cancelled";
+});
 
+console.log(`inRange length: ${inRange.length}`);
+
+// Baseline
+function runBaseline() {
+  const start = performance.now();
+  const revenue = inRange.reduce((s, o) => s + o.totalAmount, 0);
+  const units = inRange.reduce((s, o) => s + (o.orderItems || []).reduce((n, i) => n + i.quantity, 0), 0);
   const end = performance.now();
-  return end - start;
+  return { revenue, units, time: end - start };
 }
 
-async function runBenchmarks() {
-  console.log("Running benchmarks...");
-
-  // Warmup
-  await benchmarkOld();
-  await benchmarkNew();
-
-  let oldTotal = 0;
-  let newTotal = 0;
-  const iterations = 5;
-
-  for (let i = 0; i < iterations; i++) {
-    oldTotal += await benchmarkOld();
-    newTotal += await benchmarkNew();
-  }
-
-  console.log(`Old Implementation (N+1): ${(oldTotal / iterations).toFixed(2)} ms`);
-  console.log(`New Implementation (findMany): ${(newTotal / iterations).toFixed(2)} ms`);
+// Optimized
+function runOptimized() {
+  const start = performance.now();
+  const { revenue, units } = inRange.reduce(
+    (acc, o) => {
+      acc.revenue += o.totalAmount;
+      acc.units += (o.orderItems || []).reduce((n, i) => n + i.quantity, 0);
+      return acc;
+    },
+    { revenue: 0, units: 0 }
+  );
+  const end = performance.now();
+  return { revenue, units, time: end - start };
 }
 
-runBenchmarks().catch(console.error);
+// Warmup
+for(let i=0; i<10; i++) { runBaseline(); runOptimized(); }
+
+let baselineTime = 0;
+let optTime = 0;
+
+for(let i=0; i<100; i++) {
+  baselineTime += runBaseline().time;
+  optTime += runOptimized().time;
+}
+
+console.log(`Baseline avg time: ${baselineTime / 100} ms`);
+console.log(`Optimized avg time: ${optTime / 100} ms`);
