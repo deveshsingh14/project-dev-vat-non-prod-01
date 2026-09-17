@@ -911,8 +911,17 @@ function runReport() {
     const d = new Date(o.createdAt);
     return d >= from && d <= to && o.status !== "Cancelled";
   });
-  const revenue = inRange.reduce((s, o) => s + o.totalAmount, 0);
-  const units = inRange.reduce((s, o) => s + (o.orderItems || []).reduce((n, i) => n + i.quantity, 0), 0);
+  let revenue = 0;
+  let units = 0;
+  for (let i = 0; i < inRange.length; i++) {
+    const o = inRange[i];
+    revenue += o.totalAmount;
+    if (o.orderItems) {
+      for (let j = 0; j < o.orderItems.length; j++) {
+        units += o.orderItems[j].quantity;
+      }
+    }
+  }
   const aov = inRange.length ? Math.round(revenue / inRange.length) : 0;
 
   const kpis = [
