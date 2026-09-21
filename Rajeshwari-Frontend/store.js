@@ -672,3 +672,9 @@ function updateAuthUI() {
 
 // ---------- boot ----------
 boot();
+
+if (typeof module !== "undefined") {
+  module.exports = {
+    inr,
+  };
+}
