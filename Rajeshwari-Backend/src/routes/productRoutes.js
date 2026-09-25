@@ -99,8 +99,6 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
           }
         }
         
-        fs.unlinkSync(req.file.path); // cleanup
-
         res.json({
           message: `Successfully uploaded ${successCount} products`,
           errors: errors.length ? errors : undefined
@@ -108,6 +106,12 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
       } catch (e) {
         logger.error(e);
         res.status(500).json({ message: "Failed to process CSV" });
+      } finally {
+        try {
+          await fs.promises.unlink(req.file.path); // cleanup
+        } catch (unlinkErr) {
+          logger.error(`Failed to cleanup file: ${unlinkErr.message}`);
+        }
       }
     });
 });
