@@ -14,6 +14,10 @@ const { loginLimiter, registerLimiter } = require("../middleware/authRateLimiter
 
 const router = express.Router();
 
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+
 router.post("/register", registerLimiter, async (req, res) => {
 
   try {
@@ -271,6 +275,68 @@ router.post("/change-password", authMiddleware, async (req, res) => {
   } catch (error) {
     logger.error("Change password error: ", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+    logger.error("Google login error: ", err);
+    res.status(500).json({ message: "Google login failed" });
+  }
+});
+
+
+router.post("/google", async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ message: "No token provided" });
+
+    // Verify token with Google
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    if (!email) return res.status(400).json({ message: "No email in Google profile" });
+
+    // Find or create user
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { googleId },
+          { email }
+        ]
+      }
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          googleId,
+          role: "CUSTOMER", // default
+        }
+      });
+    } else {
+      // If user exists but doesn't have googleId linked, link it now
+      if (!user.googleId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { googleId }
+        });
+      }
+    }
+
+    const jwtToken = jwt.sign(
+      { id: user.id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ token: jwtToken, user: { name: user.name, email: user.email, role: user.role } });
+  } catch (err) {
+    logger.error("Google login error: ", err);
+    res.status(500).json({ message: "Google login failed" });
   }
 });
 
