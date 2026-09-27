@@ -13,16 +13,17 @@
 
 ## 3. User Roles
 1. **Customer**: General users who browse products, manage their cart/wishlist, place orders, and manage their profile.
-2. **Admin/Owner**: Privileged users who can access the Admin Console to manage the catalog, view orders, handle customers, and configure store settings.
+2. **Delivery Partner**: specialized users responsible for last-mile fulfillment. They can view orders ready for delivery, see customer delivery information, and update the order status to "Out for Delivery", "Attempted", or "Delivered". They do not have access to administrative metrics or the full product catalog.
+3. **Admin/Owner**: Privileged users who can access the Admin Console to manage the catalog, view orders, handle customers, and configure store settings.
 
 ## 4. Key Features & Requirements
 
 ### 4.1. Authentication & Authorization
-- **Registration & Login**: Users can create accounts and log in securely.
+- **Registration & Login**: Users can create accounts and log in securely via standard email/password or use **Google Sign-In** for a more convenient OAuth2 authentication experience.
 - **Password Management**: 
   - Authenticated users can change their passwords.
   - Unauthenticated users can request a password reset link (sent via email) if they forget their password. Time-bound secure tokens are used for verification.
-- **Role-Based Access Control**: Admin routes and dashboards are protected and only accessible by users with the `ADMIN` or `OWNER` role.
+- **Role-Based Access Control**: Admin routes and dashboards are protected and only accessible by users with the `ADMIN` or `OWNER` role. Delivery routes are restricted to the `DELIVERY_PARTNER`, `ADMIN`, or `OWNER` roles.
 
 ### 4.2. User Profile Management
 - Users can view and update their profile details (Full name, Phone, Pincode, Address, City, State).
