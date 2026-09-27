@@ -277,11 +277,6 @@ router.post("/change-password", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-    logger.error("Google login error: ", err);
-    res.status(500).json({ message: "Google login failed" });
-  }
-});
-
 
 router.post("/google", async (req, res) => {
   try {
