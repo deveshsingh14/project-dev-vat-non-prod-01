@@ -9,9 +9,17 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 5000, // 5 seconds timeout
+  greetingTimeout: 5000,
+  socketTimeout: 5000
 });
 
 const sendEmail = async ({ to, subject, html }) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    logger.warn("Email credentials not configured. Skipping email send.");
+    return false;
+  }
+  
   try {
     const info = await transporter.sendMail({
       from: `"Support" <${process.env.EMAIL_USER}>`,
