@@ -15,6 +15,10 @@ model User {
   role      String   @default("CUSTOMER")
   createdAt DateTime @default(now())
 
+  // ADDED: password reset fields
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+
   // ADDED: saved delivery details so checkout can pre-fill
   phone   String?  @unique
   address String?

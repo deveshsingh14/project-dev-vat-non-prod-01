@@ -144,3 +144,30 @@ async function saveProfile() {
 loadOrders();
 loadProfile();
 
+async function changePassword() {
+  const oldPassword = document.getElementById("cpOld").value;
+  const newPassword = document.getElementById("cpNew").value;
+  const cpConfirm = document.getElementById("cpConfirm").value;
+
+  if (!oldPassword || !newPassword || !cpConfirm) return toast("Please fill in all password fields");
+  if (newPassword !== cpConfirm) return toast("New passwords do not match");
+
+  try {
+    const res = await fetchAuth(`${API_URL}/auth/change-password`, {
+      method: "POST",
+      body: JSON.stringify({ oldPassword, newPassword })
+    });
+    
+    if (res.ok) {
+      toast("Password updated successfully");
+      document.getElementById("cpOld").value = "";
+      document.getElementById("cpNew").value = "";
+      document.getElementById("cpConfirm").value = "";
+    } else {
+      const data = await res.json().catch(() => ({}));
+      toast(data.message || "Failed to update password");
+    }
+  } catch (err) {
+    toast("Something went wrong");
+  }
+}
