@@ -968,3 +968,31 @@ function drawCategoryChart(orders) {
 document.getElementById("adminAvatar").textContent = "A";
 initReportDates();
 loadAll();
+
+async function adminChangePassword() {
+  const oldPassword = document.getElementById("adminCpOld").value;
+  const newPassword = document.getElementById("adminCpNew").value;
+  const cpConfirm = document.getElementById("adminCpConfirm").value;
+
+  if (!oldPassword || !newPassword || !cpConfirm) return toast("Please fill in all password fields");
+  if (newPassword !== cpConfirm) return toast("New passwords do not match");
+
+  try {
+    const res = await fetchAuth(`${API_URL}/auth/change-password`, {
+      method: "POST",
+      body: JSON.stringify({ oldPassword, newPassword })
+    });
+    
+    if (res.ok) {
+      toast("Password updated successfully");
+      document.getElementById("adminCpOld").value = "";
+      document.getElementById("adminCpNew").value = "";
+      document.getElementById("adminCpConfirm").value = "";
+    } else {
+      const data = await res.json().catch(() => ({}));
+      toast(data.message || "Failed to update password");
+    }
+  } catch (err) {
+    toast("Something went wrong");
+  }
+}

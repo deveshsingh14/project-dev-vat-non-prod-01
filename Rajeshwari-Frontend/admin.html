@@ -25,6 +25,7 @@
     <div class="nav-label">Overview</div>
     <button class="nav-item active" data-view="dashboard"><span class="ico">▚</span> Dashboard</button>
     <button class="nav-item" data-view="reports"><span class="ico">▤</span> Reports</button>
+    <button class="nav-item" data-view="settings"><span class="ico">⚙</span> Settings</button>
 
     <div class="nav-label">Catalog</div>
     <button class="nav-item" data-view="products"><span class="ico">◧</span> Products</button>
@@ -320,6 +321,21 @@
         <div class="panel">
           <div class="panel-head"><h3>Sales by category</h3></div>
           <div class="chart-box short"><canvas id="categoryChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- SETTINGS ---------- -->
+    <section class="view" id="view-settings">
+      <div class="panel" style="max-width: 600px;">
+        <div class="panel-head"><h3>Change Password</h3></div>
+        <div style="padding: 20px;">
+          <label class="field"><span>Current Password</span><input type="password" id="adminCpOld"></label>
+          <div style="display:flex; gap:16px; margin-bottom: 16px;">
+            <label class="field" style="flex:1;"><span>New Password</span><input type="password" id="adminCpNew"></label>
+            <label class="field" style="flex:1;"><span>Confirm Password</span><input type="password" id="adminCpConfirm"></label>
+          </div>
+          <button class="btn btn-primary" style="width:100%;" onclick="adminChangePassword()">Update password</button>
         </div>
       </div>
     </section>

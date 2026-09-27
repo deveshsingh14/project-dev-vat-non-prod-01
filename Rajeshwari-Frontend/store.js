@@ -584,6 +584,7 @@ function toggleAuthMode() {
     : "Sign up to start saving your favourites.";
   document.getElementById("authBtn").textContent = isLogin ? "Log in" : "Sign up";
   document.getElementById("authName").style.display = isLogin ? "none" : "block";
+  document.getElementById("forgotPwdLink").parentElement.style.display = isLogin ? "block" : "none";
   document.getElementById("authSwitchText").textContent = isLogin ? "New here?" : "Already have an account?";
   document.getElementById("authSwitchBtn").textContent = isLogin ? "Create account" : "Log in";
 }

@@ -62,6 +62,16 @@
       <button class="btn-solid" style="width:100%;" onclick="saveProfile()">Save changes</button>
       <p style="font-size:12px;color:var(--muted);margin:12px 0 0;">These details pre-fill your checkout automatically.</p>
     </div>
+
+    <div class="co-card" style="max-width:620px; margin-top:24px;">
+      <h3>Change Password</h3>
+      <div class="f-field"><span>Current Password</span><input type="password" id="cpOld"></div>
+      <div class="f-row">
+        <div class="f-field"><span>New Password</span><input type="password" id="cpNew"></div>
+        <div class="f-field"><span>Confirm Password</span><input type="password" id="cpConfirm"></div>
+      </div>
+      <button class="btn-solid" style="width:100%;" onclick="changePassword()">Update password</button>
+    </div>
   </div>
 </div>
 

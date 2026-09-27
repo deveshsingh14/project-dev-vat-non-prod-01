@@ -2,8 +2,11 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const crypto = require("crypto");
+
 const prisma = require("../config/db");
 const logger = require("../config/logger");
+const { sendEmail } = require("../utils/email");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
@@ -143,6 +146,132 @@ router.post("/login", loginLimiter, async (req, res) => {
 
   }
 
+});
+
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Return 200 to prevent email enumeration
+      return res.status(200).json({ message: "If an account with that email exists, we sent a password reset link." });
+    }
+
+    // Generate token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    // Set expiry to 1 hour from now
+    const resetTokenExpires = new Date(Date.now() + 3600000);
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetPasswordToken: resetTokenHash,
+        resetPasswordExpires: resetTokenExpires,
+      }
+    });
+
+    // Frontend URL format for resetting password
+    const resetUrl = `${req.protocol}://${req.get("host")}/reset-password.html?token=${resetToken}`;
+    const message = `
+      <h1>You requested a password reset</h1>
+      <p>Please go to this link to reset your password:</p>
+      <a href="${resetUrl}" target="_blank">Reset Password</a>
+    `;
+
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Request",
+      html: message,
+    });
+
+    res.status(200).json({ message: "If an account with that email exists, we sent a password reset link." });
+  } catch (error) {
+    logger.error("Forgot password error: ", error);
+    res.status(500).json({ message: "Email could not be sent" });
+  }
+});
+
+router.post("/reset-password/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({ message: "New password is required" });
+    }
+
+    const resetTokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetPasswordToken: resetTokenHash,
+        resetPasswordExpires: {
+          gt: new Date(),
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      }
+    });
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    logger.error("Reset password error: ", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/change-password", authMiddleware, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: "Old and new password are required" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect old password" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password: hashedPassword }
+    });
+
+    res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    logger.error("Change password error: ", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 module.exports = router;
