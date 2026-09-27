@@ -645,6 +645,27 @@ async function submitAuth() {
     toast("Couldn't reach the server");
   }
 }
+
+async function handleGoogleLogin(response) {
+  try {
+    const res = await fetch(`${API_URL}/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: response.credential })
+    });
+    
+    const data = await res.json();
+    if (data.token) {
+      finishLogin(data.token);
+    } else {
+      toast(data.message || "Google login failed");
+    }
+  } catch (err) {
+    console.error("Google auth error", err);
+    toast("Couldn't reach the server");
+  }
+}
+
 function finishLogin(jwt) {
   localStorage.setItem("token", jwt);
   closeAuth();

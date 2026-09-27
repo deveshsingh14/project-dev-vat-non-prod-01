@@ -5,6 +5,7 @@ const logger = require("../config/logger");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
+const deliveryMiddleware = require("../middleware/deliveryMiddleware");
 
 const router = express.Router();
 
@@ -177,6 +178,58 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Failed to fetch orders" });
   }
 
+});
+
+// ---- DELIVERY PARTNER: GET PENDING DELIVERIES ----
+router.get("/delivery", authMiddleware, deliveryMiddleware, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        OR: [
+          { status: "Dispatched" },
+          { status: "Out for Delivery" }
+        ],
+      },
+      include: {
+        orderItems: { include: { product: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(orders);
+  } catch (error) {
+    logger.error("Failed to fetch delivery orders: ", error);
+    res.status(500).json({ message: "Failed to fetch orders" });
+  }
+});
+
+// ---- DELIVERY PARTNER: UPDATE STATUS ----
+router.patch("/:id/delivery-status", authMiddleware, deliveryMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, paymentStatus } = req.body;
+
+    const validStatuses = ["Out for Delivery", "Delivered", "Attempted"];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid delivery status" });
+    }
+
+    const data = {};
+    if (status) data.status = status;
+    if (paymentStatus) data.paymentStatus = paymentStatus;
+
+    if (status === "Out for Delivery") {
+      data.deliveryPartnerId = req.user.id;
+    }
+
+    const updated = await prisma.order.update({
+      where: { id: parseInt(id, 10) },
+      data
+    });
+    res.json(updated);
+  } catch (error) {
+    logger.error("Failed to update delivery status: ", error);
+    res.status(500).json({ message: "Failed to update order" });
+  }
 });
 
 // ---- GET ALL ORDERS (admin) ----

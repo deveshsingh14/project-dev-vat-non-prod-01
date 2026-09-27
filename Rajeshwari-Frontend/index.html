@@ -22,6 +22,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" href="icons/favicon-64.png" type="image/png">
   <link rel="stylesheet" href="store.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -138,6 +139,28 @@
         <a href="forgot-password.html" id="forgotPwdLink" style="color: var(--ink); text-decoration: underline;">Forgot password?</a>
       </div>
       <button class="btn-solid" id="authBtn" onclick="submitAuth()">Log in</button>
+      
+      <div style="margin: 20px 0; text-align: center; color: #888; font-size: 14px;">OR</div>
+      
+      <!-- Google Sign In Button Container -->
+      <div id="g_id_onload"
+           data-client_id="YOUR_GOOGLE_CLIENT_ID"
+           data-context="signin"
+           data-ux_mode="popup"
+           data-callback="handleGoogleLogin"
+           data-auto_prompt="false">
+      </div>
+      
+      <div class="g_id_signin"
+           data-type="standard"
+           data-shape="rectangular"
+           data-theme="outline"
+           data-text="signin_with"
+           data-size="large"
+           data-logo_alignment="left"
+           style="display: flex; justify-content: center; margin-bottom: 15px;">
+      </div>
+
       <div class="auth-switch">
         <span id="authSwitchText">New here?</span>
         <button onclick="toggleAuthMode()" id="authSwitchBtn">Create account</button>
