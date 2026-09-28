@@ -229,10 +229,6 @@ router.get("/", async (req, res) => {
 });
 
 // ---- GET SINGLE PRODUCT BY ID (public) ----
-// FIXED: was registered as router.get("/", authMiddleware, adminMiddleware,...)
-//   - wrong path: "/" instead of "/:id" (so it never worked as a lookup)
-//   - wrongly locked behind admin auth (a single product should be public,
-//     same as the list above)
 router.get("/:id", async (req, res) => {
   try {
     const id = Number(req.params.id);
