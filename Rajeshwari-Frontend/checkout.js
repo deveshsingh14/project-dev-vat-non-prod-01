@@ -45,10 +45,6 @@ async function boot() {
   } catch (e) { console.error("Error loading user profile:", e); toast("Couldn't load user profile"); }
 
   await loadSummary();
-
-  // UPI QR generation is disabled along with the UPI payment option
-  // in checkout.html (see the comment there) — nothing to do here
-  // while it's disabled.
 }
 function setVal(id, v) { if (v) document.getElementById(id).value = v; }
 
@@ -87,9 +83,6 @@ async function loadSummary() {
 function pickPay(method) {
   payMethod = method;
   document.getElementById("opt-COD").classList.toggle("sel", method === "COD");
-  // opt-UPI / upiBox are commented out in checkout.html while online
-  // UPI prepay is disabled (see the comment there) — guard instead of
-  // assuming they exist, so this doesn't throw if pickPay ever runs.
   const optUpi = document.getElementById("opt-UPI");
   if (optUpi) optUpi.classList.toggle("sel", method === "UPI");
   const upiBox = document.getElementById("upiBox");
