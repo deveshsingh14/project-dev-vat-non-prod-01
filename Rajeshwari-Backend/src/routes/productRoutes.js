@@ -315,8 +315,6 @@ router.post(
         }
       });
 
-      // FIXED: there were two res.json(product) calls here. The second
-      // one would throw "Cannot set headers after they are sent".
       res.json(product);
     } catch (error) {
       logger.error(error);
