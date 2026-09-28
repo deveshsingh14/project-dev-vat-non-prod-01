@@ -54,48 +54,117 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
         let errors = [];
         const categoryCache = new Map();
 
-        for (const row of results) {
-          try {
-            const { title, description, price, image, stock, keywords, category } = row;
-            // Ignore completely empty rows (e.g. from trailing commas in CSV)
-            if (!title && !price && !category) {
-              continue;
-            }
+        // 1. Process valid rows and extract unique categories
+        const validRows = [];
+        const uniqueCategories = new Set();
 
-            if (!title || !price) {
-              errors.push(`Row missing required fields (title or price): ${title || "Unknown"}`);
-              continue;
-            }
+        for (let i = 0; i < results.length; i++) {
+          const row = results[i];
+          const { title, description, price, image, stock, keywords, category } = row;
 
+          // Ignore completely empty rows (e.g. from trailing commas in CSV)
+          if (!title && !price && !category) {
+            continue;
+          }
+
+          if (!title || !price) {
+            errors.push(`Row missing required fields (title or price): ${title || "Unknown"}`);
+            continue;
+          }
+
+          const catName = category ? category.trim() : null;
+          if (catName) {
+            uniqueCategories.add(catName);
+          }
+
+          validRows.push({
+            title,
+            description: description || "",
+            price: parseFloat(price) || 0,
+            image: image && image.trim() ? image.trim() : null,
+            stock: parseInt(stock) || 0,
+            keywords: keywords || "",
+            categoryName: catName,
+            originalRow: row
+          });
+        }
+
+        // 2. Fetch and create missing categories
+        if (uniqueCategories.size > 0) {
+          const existingCategories = await prisma.category.findMany({
+            where: { name: { in: Array.from(uniqueCategories) } }
+          });
+
+          existingCategories.forEach(cat => categoryCache.set(cat.name, cat));
+
+          const missingCategories = Array.from(uniqueCategories).filter(name => !categoryCache.has(name));
+          if (missingCategories.length > 0) {
+            // Use create to support all databases and handle concurrency via transaction
+            const categoryCreates = missingCategories.map(name => prisma.category.create({ data: { name } }));
+            const newlyCreated = await prisma.$transaction(categoryCreates);
+            newlyCreated.forEach(cat => categoryCache.set(cat.name, cat));
+          }
+        }
+
+        // 3. Batch product inserts using transaction for concurrency and safety
+        if (validRows.length > 0) {
+          // Prepare operations for batching
+          const productCreates = validRows.map(row => {
             let catData = undefined;
-            if (category) {
-              // Create or find category
-              const catName = category.trim();
-              let catRecord = categoryCache.get(catName);
-              if (!catRecord) {
-                catRecord = await prisma.category.findUnique({ where: { name: catName } });
-                if (!catRecord) {
-                  catRecord = await prisma.category.create({ data: { name: catName } });
-                }
-                categoryCache.set(catName, catRecord);
+            if (row.categoryName) {
+              const catRecord = categoryCache.get(row.categoryName);
+              if (catRecord) {
+                catData = { create: [{ categoryId: catRecord.id }] };
               }
-              catData = { create: [{ categoryId: catRecord.id }] };
             }
 
-            await prisma.product.create({
+            return prisma.product.create({
               data: {
-                title,
-                description: description || "",
-                price: parseFloat(price) || 0,
-                image: image && image.trim() ? image.trim() : null,
-                stock: parseInt(stock) || 0,
-                keywords: keywords || "",
+                title: row.title,
+                description: row.description,
+                price: row.price,
+                image: row.image,
+                stock: row.stock,
+                keywords: row.keywords,
                 categories: catData
               }
             });
-            successCount++;
-          } catch (rowErr) {
-            errors.push(`Error processing ${row.title}: ${rowErr.message}`);
+          });
+
+          try {
+            // Execute all insertions optimally in a single database transaction
+            const createdProducts = await prisma.$transaction(productCreates);
+            successCount = createdProducts.length;
+          } catch (bulkErr) {
+            // Fallback for isolated per-row error handling. This handles the specific constraint
+            // failures on individual rows without re-inserting since the transaction rolls back.
+            for (let i = 0; i < validRows.length; i++) {
+              try {
+                const row = validRows[i];
+                let catData = undefined;
+                if (row.categoryName) {
+                  const catRecord = categoryCache.get(row.categoryName);
+                  if (catRecord) {
+                    catData = { create: [{ categoryId: catRecord.id }] };
+                  }
+                }
+
+                await prisma.product.create({
+                  data: {
+                    title: row.title,
+                    description: row.description,
+                    price: row.price,
+                    image: row.image,
+                    stock: row.stock,
+                    keywords: row.keywords,
+                    categories: catData
+                  }
+                });
+                successCount++;
+              } catch (rowErr) {
+                errors.push(`Error processing ${validRows[i].title}: ${rowErr.message}`);
+              }
+            }
           }
         }
         
