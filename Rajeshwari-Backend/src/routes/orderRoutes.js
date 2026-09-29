@@ -90,12 +90,20 @@ router.post("/checkout", authMiddleware, async (req, res) => {
         }
       }
 
-      // decrement stock
+      // decrement stock (optimized to avoid N+1)
+      const decrementMap = {};
+      for (const item of cartItems) {
+        if (!decrementMap[item.quantity]) {
+          decrementMap[item.quantity] = [];
+        }
+        decrementMap[item.quantity].push(item.productId);
+      }
+
       await Promise.all(
-        cartItems.map(item =>
-          tx.product.update({
-            where: { id: item.productId },
-            data: { stock: { decrement: item.quantity } }
+        Object.entries(decrementMap).map(([quantity, ids]) =>
+          tx.product.updateMany({
+            where: { id: { in: ids } },
+            data: { stock: { decrement: parseInt(quantity, 10) } }
           })
         )
       );
@@ -311,12 +319,20 @@ router.put(
         const willBeCancelled = status === "Cancelled";
 
         if (!wasCancelled && willBeCancelled) {
-          // restock
+          // restock (optimized to avoid N+1)
+          const incrementMap = {};
+          for (const item of order.orderItems) {
+            if (!incrementMap[item.quantity]) {
+              incrementMap[item.quantity] = [];
+            }
+            incrementMap[item.quantity].push(item.productId);
+          }
+
           await Promise.all(
-            order.orderItems.map(item =>
-              tx.product.update({
-                where: { id: item.productId },
-                data: { stock: { increment: item.quantity } }
+            Object.entries(incrementMap).map(([quantity, ids]) =>
+              tx.product.updateMany({
+                where: { id: { in: ids } },
+                data: { stock: { increment: parseInt(quantity, 10) } }
               })
             )
           );
@@ -337,11 +353,20 @@ router.put(
             }
           }
 
+          // decrement stock (optimized to avoid N+1)
+          const decrementMap = {};
+          for (const item of order.orderItems) {
+            if (!decrementMap[item.quantity]) {
+              decrementMap[item.quantity] = [];
+            }
+            decrementMap[item.quantity].push(item.productId);
+          }
+
           await Promise.all(
-            order.orderItems.map(item =>
-              tx.product.update({
-                where: { id: item.productId },
-                data: { stock: { decrement: item.quantity } }
+            Object.entries(decrementMap).map(([quantity, ids]) =>
+              tx.product.updateMany({
+                where: { id: { in: ids } },
+                data: { stock: { decrement: parseInt(quantity, 10) } }
               })
             )
           );
