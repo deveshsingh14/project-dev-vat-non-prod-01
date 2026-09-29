@@ -137,34 +137,38 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
             successCount = createdProducts.length;
           } catch (bulkErr) {
             // Fallback for isolated per-row error handling. This handles the specific constraint
-            // failures on individual rows without re-inserting since the transaction rolls back.
-            for (let i = 0; i < validRows.length; i++) {
-              try {
-                const row = validRows[i];
-                let catData = undefined;
-                if (row.categoryName) {
-                  const catRecord = categoryCache.get(row.categoryName);
-                  if (catRecord) {
-                    catData = { create: [{ categoryId: catRecord.id }] };
-                  }
+            // failures on individual rows concurrently without re-inserting since the transaction rolls back.
+            const fallbackPromises = validRows.map(row => {
+              let catData = undefined;
+              if (row.categoryName) {
+                const catRecord = categoryCache.get(row.categoryName);
+                if (catRecord) {
+                  catData = { create: [{ categoryId: catRecord.id }] };
                 }
-
-                await prisma.product.create({
-                  data: {
-                    title: row.title,
-                    description: row.description,
-                    price: row.price,
-                    image: row.image,
-                    stock: row.stock,
-                    keywords: row.keywords,
-                    categories: catData
-                  }
-                });
-                successCount++;
-              } catch (rowErr) {
-                errors.push(`Error processing ${validRows[i].title}: ${rowErr.message}`);
               }
-            }
+
+              return prisma.product.create({
+                data: {
+                  title: row.title,
+                  description: row.description,
+                  price: row.price,
+                  image: row.image,
+                  stock: row.stock,
+                  keywords: row.keywords,
+                  categories: catData
+                }
+              });
+            });
+
+            const results = await Promise.allSettled(fallbackPromises);
+
+            results.forEach((result, index) => {
+              if (result.status === 'fulfilled') {
+                successCount++;
+              } else {
+                errors.push(`Error processing ${validRows[index].title}: ${result.reason.message}`);
+              }
+            });
           }
         }
         
