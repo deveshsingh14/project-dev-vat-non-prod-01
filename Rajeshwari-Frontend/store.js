@@ -595,7 +595,14 @@ function shareProduct(e, id) {
 // ============================================================
 //  AUTH
 // ============================================================
-function openAuth() { document.getElementById("authModal").classList.add("open"); }
+let googleAuthInitialized = false;
+function openAuth() { 
+  document.getElementById("authModal").classList.add("open"); 
+  if (!googleAuthInitialized) {
+    initGoogleAuth();
+    googleAuthInitialized = true;
+  }
+}
 function closeAuth() { document.getElementById("authModal").classList.remove("open"); }
 document.getElementById("authModal").addEventListener("click", function (e) {
   if (e.target === this) closeAuth();
@@ -643,6 +650,31 @@ async function submitAuth() {
   } catch (e) {
     console.error("Error submitting authentication:", e);
     toast("Couldn't reach the server");
+  }
+}
+
+async function initGoogleAuth() {
+  try {
+    const res = await fetch(`${API_URL}/auth/google-client-id`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.clientId) return;
+
+    if (window.google && google.accounts) {
+      google.accounts.id.initialize({
+        client_id: data.clientId,
+        callback: handleGoogleLogin,
+        context: "signin",
+        ux_mode: "popup",
+        auto_prompt: false
+      });
+      google.accounts.id.renderButton(
+        document.getElementById("googleBtnContainer"),
+        { theme: "outline", size: "large", type: "standard", shape: "rectangular", text: "signin_with", logo_alignment: "left" }
+      );
+    }
+  } catch (e) {
+    console.error("Failed to load Google Client ID:", e);
   }
 }
 
