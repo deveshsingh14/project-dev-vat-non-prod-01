@@ -6,6 +6,7 @@ const logger = require("../config/logger");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const deliveryMiddleware = require("../middleware/deliveryMiddleware");
+const { bulkUpdateProductStock } = require("../utils/stock");
 
 const router = express.Router();
 
@@ -91,22 +92,7 @@ router.post("/checkout", authMiddleware, async (req, res) => {
       }
 
       // decrement stock (optimized to avoid N+1)
-      const decrementMap = {};
-      for (const item of cartItems) {
-        if (!decrementMap[item.quantity]) {
-          decrementMap[item.quantity] = [];
-        }
-        decrementMap[item.quantity].push(item.productId);
-      }
-
-      await Promise.all(
-        Object.entries(decrementMap).map(([quantity, ids]) =>
-          tx.product.updateMany({
-            where: { id: { in: ids } },
-            data: { stock: { decrement: parseInt(quantity, 10) } }
-          })
-        )
-      );
+      await bulkUpdateProductStock(tx, cartItems, 'decrement');
 
       const totalAmount = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
@@ -320,22 +306,7 @@ router.put(
 
         if (!wasCancelled && willBeCancelled) {
           // restock (optimized to avoid N+1)
-          const incrementMap = {};
-          for (const item of order.orderItems) {
-            if (!incrementMap[item.quantity]) {
-              incrementMap[item.quantity] = [];
-            }
-            incrementMap[item.quantity].push(item.productId);
-          }
-
-          await Promise.all(
-            Object.entries(incrementMap).map(([quantity, ids]) =>
-              tx.product.updateMany({
-                where: { id: { in: ids } },
-                data: { stock: { increment: parseInt(quantity, 10) } }
-              })
-            )
-          );
+          await bulkUpdateProductStock(tx, order.orderItems, 'increment');
         }
 
         if (wasCancelled && !willBeCancelled) {
@@ -354,22 +325,7 @@ router.put(
           }
 
           // decrement stock (optimized to avoid N+1)
-          const decrementMap = {};
-          for (const item of order.orderItems) {
-            if (!decrementMap[item.quantity]) {
-              decrementMap[item.quantity] = [];
-            }
-            decrementMap[item.quantity].push(item.productId);
-          }
-
-          await Promise.all(
-            Object.entries(decrementMap).map(([quantity, ids]) =>
-              tx.product.updateMany({
-                where: { id: { in: ids } },
-                data: { stock: { decrement: parseInt(quantity, 10) } }
-              })
-            )
-          );
+          await bulkUpdateProductStock(tx, order.orderItems, 'decrement');
         }
 
         return tx.order.update({
