@@ -335,4 +335,9 @@ router.post("/google", async (req, res) => {
   }
 });
 
+// ==== GET GOOGLE CLIENT ID FOR FRONTEND ====
+router.get("/google-client-id", (req, res) => {
+  res.json({ clientId: process.env.GOOGLE_CLIENT_ID });
+});
+
 module.exports = router;
