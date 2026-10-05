@@ -29,6 +29,7 @@ global.token = jest.fn(() => "mock-token");
 global.authHeaders = jest.fn(() => ({}));
 global.handle401 = jest.fn(() => false);
 global.inr = jest.fn((n) => "₹" + n);
+global.toast = jest.fn();
 
 // JSDOM specific window location mock
 delete window.location;
@@ -52,7 +53,9 @@ jest.spyOn(console, 'error').mockImplementation((msg) => {
 // Avoid fetch errors
 global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve([]) }));
 
-const { toast, boot, setVal, loadSummary, pickPay, placeOrder, val } = require('./checkout');
+const { boot, setVal, loadSummary, pickPay, placeOrder, val } = require('./checkout');
+const { toast } = require('./api');
+global.toast = toast;
 
 describe('checkout.js', () => {
   beforeEach(() => {

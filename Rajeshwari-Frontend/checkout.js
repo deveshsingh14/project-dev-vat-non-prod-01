@@ -7,12 +7,6 @@
 const UPI_ID = "radha@upi";
 const UPI_NAME = "Radha Bangles Jewellery";
 
-function toast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
-}
-
 // ---- guard: must be logged in with items in the bag ----
 if (!token()) {
   window.location.href = "index.html";

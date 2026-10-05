@@ -59,6 +59,18 @@ function authHeaders(json) {
   return h;
 }
 
+function toast(msg, kind = "ok") {
+  const t = document.getElementById("toast");
+  if (!t) return alert(msg);
+  t.textContent = msg;
+  t.className = "show " + kind;
+  clearTimeout(t._h);
+  t._h = setTimeout(() => {
+    t.className = kind;
+    t.classList.remove("show");
+  }, 2500);
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
     API_URL,
@@ -67,6 +79,7 @@ if (typeof module !== "undefined") {
     imgSrc,
     handle401,
     token,
-    authHeaders
+    authHeaders,
+    toast
   };
 }
