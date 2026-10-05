@@ -10,7 +10,7 @@ const { sendEmail } = require("../utils/email");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
-const { loginLimiter, registerLimiter } = require("../middleware/authRateLimiter");
+const { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter } = require("../middleware/authRateLimiter");
 
 const router = express.Router();
 
@@ -152,7 +152,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
 });
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -201,7 +201,7 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-router.post("/reset-password/:token", async (req, res) => {
+router.post("/reset-password/:token", resetPasswordLimiter, async (req, res) => {
   try {
     const { token } = req.params;
     const { newPassword } = req.body;
