@@ -48,12 +48,6 @@ async function api(path, opts) {
   if (!res.ok) throw new Error(`${res.status} ${path}`);
   return res.json();
 }
-function toast(msg, kind = "ok") {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "show " + kind;
-  setTimeout(() => (t.className = kind), 2200);
-}
 function catchErr(e, msg, el = null) {
   console.error("Error:", e);
   if (el) el.textContent = msg;

@@ -84,12 +84,4 @@ function logout() {
   window.location.href = "index.html";
 }
 
-function toast(msg) {
-  const t = document.getElementById("toast");
-  if (!t) return alert(msg);
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 3000);
-}
-
 boot();

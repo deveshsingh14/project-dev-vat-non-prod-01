@@ -144,7 +144,7 @@ describe('Admin panel helpers', () => {
       jest.useFakeTimers();
       const toastEl = document.getElementById("toast");
 
-      const { toast } = require('./admin');
+      const { toast } = require('./api');
       toast("Test message");
 
       expect(toastEl.textContent).toBe("Test message");
@@ -160,7 +160,7 @@ describe('Admin panel helpers', () => {
       jest.useFakeTimers();
       const toastEl = document.getElementById("toast");
 
-      const { toast } = require('./admin');
+      const { toast } = require('./api');
       toast("Error message", "err");
 
       expect(toastEl.textContent).toBe("Error message");

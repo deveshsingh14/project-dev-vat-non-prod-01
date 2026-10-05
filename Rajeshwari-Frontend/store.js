@@ -21,13 +21,6 @@ let searchQuery = "";
 let isLogin = true;
 
 // ---------- helpers ----------
-function toast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  clearTimeout(t._h);
-  t._h = setTimeout(() => t.classList.remove("show"), 2000);
-}
 function normalizeProduct(p) {
   const categoryList = (p.categories || [])
     .map(c => c.category && c.category.name).filter(Boolean);

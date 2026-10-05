@@ -5,11 +5,6 @@
 function fmtDate(d) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
-function toast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200);
-}
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "index.html";
