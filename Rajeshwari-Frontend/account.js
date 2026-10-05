@@ -2,7 +2,6 @@
 
 // API_URL, esc(), NO_IMAGE_PLACEHOLDER and imgSrc() live in api.js.
 
-function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
 function fmtDate(d) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }

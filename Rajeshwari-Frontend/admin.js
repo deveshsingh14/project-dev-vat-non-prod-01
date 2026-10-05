@@ -35,7 +35,6 @@ let orderById = {};
 let charts = {};
 
 // ---------- helpers ----------
-function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
 function shortDate(d) { return d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "—"; }
 async function api(path, opts) {
   const res = await fetch(`${API_URL}${path}`, opts);

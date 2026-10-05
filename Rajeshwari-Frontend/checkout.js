@@ -7,7 +7,6 @@
 const UPI_ID = "radha@upi";
 const UPI_NAME = "Radha Bangles Jewellery";
 
-function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
 function toast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg; t.classList.add("show");
