@@ -22,7 +22,7 @@
             });
           });
         })
-        .catch(err => console.log("SW registration failed:", err));
+        .catch(err => console.error("SW registration failed:", err));
     });
   }
 
