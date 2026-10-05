@@ -97,7 +97,12 @@ router.post("/bulk-upload", authMiddleware, adminOrOwnerMiddleware, csvUpload.si
 
           existingCategories.forEach(cat => categoryCache.set(cat.name, cat));
 
-          const missingCategories = Array.from(uniqueCategories).filter(name => !categoryCache.has(name));
+          const missingCategories = [];
+          for (const name of uniqueCategories) {
+            if (!categoryCache.has(name)) {
+              missingCategories.push(name);
+            }
+          }
           if (missingCategories.length > 0) {
             // Use create to support all databases and handle concurrency via transaction
             const categoryCreates = missingCategories.map(name => prisma.category.create({ data: { name } }));
