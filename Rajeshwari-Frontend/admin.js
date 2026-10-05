@@ -13,15 +13,22 @@
 const LOW_STOCK = 5;
 
 // ---------- auth guard ----------
-const token = localStorage.getItem("token");
+document.body.style.display = "none";
 let adminUser = null;
-try {
-  adminUser = JSON.parse(atob(token.split(".")[1]));
-} catch (e) { /* invalid token */ }
 
-if (!token || !adminUser || (adminUser.role !== "ADMIN" && adminUser.role !== "OWNER")) {
-  alert("Admin or Owner access required. Please sign in with an authorized account.");
-  window.location.href = "index.html";
+async function verifyAdmin() {
+  const t = localStorage.getItem("token");
+  if (!t) return false;
+  try {
+    const res = await fetch(`${API_URL}/users/me`, { headers: { Authorization: `Bearer ${t}` } });
+    if (!res.ok) return false;
+    const user = await res.json();
+    if (user.role !== "ADMIN" && user.role !== "OWNER") return false;
+    adminUser = user;
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 // ---------- state ----------
@@ -968,9 +975,19 @@ function drawCategoryChart(orders) {
 }
 
 // ---------- boot ----------
-document.getElementById("adminAvatar").textContent = "A";
-initReportDates();
-loadAll();
+async function boot() {
+  const isAuthorized = await verifyAdmin();
+  if (!isAuthorized) {
+    alert("Admin or Owner access required. Please sign in with an authorized account.");
+    window.location.href = "index.html";
+    return;
+  }
+  document.body.style.display = "";
+  document.getElementById("adminAvatar").textContent = adminUser.name ? adminUser.name.charAt(0).toUpperCase() : "A";
+  initReportDates();
+  loadAll();
+}
+boot();
 
 async function adminChangePassword() {
   const oldPassword = document.getElementById("adminCpOld").value;
