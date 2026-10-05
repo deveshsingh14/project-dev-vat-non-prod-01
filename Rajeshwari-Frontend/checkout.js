@@ -131,3 +131,14 @@ function val(id) { return document.getElementById(id).value.trim(); }
 
 boot();
 
+if (typeof module !== 'undefined') {
+  module.exports = {
+    toast,
+    boot,
+    setVal,
+    loadSummary,
+    pickPay,
+    placeOrder,
+    val
+  };
+}
