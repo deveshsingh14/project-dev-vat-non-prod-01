@@ -37,11 +37,6 @@ let charts = {};
 // ---------- helpers ----------
 function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
 function shortDate(d) { return d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "—"; }
-function authHeaders(json) {
-  const h = { Authorization: `Bearer ${token}` };
-  if (json) h["Content-Type"] = "application/json";
-  return h;
-}
 async function api(path, opts) {
   const res = await fetch(`${API_URL}${path}`, opts);
   if (!res.ok) throw new Error(`${res.status} ${path}`);

@@ -7,12 +7,6 @@
 const UPI_ID = "radha@upi";
 const UPI_NAME = "Radha Bangles Jewellery";
 
-function token() { return localStorage.getItem("token"); }
-function authHeaders(json) {
-  const h = { Authorization: `Bearer ${token()}` };
-  if (json) h["Content-Type"] = "application/json";
-  return h;
-}
 function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
 function toast(msg) {
   const t = document.getElementById("toast");
