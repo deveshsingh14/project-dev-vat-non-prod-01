@@ -1016,3 +1016,12 @@ async function adminChangePassword() {
     toast("Something went wrong");
   }
 }
+if (typeof module !== "undefined") {
+  module.exports = {
+    shortDate,
+    statusBadge,
+    stockBadge,
+    revenueOf,
+    toast
+  };
+}
