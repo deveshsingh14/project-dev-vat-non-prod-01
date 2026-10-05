@@ -54,6 +54,12 @@ function toast(msg, kind = "ok") {
   t.className = "show " + kind;
   setTimeout(() => (t.className = kind), 2200);
 }
+function catchErr(e, msg, el = null) {
+  console.error("Error:", e);
+  if (el) el.textContent = msg;
+  else if (msg) toast(msg, "err");
+}
+
 function statusBadge(s) {
   const map = { Delivered: "b-ok", Shipped: "b-info", Pending: "b-warn", Cancelled: "b-bad" };
   return `<span class="badge ${map[s] || "b-mute"}">${esc(s || "—")}</span>`;
@@ -143,8 +149,7 @@ async function loadAll() {
       if(customersNavBtn) customersNavBtn.style.display = "none";
     }
   } catch (err) {
-    console.error(err);
-    toast("Couldn't load data — is the API running?", "err");
+    catchErr(err, "Couldn't load data — is the API running?");
   }
 }
 
@@ -314,8 +319,7 @@ async function handleBulkUpload(e) {
       toast(data.message || "Failed to bulk upload", "err");
     }
   } catch (error) {
-    console.error(error);
-    toast("Network error during bulk upload", "err");
+    catchErr(error, "Network error during bulk upload");
   } finally {
     e.target.value = ""; // reset input
   }
@@ -380,7 +384,7 @@ async function createProduct() {
     resetProductForm();
     await loadAll();
     showView("products");
-  } catch (e) { console.error("Error:", e); toast("Couldn't create product", "err"); }
+  } catch (e) { catchErr(e, "Couldn't create product"); }
 }
 function resetProductForm() {
   ["productTitle", "productDescription", "productPrice", "productImage", "productStock", "productKeywords"].forEach(id => document.getElementById(id).value = "");
@@ -400,7 +404,7 @@ async function uploadProductImage() {
       document.getElementById("productImage").value = data.imageUrl;
       status.textContent = "Uploaded ✓";
     } else { status.textContent = data.message || "Upload failed"; }
-  } catch (e) { console.error("Error:", e); status.textContent = "Upload failed"; }
+  } catch (e) { catchErr(e, "Upload failed", status); }
 }
 async function deleteProduct(id) {
   if (!confirm("Delete this product? This cannot be undone.")) return;
@@ -408,7 +412,7 @@ async function deleteProduct(id) {
     await api(`/products/${id}`, { method: "DELETE", headers: authHeaders() });
     toast("Product deleted");
     await loadAll();
-  } catch (e) { console.error("Error:", e); toast("Couldn't delete", "err"); }
+  } catch (e) { catchErr(e, "Couldn't delete"); }
 }
 function val(id) { return document.getElementById(id).value; }
 
@@ -442,7 +446,7 @@ async function uploadEditProductImage() {
       document.getElementById("editProductImage").value = data.imageUrl;
       status.textContent = "Uploaded ✓";
     } else { status.textContent = data.message || "Upload failed"; }
-  } catch (e) { console.error("Error:", e); status.textContent = "Upload failed"; }
+  } catch (e) { catchErr(e, "Upload failed", status); }
 }
 async function updateProduct() {
   const id = val("editProductId");
@@ -457,7 +461,7 @@ async function updateProduct() {
     toast("Product updated");
     closeEdit();
     await loadAll();
-  } catch (e) { console.error("Error:", e); toast("Couldn't update", "err"); }
+  } catch (e) { catchErr(e, "Couldn't update"); }
 }
 function exportProductsCSV() {
   const rows = [["ID", "Title", "Price", "Stock", "Categories", "Keywords"]];
@@ -490,7 +494,7 @@ async function createCategory() {
     document.getElementById("categoryName").value = "";
     toast("Category added");
     await loadAll();
-  } catch (e) { console.error("Error:", e); toast("Couldn't add category", "err"); }
+  } catch (e) { catchErr(e, "Couldn't add category"); }
 }
 async function deleteCategory(id) {
   if (!confirm("Delete this category?")) return;
@@ -498,7 +502,7 @@ async function deleteCategory(id) {
     await api(`/categories/${id}`, { method: "DELETE", headers: authHeaders() });
     toast("Category deleted");
     await loadAll();
-  } catch (e) { console.error("Error:", e); toast("Couldn't delete", "err"); }
+  } catch (e) { catchErr(e, "Couldn't delete"); }
 }
 
 // ============================================================
@@ -522,8 +526,7 @@ async function togglePincodeRestriction(checked) {
     PINCODE_SETTING.enabled = data.enabled;
     toast(data.enabled ? "Checkout restricted to listed pincodes" : "Restriction turned off — every pincode can check out");
   } catch (e) {
-    console.error("Error:", e);
-    toast("Couldn't update the restriction", "err");
+    catchErr(e, "Couldn't update the restriction");
     document.getElementById("pincodeRestrictionToggle").checked = !!PINCODE_SETTING.enabled;
   }
 }
@@ -537,7 +540,7 @@ async function addServiceablePincode() {
     const data = await api("/pincode-restrictions", { headers: authHeaders() });
     PINCODE_SETTING = data;
     renderDeliveryAreas();
-  } catch (e) { console.error("Error:", e); toast("Couldn't add pincode", "err"); }
+  } catch (e) { catchErr(e, "Couldn't add pincode"); }
 }
 async function removeServiceablePincode(pincode) {
   try {
@@ -546,7 +549,7 @@ async function removeServiceablePincode(pincode) {
     const data = await api("/pincode-restrictions", { headers: authHeaders() });
     PINCODE_SETTING = data;
     renderDeliveryAreas();
-  } catch (e) { console.error("Error:", e); toast("Couldn't remove pincode", "err"); }
+  } catch (e) { catchErr(e, "Couldn't remove pincode"); }
 }
 
 // ============================================================
@@ -589,7 +592,7 @@ async function updateOrderStatus(id, status) {
     const o = orderById[id]; if (o) o.status = status;
     toast(`Order #${id} → ${status}`);
     renderDashboard(); renderPayments();
-  } catch (e) { console.error("Error:", e); toast("Couldn't update status", "err"); }
+  } catch (e) { catchErr(e, "Couldn't update status"); }
 }
 function viewOrder(id) {
   const o = orderById[id]; if (!o) return;
@@ -681,7 +684,7 @@ async function setPayment(id, paymentStatus) {
     if (o) o.paymentStatus = paymentStatus;
     toast(`Order #${id} payment → ${paymentStatus}`);
     renderPayments();
-  } catch (e) { console.error("Error:", e); toast("Couldn't update payment", "err"); }
+  } catch (e) { catchErr(e, "Couldn't update payment"); }
 }
 
 // ============================================================
@@ -711,7 +714,7 @@ async function promptAddCustomer() {
       toast(data.message || "Failed to create customer", "err");
     }
   } catch (error) {
-    toast("Network error while creating customer", "err");
+    catchErr(error, "Network error while creating customer");
   }
 }
 
@@ -766,7 +769,7 @@ async function viewCustomer(id, name) {
         </div>`).join("")
       : "<div class='empty'><div class='big'>✦</div>No orders yet</div>";
     document.getElementById("detailsModal").classList.add("open");
-  } catch (e) { console.error("Error:", e); toast("Couldn't load customer orders", "err"); }
+  } catch (e) { catchErr(e, "Couldn't load customer orders"); }
 }
 function exportCustomersCSV() {
   const rows = [["ID", "Name", "Email", "Role", "Orders", "Total spent", "Joined"]];
@@ -795,8 +798,7 @@ async function changeRole(id, newRole, oldRole, name) {
       await loadAll();
     }
   } catch (e) {
-    console.error("Error:", e);
-    toast("Network error", "err");
+    catchErr(e, "Network error");
     await loadAll();
   }
 }
@@ -819,8 +821,7 @@ async function deleteCustomer(id, name) {
       toast(data.message || "Failed to delete customer", "err");
     }
   } catch (e) {
-    console.error("Error:", e);
-    toast("Failed to connect to server", "err");
+    catchErr(e, "Failed to connect to server");
   }
 }
 
@@ -889,8 +890,7 @@ document.getElementById("ownerForm")?.addEventListener("submit", async (e) => {
       toast(data.message || "Failed to create owner", "err");
     }
   } catch (err) {
-    console.error(err);
-    toast("Network error", "err");
+    catchErr(err, "Network error");
   }
 });
 
@@ -1013,7 +1013,7 @@ async function adminChangePassword() {
       toast(data.message || "Failed to update password");
     }
   } catch (err) {
-    toast("Something went wrong");
+    catchErr(err, "Something went wrong");
   }
 }
 if (typeof module !== "undefined") {
