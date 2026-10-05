@@ -164,3 +164,14 @@ async function changePassword() {
     toast("Something went wrong");
   }
 }
+
+if (typeof module !== 'undefined') {
+  module.exports = {
+    fmtDate,
+    statusPill,
+    payPill,
+    timelineHTML,
+    showTab,
+    logout
+  };
+}
