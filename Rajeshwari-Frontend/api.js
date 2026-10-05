@@ -3,6 +3,8 @@
 
 const API_URL = "https://project-dev-vat-non-prod-01.onrender.com";
 
+function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
+
 function esc(v) {
   if (v === null || v === undefined) return "";
   return String(v)
@@ -55,4 +57,16 @@ function authHeaders(json) {
   const h = { Authorization: `Bearer ${token()}` };
   if (json) h["Content-Type"] = "application/json";
   return h;
+}
+
+if (typeof module !== "undefined") {
+  module.exports = {
+    API_URL,
+    inr,
+    esc,
+    imgSrc,
+    handle401,
+    token,
+    authHeaders
+  };
 }

@@ -56,7 +56,7 @@ document.body.innerHTML = `
 // Avoid fetch errors by spying on console.error
 jest.spyOn(console, 'error').mockImplementation(() => {});
 
-const { inr } = require('./store');
+const { inr } = require('./api');
 
 describe('inr currency formatter', () => {
   it('formats positive integers correctly with Indian numbering system', () => {

@@ -21,7 +21,6 @@ let searchQuery = "";
 let isLogin = true;
 
 // ---------- helpers ----------
-function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
 function toast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -723,6 +722,5 @@ boot();
 
 if (typeof module !== "undefined") {
   module.exports = {
-    inr,
   };
 }
