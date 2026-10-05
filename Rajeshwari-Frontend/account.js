@@ -2,12 +2,6 @@
 
 // API_URL, esc(), NO_IMAGE_PLACEHOLDER and imgSrc() live in api.js.
 
-function token() { return localStorage.getItem("token"); }
-function authHeaders(json) {
-  const h = { Authorization: `Bearer ${token()}` };
-  if (json) h["Content-Type"] = "application/json";
-  return h;
-}
 function inr(n) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }
 function fmtDate(d) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });

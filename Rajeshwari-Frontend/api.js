@@ -46,3 +46,13 @@ function handle401(res) {
   }
   return false;
 }
+
+function token() {
+  return localStorage.getItem("token");
+}
+
+function authHeaders(json) {
+  const h = { Authorization: `Bearer ${token()}` };
+  if (json) h["Content-Type"] = "application/json";
+  return h;
+}
