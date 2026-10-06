@@ -292,6 +292,7 @@ router.post("/google", async (req, res) => {
     const { email, name, sub: googleId } = payload;
 
     if (!email) return res.status(400).json({ message: "No email in Google profile" });
+    if (!payload.email_verified) return res.status(400).json({ message: "Google email not verified" });
 
     // Find or create user
     let user = await prisma.user.findFirst({
