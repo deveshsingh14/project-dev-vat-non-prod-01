@@ -210,7 +210,7 @@ function dailyRevenue(days) {
   const labels = [], data = [];
   const map = {};
   ORDERS.filter(o => o.status !== "Cancelled").forEach(o => {
-    const key = new Date(o.createdAt).toISOString().slice(0, 10);
+    const key = String(o.createdAt).slice(0, 10);
     map[key] = (map[key] || 0) + o.totalAmount;
   });
   for (let i = days - 1; i >= 0; i--) {
