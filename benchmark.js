@@ -1,64 +1,42 @@
 const { performance } = require('perf_hooks');
 
-// Generate mock data
 const ORDERS = [];
 for (let i = 0; i < 100000; i++) {
   ORDERS.push({
-    createdAt: new Date().toISOString(),
-    status: "Delivered",
-    totalAmount: Math.random() * 1000,
-    orderItems: [
-      { quantity: Math.floor(Math.random() * 5) + 1 },
-      { quantity: Math.floor(Math.random() * 5) + 1 },
-      { quantity: Math.floor(Math.random() * 5) + 1 }
-    ]
+    status: Math.random() > 0.1 ? 'Completed' : 'Cancelled',
+    createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
+    totalAmount: Math.random() * 1000
   });
 }
 
-const from = new Date(Date.now() - 1000000);
-const to = new Date(Date.now() + 1000000);
-
-const inRange = ORDERS.filter(o => {
-  const d = new Date(o.createdAt);
-  return d >= from && d <= to && o.status !== "Cancelled";
-});
-
-console.log(`inRange length: ${inRange.length}`);
-
-// Baseline
-function runBaseline() {
-  const start = performance.now();
-  const revenue = inRange.reduce((s, o) => s + o.totalAmount, 0);
-  const units = inRange.reduce((s, o) => s + (o.orderItems || []).reduce((n, i) => n + i.quantity, 0), 0);
-  const end = performance.now();
-  return { revenue, units, time: end - start };
+function original() {
+  const map = {};
+  ORDERS.filter(o => o.status !== "Cancelled").forEach(o => {
+    const key = String(o.createdAt).slice(0, 10);
+    map[key] = (map[key] || 0) + o.totalAmount;
+  });
+  return map;
 }
 
-// Optimized
-function runOptimized() {
-  const start = performance.now();
-  const { revenue, units } = inRange.reduce(
-    (acc, o) => {
-      acc.revenue += o.totalAmount;
-      acc.units += (o.orderItems || []).reduce((n, i) => n + i.quantity, 0);
-      return acc;
-    },
-    { revenue: 0, units: 0 }
-  );
-  const end = performance.now();
-  return { revenue, units, time: end - start };
+function optimized() {
+  const map = {};
+  for (let i = 0; i < ORDERS.length; i++) {
+    const o = ORDERS[i];
+    if (o.status !== "Cancelled") {
+      const key = String(o.createdAt).slice(0, 10);
+      map[key] = (map[key] || 0) + o.totalAmount;
+    }
+  }
+  return map;
 }
 
-// Warmup
-for(let i=0; i<10; i++) { runBaseline(); runOptimized(); }
+const t0 = performance.now();
+for (let i = 0; i < 100; i++) original();
+const t1 = performance.now();
 
-let baselineTime = 0;
-let optTime = 0;
+const t2 = performance.now();
+for (let i = 0; i < 100; i++) optimized();
+const t3 = performance.now();
 
-for(let i=0; i<100; i++) {
-  baselineTime += runBaseline().time;
-  optTime += runOptimized().time;
-}
-
-console.log(`Baseline avg time: ${baselineTime / 100} ms`);
-console.log(`Optimized avg time: ${optTime / 100} ms`);
+console.log(`Original: ${(t1 - t0).toFixed(2)}ms`);
+console.log(`Optimized: ${(t3 - t2).toFixed(2)}ms`);
