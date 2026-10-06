@@ -101,6 +101,8 @@ router.post("/login", loginLimiter, async (req, res) => {
 
     if (!user) {
       logger.info(`Login failed: user not found for email ${email}`);
+      // Perform a dummy compare to mitigate timing attacks
+      await bcrypt.compare(password, "$2b$10$abcdefghijklmnopqrstuvabcdefghijklmnopqrstuvwxyz01234");
       // CHANGED: same generic message for "no user" and "wrong password"
       // so you don't leak which emails are registered.
       return res.status(400).json({
