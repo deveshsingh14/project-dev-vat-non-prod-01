@@ -209,10 +209,12 @@ function emptyRow(cols, msg) {
 function dailyRevenue(days) {
   const labels = [], data = [];
   const map = {};
-  ORDERS.filter(o => o.status !== "Cancelled").forEach(o => {
-    const key = String(o.createdAt).slice(0, 10);
-    map[key] = (map[key] || 0) + o.totalAmount;
-  });
+  for (const o of ORDERS) {
+    if (o.status !== "Cancelled") {
+      const key = String(o.createdAt).slice(0, 10);
+      map[key] = (map[key] || 0) + o.totalAmount;
+    }
+  }
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0, 10);
