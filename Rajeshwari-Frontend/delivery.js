@@ -22,7 +22,7 @@ async function boot() {
 
 async function loadDeliveries() {
   try {
-    const res = await fetchAuth(`${API_URL}/orders/delivery`);
+    const res = await fetch(`${API_URL}/orders/delivery`, { headers: authHeaders() });
     if (!res.ok) throw new Error();
     deliveries = await res.json();
     renderDeliveries();
@@ -61,8 +61,9 @@ async function updateStatus(orderId, newStatus) {
   if (!confirm(`Are you sure you want to mark this order as ${newStatus}?`)) return;
   
   try {
-    const res = await fetchAuth(`${API_URL}/orders/${orderId}/delivery-status`, {
+    const res = await fetch(`${API_URL}/orders/${orderId}/delivery-status`, {
       method: "PATCH",
+      headers: authHeaders(true),
       body: JSON.stringify({ status: newStatus })
     });
     

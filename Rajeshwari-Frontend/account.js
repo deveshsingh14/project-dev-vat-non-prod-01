@@ -141,8 +141,9 @@ async function changePassword() {
   if (newPassword !== cpConfirm) return toast("New passwords do not match");
 
   try {
-    const res = await fetchAuth(`${API_URL}/auth/change-password`, {
+    const res = await fetch(`${API_URL}/auth/change-password`, {
       method: "POST",
+      headers: authHeaders(true),
       body: JSON.stringify({ oldPassword, newPassword })
     });
     
