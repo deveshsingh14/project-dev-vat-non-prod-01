@@ -207,6 +207,11 @@ router.patch("/:id/delivery-status", authMiddleware, deliveryMiddleware, async (
       return res.status(400).json({ message: "Invalid delivery status" });
     }
 
+    const validPaymentStatuses = ["Pending", "Paid", "Refunded"];
+    if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
+      return res.status(400).json({ message: "Invalid payment status" });
+    }
+
     const data = {};
     if (status) data.status = status;
     if (paymentStatus) data.paymentStatus = paymentStatus;
