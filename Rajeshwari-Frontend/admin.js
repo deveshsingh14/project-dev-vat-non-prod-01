@@ -903,10 +903,11 @@ function runReport() {
   if (!document.getElementById("reportFrom").value) initReportDates();
   const from = new Date(document.getElementById("reportFrom").value); from.setHours(0, 0, 0, 0);
   const to = new Date(document.getElementById("reportTo").value); to.setHours(23, 59, 59, 999);
+  const fromISO = from.toISOString();
+  const toISO = to.toISOString();
 
   const inRange = ORDERS.filter(o => {
-    const d = new Date(o.createdAt);
-    return d >= from && d <= to && o.status !== "Cancelled";
+    return o.createdAt >= fromISO && o.createdAt <= toISO && o.status !== "Cancelled";
   });
   let revenue = 0;
   let units = 0;
