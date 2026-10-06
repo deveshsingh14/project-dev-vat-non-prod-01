@@ -49,7 +49,6 @@ jest.spyOn(console, 'error').mockImplementation((msg) => {
 
 // Avoid fetch errors
 global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve([]) }));
-global.fetchAuth = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }));
 
 global.localStorage = {
   getItem: jest.fn(() => null),
