@@ -20,7 +20,7 @@ async function verifyAdmin() {
   const t = localStorage.getItem("token");
   if (!t) return false;
   try {
-    const res = await fetch(`${API_URL}/users/me`, { headers: { Authorization: `Bearer ${t}` } });
+    const res = await fetch(`${API_URL}/users/me`, { headers: authHeaders() });
     if (!res.ok) return false;
     const user = await res.json();
     if (user.role !== "ADMIN" && user.role !== "OWNER") return false;
