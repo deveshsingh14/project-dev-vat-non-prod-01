@@ -1020,6 +1020,7 @@ if (typeof module !== "undefined") {
     statusBadge,
     stockBadge,
     revenueOf,
+    catchErr,
     toast
   };
 }
