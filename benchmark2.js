@@ -1,18 +1,7 @@
 const { performance } = require('perf_hooks');
+const { generateOrders } = require('./benchmark-data');
 
-const ORDERS = [];
-for (let i = 0; i < 100000; i++) {
-  ORDERS.push({
-    createdAt: new Date().toISOString(),
-    status: "Delivered",
-    totalAmount: Math.random() * 1000,
-    orderItems: [
-      { quantity: Math.floor(Math.random() * 5) + 1 },
-      { quantity: Math.floor(Math.random() * 5) + 1 },
-      { quantity: Math.floor(Math.random() * 5) + 1 }
-    ]
-  });
-}
+const ORDERS = generateOrders({ randomStatus: false, randomDate: false, includeOrderItems: true });
 const inRange = ORDERS;
 
 function runReduce() {

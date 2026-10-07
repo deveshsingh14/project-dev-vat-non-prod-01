@@ -1,13 +1,7 @@
 const { performance } = require('perf_hooks');
+const { generateOrders } = require('./benchmark-data');
 
-const ORDERS = [];
-for (let i = 0; i < 100000; i++) {
-  ORDERS.push({
-    status: Math.random() > 0.1 ? 'Completed' : 'Cancelled',
-    createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
-    totalAmount: Math.random() * 1000
-  });
-}
+const ORDERS = generateOrders({ randomStatus: true, randomDate: true, includeOrderItems: false });
 
 function original() {
   const map = {};
