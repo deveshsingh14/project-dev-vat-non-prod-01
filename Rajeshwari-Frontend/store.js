@@ -267,7 +267,7 @@ function doubleTapSave(id) {
     void burst.offsetWidth; // restart animation
     burst.classList.add("go");
   }
-  if (!savedProductIds.has(id)) saveToWishlist(id);
+  if (!savedProductIds.has(id)) toggleWishlist(id);
 }
 
 // ============================================================
@@ -374,43 +374,37 @@ function updateWishCount() {
 }
 function toggleSave(e, id) {
   e.stopPropagation();
-  savedProductIds.has(id) ? removeSave(id) : saveToWishlist(id);
+  toggleWishlist(id);
 }
 function toggleSaveFromSheet(id) {
-  savedProductIds.has(id) ? removeSave(id) : saveToWishlist(id);
+  toggleWishlist(id);
 }
-async function saveToWishlist(id) {
-  if (!token()) { openAuth(); return; }
+async function toggleWishlist(productId) {
+  if (!token()) { toast("Please login first"); openAuth(); return; }
+  const isSaved = savedProductIds.has(productId);
   try {
-    const res = await fetch(`${API_URL}/wishlist`, {
-      method: "POST", headers: authHeaders(true),
-      body: JSON.stringify({ productId: id })
-    });
-    if (handle401(res)) return;
-    if (res.ok || res.status === 400) {  // 400 = already saved
-      await refreshWishlist();
-      applyFilters();
-      syncSheetHeart(id);
+    if (isSaved) {
+      const wishlistItemId = savedProductIds.get(productId);
+      if (!wishlistItemId) return;
+      const res = await fetch(`${API_URL}/wishlist/${wishlistItemId}`, { method: "DELETE", headers: authHeaders() });
+      if (!res.ok) throw new Error("Delete failed");
+      toast("Removed from saved");
+    } else {
+      const res = await fetch(`${API_URL}/wishlist`, {
+        method: "POST", headers: authHeaders(true),
+        body: JSON.stringify({ productId })
+      });
+      if (handle401(res)) return;
+      if (!res.ok && res.status !== 400) throw new Error("Post failed");
       toast("Saved ♥");
     }
-  } catch (e) {
-    console.error("Error saving to wishlist:", e);
-    toast("Couldn't save to wishlist");
-  }
-}
-async function removeSave(productId) {
-  const wishlistItemId = savedProductIds.get(productId);
-  if (!wishlistItemId) return;
-  try {
-    await fetch(`${API_URL}/wishlist/${wishlistItemId}`, { method: "DELETE", headers: authHeaders() });
     await refreshWishlist();
     applyFilters();
     renderWishlistDrawer();
     syncSheetHeart(productId);
-    toast("Removed from saved");
   } catch (e) {
-    console.error("Error removing from wishlist:", e);
-    toast("Couldn't remove from saved");
+    console.error("Error toggling wishlist:", e);
+    toast("Couldn't update wishlist");
   }
 }
 function syncSheetHeart(id) {
@@ -441,7 +435,7 @@ function renderWishlistDrawer() {
         <div class="li-price">${inr(p.price)}</div>
         <div class="li-controls">
           <button class="li-move" onclick="moveToBag(${w.id}, ${p.id})">Move to bag</button>
-          <button class="li-remove" onclick="removeSave(${p.id})">Remove</button>
+          <button class="li-remove" onclick="toggleWishlist(${p.id})">Remove</button>
         </div>
       </div>
     </div>`;
@@ -449,7 +443,7 @@ function renderWishlistDrawer() {
 }
 async function moveToBag(wishId, productId) {
   await addToCart(productId, true);
-  await removeSave(productId);
+  if (savedProductIds.has(productId)) await toggleWishlist(productId);
 }
 
 // ============================================================
@@ -537,10 +531,11 @@ async function loadCartDrawer() {
 async function changeQty(cartItemId, qty) {
   if (qty < 1) return removeCartItem(cartItemId);
   try {
-    await fetch(`${API_URL}/cart/${cartItemId}`, {
+    const res = await fetch(`${API_URL}/cart/${cartItemId}`, {
       method: "PUT", headers: authHeaders(true),
       body: JSON.stringify({ quantity: qty })
     });
+    if (!res.ok) throw new Error("Failed to change quantity");
     loadCartDrawer(); refreshCartCount();
   } catch (e) {
     console.error("Error changing quantity:", e);
@@ -549,7 +544,8 @@ async function changeQty(cartItemId, qty) {
 }
 async function removeCartItem(cartItemId) {
   try {
-    await fetch(`${API_URL}/cart/${cartItemId}`, { method: "DELETE", headers: authHeaders() });
+    const res = await fetch(`${API_URL}/cart/${cartItemId}`, { method: "DELETE", headers: authHeaders() });
+    if (!res.ok) throw new Error("Failed to remove item");
     loadCartDrawer(); refreshCartCount();
   } catch (e) {
     console.error("Error removing cart item:", e);
