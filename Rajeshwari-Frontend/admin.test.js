@@ -57,7 +57,7 @@ global.localStorage = {
 };
 
 // Import code
-const { shortDate, statusBadge, stockBadge, revenueOf } = require('./admin');
+const { shortDate, statusBadge, stockBadge, revenueOf, catchErr } = require('./admin');
 
 describe('Admin panel helpers', () => {
   describe('shortDate', () => {
@@ -110,6 +110,54 @@ describe('Admin panel helpers', () => {
       expect(stockBadge(6)).toContain("In stock");
       expect(stockBadge(6)).toContain("b-ok");
       expect(stockBadge(100)).toContain("In stock");
+    });
+  });
+
+  describe('catchErr', () => {
+    let consoleErrorSpy;
+
+    beforeEach(() => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      global.toast = jest.fn();
+    });
+
+    afterEach(() => {
+      consoleErrorSpy.mockRestore();
+      jest.clearAllMocks();
+      delete global.toast;
+    });
+
+    it('logs the error to console.error', () => {
+      const error = new Error('Test error');
+      catchErr(error, 'Message');
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', error);
+    });
+
+    it('sets textContent of the provided DOM element if el is given', () => {
+      const el = { textContent: '' };
+      const error = new Error('Test error');
+
+      catchErr(error, 'Message', el);
+
+      expect(el.textContent).toBe('Message');
+    });
+
+    it('calls toast with err kind if no el is given but msg is provided', () => {
+      const error = new Error('Test error');
+
+      catchErr(error, 'Message');
+
+      expect(global.toast).toHaveBeenCalledWith('Message', 'err');
+    });
+
+    it('only logs to console.error if neither el nor msg is provided', () => {
+      const error = new Error('Test error');
+
+      catchErr(error);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', error);
+      expect(global.toast).not.toHaveBeenCalled();
     });
   });
 
