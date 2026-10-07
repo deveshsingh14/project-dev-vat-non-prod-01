@@ -28,4 +28,7 @@ const upload = multer({
   }
 });
 
+// Export the fileFilter for testing purposes alongside the upload middleware
+upload.fileFilterFn = fileFilter;
+
 module.exports = upload;
