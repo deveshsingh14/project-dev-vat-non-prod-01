@@ -61,9 +61,8 @@ async function updateStatus(orderId, newStatus) {
   if (!confirm(`Are you sure you want to mark this order as ${newStatus}?`)) return;
   
   try {
-    const res = await fetch(`${API_URL}/orders/${orderId}/delivery-status`, {
+    const res = await fetchAuth(`${API_URL}/orders/${orderId}/delivery-status`, {
       method: "PATCH",
-      headers: authHeaders(true),
       body: JSON.stringify({ status: newStatus })
     });
     
@@ -86,3 +85,7 @@ function logout() {
 }
 
 boot();
+
+if (typeof module !== 'undefined') {
+  module.exports = { updateStatus };
+}
