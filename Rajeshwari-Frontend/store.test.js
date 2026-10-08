@@ -2,7 +2,7 @@
 global.fetch = jest.fn((url) => {
   return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
 });
-global.API_URL = "http://localhost:5000";
+
 global.NO_IMAGE_PLACEHOLDER = "";
 global.imgSrc = (p) => p || "";
 global.esc = (s) => s;

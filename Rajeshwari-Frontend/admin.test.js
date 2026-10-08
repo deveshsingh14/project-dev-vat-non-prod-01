@@ -18,7 +18,7 @@ document.body.innerHTML = domElements.map(id => `<div id="${id}"></div>`).join('
 `;
 
 // Mock globals
-global.API_URL = "http://localhost:5000";
+
 global.esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 global.NO_IMAGE_PLACEHOLDER = "";
 global.imgSrc = (p) => p || "";
