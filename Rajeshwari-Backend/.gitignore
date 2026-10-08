@@ -6,3 +6,4 @@ node_modules
 
 # Firebase Admin SDK
 src/config/firebase-service-account.json
+server.log
