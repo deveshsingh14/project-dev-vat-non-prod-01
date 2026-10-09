@@ -3,7 +3,7 @@ let deliveries = [];
 
 async function boot() {
   const t = localStorage.getItem("token");
-  if (!t) return window.location.href = "index.html";
+  if (!t) { window.localStorage.removeItem("token"); return window.location.assign("index.html"); }
 
   try {
     const res = await fetch(`${API_URL}/auth/me`, { headers: { "Authorization": `Bearer ${t}` } });
@@ -14,7 +14,7 @@ async function boot() {
     }
   } catch (e) {
     localStorage.removeItem("token");
-    return window.location.href = "index.html";
+    return window.location.assign("index.html");
   }
 
   loadDeliveries();
@@ -81,11 +81,11 @@ async function updateStatus(orderId, newStatus) {
 
 function logout() {
   localStorage.removeItem("token");
-  window.location.href = "index.html";
+  window.location.assign("index.html");
 }
 
 boot();
 
 if (typeof module !== 'undefined') {
-  module.exports = { updateStatus };
+  module.exports = { updateStatus, boot, loadDeliveries, renderDeliveries, logout };
 }
