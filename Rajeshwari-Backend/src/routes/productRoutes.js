@@ -7,6 +7,7 @@ const logger = require("../config/logger");
 const cloudinary = require("../config/cloudinary");
 const { z } = require("zod");
 const { validateBody } = require("../middleware/validate");
+const { uploadLimiter } = require("../middleware/authRateLimiter");
 
 const router = express.Router();
 
@@ -439,6 +440,7 @@ router.post(
   "/upload",
   authMiddleware,
   adminOrOwnerMiddleware,
+  uploadLimiter,
   (req, res, next) => {
     upload.single("image")(req, res, (err) => {
       if (err) {
