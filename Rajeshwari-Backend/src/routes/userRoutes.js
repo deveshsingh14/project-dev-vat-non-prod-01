@@ -5,7 +5,6 @@ const logger = require("../config/logger");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
-const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const bcrypt = require("bcrypt");
 
 const router = express.Router();
