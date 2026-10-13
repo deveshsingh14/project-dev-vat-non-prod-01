@@ -9,7 +9,6 @@ const logger = require("../config/logger");
 const { sendEmail } = require("../utils/email");
 
 const authMiddleware = require("../middleware/authMiddleware");
-const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter } = require("../middleware/authRateLimiter");
 
 const router = express.Router();
