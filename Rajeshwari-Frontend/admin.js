@@ -307,8 +307,7 @@ async function handleBulkUpload(e) {
     if (res.ok) {
       toast(data.message);
       if (data.errors && data.errors.length) {
-        console.warn("Bulk upload warnings:", data.errors);
-        toast(`Completed with ${data.errors.length} errors. See console.`);
+        toast(`Completed with ${data.errors.length} errors.`);
       }
       await loadAll();
     } else {
