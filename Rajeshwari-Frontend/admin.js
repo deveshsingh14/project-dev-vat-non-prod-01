@@ -357,7 +357,7 @@ function renderProducts() {
         <td class="num">${p.stock}</td>
         <td>${stockBadge(p.stock)}</td>
         <td><div class="btn-row">
-          <button class="btn btn-sm" onclick='openEdit(${JSON.stringify(p)})'>Edit</button>
+          <button class="btn btn-sm" onclick="openEdit(${esc(JSON.stringify(p))})">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
         </div></td>
       </tr>`).join("")
