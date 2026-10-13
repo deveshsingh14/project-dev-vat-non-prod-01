@@ -510,7 +510,7 @@ function renderDeliveryAreas() {
   document.getElementById("pincodeList").innerHTML = pincodes.length
     ? pincodes.map(p => `
       <span class="chip">${esc(p)}
-        <a href="#" onclick="removeServiceablePincode('${esc(p)}'); return false;" style="color:inherit; margin-left:6px; text-decoration:none;" aria-label="Remove ${esc(p)}">×</a>
+        <a href="#" onclick="removeServiceablePincode(${esc(JSON.stringify(p))}); return false;" style="color:inherit; margin-left:6px; text-decoration:none;" aria-label="Remove ${esc(p)}">×</a>
       </span>`).join("")
     : `<span class="cell-sub">No pincodes added yet.</span>`;
 }
@@ -740,9 +740,9 @@ function renderCustomers() {
         <td class="cell-sub">${shortDate(c.createdAt)}</td>
         <td>
           <div class="btn-row">
-            <button class="btn btn-sm" onclick="viewCustomer(${c.id}, '${esc(c.name)}')">Orders</button>
+            <button class="btn btn-sm" onclick="viewCustomer(${c.id}, ${esc(JSON.stringify(c.name))})">Orders</button>
             ${adminUser.role === "ADMIN" && c.email !== "devesh141singh@gmail.com" && c.id !== adminUser.id ? 
-              `<button class="btn btn-sm btn-err" style="background-color: #ffebe9; color: #cf222e; border: 1px solid rgba(207, 34, 46, 0.2);" onclick="deleteCustomer(${c.id}, '${esc(c.name)}')">Delete</button>` : ''
+              `<button class="btn btn-sm btn-err" style="background-color: #ffebe9; color: #cf222e; border: 1px solid rgba(207, 34, 46, 0.2);" onclick="deleteCustomer(${c.id}, ${esc(JSON.stringify(c.name))})">Delete</button>` : ''
             }
           </div>
         </td>
