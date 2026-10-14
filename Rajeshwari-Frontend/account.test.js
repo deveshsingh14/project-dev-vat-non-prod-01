@@ -42,7 +42,6 @@ window.location = {
 // Avoid jsdom "not implemented" error
 jest.spyOn(console, 'error').mockImplementation((msg) => {
   if (msg.toString().includes('Not implemented: navigation')) return;
-  console.log(msg);
 });
 
 // Avoid fetch errors
