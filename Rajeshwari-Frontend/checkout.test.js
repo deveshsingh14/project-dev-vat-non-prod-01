@@ -47,7 +47,6 @@ window.scrollTo = jest.fn();
 // Avoid jsdom "not implemented" error
 jest.spyOn(console, 'error').mockImplementation((msg) => {
   if (msg && msg.toString().includes('Not implemented: navigation')) return;
-  // console.log(msg); // Enable if debugging tests
 });
 
 // Avoid fetch errors
