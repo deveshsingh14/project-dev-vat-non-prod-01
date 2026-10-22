@@ -8,8 +8,18 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 const bcrypt = require("bcrypt");
 const { z } = require("zod");
 const { validateBody } = require("../middleware/validate");
+const crypto = require("crypto");
 
 const router = express.Router();
+
+function secureCompare(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') {
+    return false;
+  }
+  const aHash = crypto.createHash('sha256').update(a).digest();
+  const bHash = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(aHash, bHash);
+}
 
 const userProfileUpdateSchema = z.object({
   name: z.string().trim().min(1, "Name cannot be empty").optional(),
@@ -211,7 +221,7 @@ router.put(
       if (!targetUser) return res.status(404).json({ message: "User not found" });
 
       const adminEmail = process.env.ADMIN_EMAIL;
-      if (adminEmail && targetUser.email === adminEmail) {
+      if (adminEmail && secureCompare(targetUser.email, adminEmail)) {
         return res.status(403).json({ message: "Cannot change the role of the Superadmin" });
       }
 
@@ -285,7 +295,7 @@ router.delete(
       if (!targetUser) return res.status(404).json({ message: "User not found" });
 
       const adminEmail = process.env.ADMIN_EMAIL;
-      if (adminEmail && targetUser.email === adminEmail) {
+      if (adminEmail && secureCompare(targetUser.email, adminEmail)) {
         return res.status(403).json({ message: "Cannot delete the Superadmin account" });
       }
 
