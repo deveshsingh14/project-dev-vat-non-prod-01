@@ -52,10 +52,15 @@ const app = express();
 // send an Origin header at all — those were never something CORS could
 // protect against anyway.
 const ALLOWED_ORIGINS = [
-  "https://deveshsingh14.github.io",
-  "http://localhost:5500",
-  "http://127.0.0.1:5500"
+  "https://deveshsingh14.github.io"
 ];
+
+if (process.env.NODE_ENV !== "production") {
+  ALLOWED_ORIGINS.push(
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+  );
+}
 
 app.use(cors({
   // CHANGED: reject with `false`, not an Error — an Error here reaches
