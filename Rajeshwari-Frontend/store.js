@@ -25,7 +25,8 @@ let isLogin = true;
 function normalizeProduct(p) {
   const categoryList = (p.categories || [])
     .map(c => c.category && c.category.name).filter(Boolean);
-  return { ...p, categoryList, category: categoryList[0] || "" };
+  const _searchIndex = `${p.title} ${p.description || ""} ${p.keywords || ""} ${categoryList.join(" ")}`.toLowerCase();
+  return { ...p, categoryList, category: categoryList[0] || "", _searchIndex };
 }
 
 // Deterministic image height per pin so the masonry feels organic
@@ -172,9 +173,7 @@ function applyFilters() {
   }
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
-    items = items.filter(p =>
-      `${p.title} ${p.description || ""} ${p.keywords || ""} ${p.categoryList.join(" ")}`
-        .toLowerCase().includes(q));
+    items = items.filter(p => p._searchIndex.includes(q));
   }
 
   const sort = document.getElementById("sortSelect").value;
