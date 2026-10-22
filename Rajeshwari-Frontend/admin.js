@@ -151,8 +151,13 @@ async function loadAll() {
 //  DASHBOARD
 // ============================================================
 function revenueOf(orders) {
-  return orders.filter(o => o.status !== "Cancelled")
-    .reduce((s, o) => s + o.totalAmount, 0);
+  let total = 0;
+  for (let i = 0; i < orders.length; i++) {
+    if (orders[i].status !== "Cancelled") {
+      total += orders[i].totalAmount;
+    }
+  }
+  return total;
 }
 function renderDashboard() {
   const live = ORDERS.filter(o => o.status !== "Cancelled");
