@@ -1,5 +1,3 @@
-const fs = require('fs');
-
 // Generate 100,000 dummy orders
 const ORDERS = [];
 const statuses = ["Pending", "Shipped", "Delivered", "Cancelled"];
