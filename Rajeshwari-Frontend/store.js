@@ -13,6 +13,7 @@
 
 // ---------- state ----------
 let PRODUCTS = [];          // normalized products
+let productsByCategory = null; // index for "More like this"
 let CATEGORIES = [];
 let WISHLIST = [];          // raw wishlist rows {id, productId, product}
 let savedProductIds = new Map(); // maps productId -> wishlistItemId
@@ -62,6 +63,7 @@ async function boot() {
       fetch(`${API_URL}/categories`)
     ]);
     PRODUCTS = (await prodRes.json()).items.map(normalizeProduct);
+    productsByCategory = null; // invalidate cache when products reload
     CATEGORIES = await catRes.json();
     categoryCoverMap = null; // Invalidate map when products reload
   } catch (e) {
@@ -292,9 +294,34 @@ function focusSearch() {
 // ADDED: "More like this" — up to 4 products sharing a category,
 // shown inside the sheet. Clicking one opens its sheet.
 function moreLikeThisHTML(p) {
-  const similar = PRODUCTS.filter(x =>
-    x.id !== p.id && x.categoryList.some(c => p.categoryList.includes(c))
-  ).slice(0, 4);
+  if (!productsByCategory) {
+    productsByCategory = {};
+    for (const prod of PRODUCTS) {
+      if (!prod.categoryList) continue;
+      for (const c of prod.categoryList) {
+        if (!productsByCategory[c]) productsByCategory[c] = [];
+        productsByCategory[c].push(prod);
+      }
+    }
+  }
+
+  const similar = [];
+  const seen = new Set([p.id]);
+
+  if (p.categoryList) {
+    for (const c of p.categoryList) {
+      const list = productsByCategory[c] || [];
+      for (const x of list) {
+        if (!seen.has(x.id)) {
+          similar.push(x);
+          seen.add(x.id);
+          if (similar.length >= 4) break;
+        }
+      }
+      if (similar.length >= 4) break;
+    }
+  }
+
   if (!similar.length) return "";
   return `
     <div class="mlt">
