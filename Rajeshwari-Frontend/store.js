@@ -685,7 +685,7 @@ function finishLogin(jwt) {
   closeAuth();
   toast("Welcome ✨");
   let payload = null;
-  try { payload = JSON.parse(atob(jwt.split(".")[1])); } catch (e) {}
+  try { payload = JSON.parse(atob(jwt.split(".")[1])); } catch (e) { console.error("Error decoding JWT:", e); }
   if (payload && (payload.role === "ADMIN" || payload.role === "OWNER")) { window.location.href = "admin.html"; return; }
   updateAuthUI();
   refreshWishlist().then(applyFilters);
