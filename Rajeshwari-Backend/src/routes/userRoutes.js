@@ -104,7 +104,7 @@ router.get(
 
         const lastOrder = orders.length
           ? orders.reduce((a, b) =>
-              new Date(a.createdAt) > new Date(b.createdAt) ? a : b
+              a.createdAt > b.createdAt ? a : b
             )
           : null;
 
