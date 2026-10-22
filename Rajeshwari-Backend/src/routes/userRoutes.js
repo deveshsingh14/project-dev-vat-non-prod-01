@@ -6,8 +6,19 @@ const logger = require("../config/logger");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const bcrypt = require("bcrypt");
+const { z } = require("zod");
+const { validateBody } = require("../middleware/validate");
 
 const router = express.Router();
+
+const userProfileUpdateSchema = z.object({
+  name: z.string().trim().min(1, "Name cannot be empty").optional(),
+  phone: z.string().trim().optional().nullable(),
+  address: z.string().trim().optional().nullable(),
+  city: z.string().trim().optional().nullable(),
+  state: z.string().trim().optional().nullable(),
+  pincode: z.string().trim().optional().nullable(),
+});
 
 // In-memory toggle for owner promotions, defaults to env var or true
 let ownerPromotionsEnabled = process.env.ENABLE_OWNER_PROMOTION !== "false";
@@ -37,13 +48,9 @@ router.get("/me", authMiddleware, async (req, res) => {
 // ADDED: name + delivery details only. Email, role and password are
 // deliberately NOT updatable here (role for security; email/password
 // deserve their own verified flows later).
-router.put("/me", authMiddleware, async (req, res) => {
+router.put("/me", authMiddleware, validateBody(userProfileUpdateSchema), async (req, res) => {
   try {
     const { name, phone, address, city, state, pincode } = req.body;
-
-    if (name !== undefined && !String(name).trim()) {
-      return res.status(400).json({ message: "Name cannot be empty" });
-    }
 
     const user = await prisma.user.update({
       where: { id: req.user.id },
