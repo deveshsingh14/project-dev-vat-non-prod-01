@@ -33,6 +33,3 @@ const inRange2 = ORDERS.filter(o => {
   return o.createdAt >= fromISO && o.createdAt <= toISO && o.status !== "Cancelled";
 });
 console.timeEnd('Optimized');
-
-console.log("Results count baseline:", inRange1.length);
-console.log("Results count optimized:", inRange2.length);
