@@ -98,24 +98,16 @@ router.post("/login", loginLimiter, async (req, res) => {
       }
     });
 
-    if (!user) {
-      logger.info(`Login failed: user not found for email ${email}`);
-      // Perform a dummy compare to mitigate timing attacks
-      await bcrypt.compare(password, "$2b$10$abcdefghijklmnopqrstuvabcdefghijklmnopqrstuvwxyz01234");
-      // CHANGED: same generic message for "no user" and "wrong password"
-      // so you don't leak which emails are registered.
-      return res.status(400).json({
-        message: "Invalid credentials"
-      });
-    }
+    // We unconditionally perform a bcrypt compare to mitigate timing attacks.
+    // If the user doesn't exist or has no password (e.g., OAuth users), we compare against a dummy hash.
+    const dummyHash = "$2b$10$abcdefghijklmnopqrstuvabcdefghijklmnopqrstuvwxyz01234";
+    const hashToCompare = user && user.password ? user.password : dummyHash;
 
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isPasswordCorrect = await bcrypt.compare(password, hashToCompare);
 
-    if (!isPasswordCorrect) {
-      logger.info(`Login failed: wrong password for email ${email}`);
+    if (!user || !user.password || !isPasswordCorrect) {
+      logger.info(`Login failed for email ${email}`);
+      // Return a generic message so we don't leak which emails are registered
       return res.status(400).json({
         message: "Invalid credentials"
       });
@@ -258,6 +250,10 @@ router.post("/change-password", authMiddleware, async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.password) {
+      return res.status(400).json({ message: "Password cannot be changed for OAuth users directly" });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
