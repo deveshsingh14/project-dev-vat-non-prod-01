@@ -152,45 +152,56 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      // Return 200 to prevent email enumeration
-      return res.status(200).json({ message: "If an account with that email exists, we sent a password reset link." });
-    }
-
-    // Generate token
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
-
-    // Set expiry to 1 hour from now
-    const resetTokenExpires = new Date(Date.now() + 3600000);
-
-    await prisma.user.update({
-      where: { email },
-      data: {
-        resetPasswordToken: resetTokenHash,
-        resetPasswordExpires: resetTokenExpires,
-      }
-    });
-
-    // Frontend URL format for resetting password
-    const resetUrl = `${req.protocol}://${req.get("host")}/reset-password.html?token=${resetToken}`;
-    const message = `
-      <h1>You requested a password reset</h1>
-      <p>Please go to this link to reset your password:</p>
-      <a href="${resetUrl}" target="_blank">Reset Password</a>
-    `;
-
-    await sendEmail({
-      to: user.email,
-      subject: "Password Reset Request",
-      html: message,
-    });
-
+    // Immediately return 200 to prevent email enumeration via timing attacks
     res.status(200).json({ message: "If an account with that email exists, we sent a password reset link." });
+
+    // Process the rest asynchronously in the background
+    (async () => {
+      try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+          return; // Do nothing if user doesn't exist
+        }
+
+        // Generate token
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+        // Set expiry to 1 hour from now
+        const resetTokenExpires = new Date(Date.now() + 3600000);
+
+        await prisma.user.update({
+          where: { email },
+          data: {
+            resetPasswordToken: resetTokenHash,
+            resetPasswordExpires: resetTokenExpires,
+          }
+        });
+
+        // Frontend URL format for resetting password
+        const resetUrl = `${req.protocol}://${req.get("host")}/reset-password.html?token=${resetToken}`;
+        const message = `
+          <h1>You requested a password reset</h1>
+          <p>Please go to this link to reset your password:</p>
+          <a href="${resetUrl}" target="_blank">Reset Password</a>
+        `;
+
+        await sendEmail({
+          to: user.email,
+          subject: "Password Reset Request",
+          html: message,
+        });
+      } catch (bgError) {
+        logger.error("Background forgot password processing error: ", bgError);
+      }
+    })();
+
   } catch (error) {
     logger.error("Forgot password error: ", error);
-    res.status(500).json({ message: "Email could not be sent" });
+    // Even on synchronous error, try to not leak information if possible, but 500 is standard here.
+    if (!res.headersSent) {
+      res.status(500).json({ message: "An error occurred" });
+    }
   }
 });
 
