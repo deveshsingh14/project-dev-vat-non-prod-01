@@ -48,11 +48,6 @@ async function api(path, opts) {
   if (!res.ok) throw new Error(`${res.status} ${path}`);
   return res.json();
 }
-function catchErr(e, msg, el = null) {
-  console.error("Error:", e);
-  if (el) el.textContent = msg;
-  else if (msg) toast(msg, "err");
-}
 
 function statusBadge(s) {
   const map = { Delivered: "b-ok", Shipped: "b-info", Pending: "b-warn", Cancelled: "b-bad" };
@@ -1039,7 +1034,6 @@ if (typeof module !== "undefined") {
     statusBadge,
     stockBadge,
     revenueOf,
-    catchErr,
     toast
   };
 }

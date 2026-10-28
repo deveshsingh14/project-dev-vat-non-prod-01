@@ -71,6 +71,12 @@ function toast(msg, kind = "ok") {
   }, 2500);
 }
 
+function catchErr(e, msg, el = null) {
+  console.error("Error:", e);
+  if (el) el.textContent = msg;
+  else if (msg) toast(msg, "err");
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
     API_URL,
@@ -80,6 +86,7 @@ if (typeof module !== "undefined") {
     handle401,
     token,
     authHeaders,
-    toast
+    toast,
+    catchErr
   };
 }
