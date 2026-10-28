@@ -108,15 +108,16 @@ router.get(
       const customers = users.map(u => {
         const orders = u.orders || [];
 
-        const totalSpent = orders
-          .filter(o => o.status !== "Cancelled")
-          .reduce((sum, o) => sum + o.totalAmount, 0);
-
-        const lastOrder = orders.length
-          ? orders.reduce((a, b) =>
-              a.createdAt > b.createdAt ? a : b
-            )
-          : null;
+        const { totalSpent, lastOrder } = orders.reduce(
+          (acc, o) => {
+            if (o.status !== "Cancelled") acc.totalSpent += o.totalAmount;
+            if (!acc.lastOrder || o.createdAt > acc.lastOrder.createdAt) {
+              acc.lastOrder = o;
+            }
+            return acc;
+          },
+          { totalSpent: 0, lastOrder: null }
+        );
 
         return {
           id: u.id,
