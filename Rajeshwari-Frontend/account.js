@@ -89,8 +89,7 @@ async function loadOrders() {
         </div>
       </div>`).join("");
   } catch (e) {
-    // TODO: Send to error monitoring service
-    console.error("Error:", e);
+    catchErr(e, null, box);
     box.innerHTML = `<div class="empty-feed"><div class="big">⚠</div>Couldn't load your orders.</div>`;
   }
 }
@@ -106,9 +105,7 @@ async function loadProfile() {
     set("pfPhone", me.phone); set("pfAddress", me.address);
     set("pfCity", me.city); set("pfState", me.state); set("pfPincode", me.pincode);
   } catch (e) {
-    // TODO: Send to error monitoring service
-    console.error("Error:", e);
-    toast("Couldn't load profile data");
+    catchErr(e, "Couldn't load profile data");
   }
 }
 function set(id, v) { document.getElementById(id).value = v || ""; }
@@ -129,9 +126,7 @@ async function saveProfile() {
     toast("Profile saved ✓");
     document.getElementById("helloTitle").textContent = `Hi, ${data.name?.split(" ")[0]} ✨`;
   } catch (e) {
-    // TODO: Send to error monitoring service
-    console.error("Error:", e);
-    toast("Couldn't reach the server");
+    catchErr(e, "Couldn't reach the server");
   }
 }
 
@@ -163,9 +158,7 @@ async function changePassword() {
       toast(data.message || "Failed to update password");
     }
   } catch (err) {
-    // TODO: Send to error monitoring service
-    console.error("Error:", err);
-    toast("Something went wrong");
+    catchErr(err, "Something went wrong");
   }
 }
 

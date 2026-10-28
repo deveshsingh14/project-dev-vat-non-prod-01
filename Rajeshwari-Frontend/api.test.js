@@ -10,7 +10,7 @@ global.localStorage = {
 // Mock alert
 global.alert = jest.fn();
 
-const { inr, esc, imgSrc, token, authHeaders, toast, API_URL } = require('./api');
+const { inr, esc, imgSrc, token, authHeaders, toast, catchErr, API_URL } = require('./api');
 
 describe('api.js utilities', () => {
   beforeEach(() => {
@@ -138,5 +138,57 @@ describe('api.js utilities', () => {
 
       jest.useRealTimers();
     });
+  });
+});
+
+describe('catchErr', () => {
+  let consoleErrorSpy;
+
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    document.body.innerHTML = '<div id="toast"></div>';
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('logs the error to console.error', () => {
+    const error = new Error('Test error');
+    catchErr(error, 'Message');
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', error);
+  });
+
+  it('sets el.textContent if el is provided', () => {
+    const el = { textContent: '' };
+    const error = new Error('Test error');
+
+    catchErr(error, 'Message', el);
+
+    expect(el.textContent).toBe('Message');
+  });
+
+  it('calls toast with err kind if no el is given but msg is provided', () => {
+    const error = new Error('Test error');
+
+    catchErr(error, 'Message');
+
+    const t = document.getElementById('toast');
+    expect(t.textContent).toBe('Message');
+    expect(t.className).toBe('show err');
+  });
+
+  it('only logs to console.error if neither el nor msg is provided', () => {
+    const error = new Error('Test error');
+    const t = document.getElementById('toast');
+    t.className = 'initial';
+    t.textContent = 'initial';
+
+    catchErr(error);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', error);
+    expect(t.textContent).toBe('initial');
+    expect(t.className).toBe('initial');
   });
 });
