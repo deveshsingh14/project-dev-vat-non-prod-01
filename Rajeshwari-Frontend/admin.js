@@ -621,11 +621,8 @@ function exportOrdersCSV() {
 // ============================================================
 //  PAYMENTS  (derived from order status)
 // ============================================================
-function renderPayments() {
-  // CHANGED: now uses the real paymentMethod / paymentStatus fields
-  // (falls back to status-derived logic for old orders created before
-  // the migration, which will have defaults COD/Pending).
-  const stats = ORDERS.reduce((acc, o) => {
+function calculatePaymentStats(orders) {
+  return orders.reduce((acc, o) => {
     if (o.paymentStatus === "Paid") {
       acc.paid.count++;
       acc.paid.sum += o.totalAmount;
@@ -644,7 +641,9 @@ function renderPayments() {
     refunded: { count: 0, sum: 0 },
     upiSum: 0
   });
+}
 
+function renderPaymentUI(stats, orders) {
   const kpis = [
     { label: "Collected", value: stats.paid.sum, foot: `${stats.paid.count} paid orders`, cls: "" },
     { label: "Awaiting payment", value: stats.awaiting.sum, foot: `${stats.awaiting.count} unpaid (COD/UPI)`, cls: "" },
@@ -664,7 +663,7 @@ function renderPayments() {
     if (o.status === "Cancelled") return `<span class="badge b-bad">Cancelled unpaid</span>`;
     return `<span class="badge b-warn">Awaiting</span>`;
   };
-  const rows = [...ORDERS].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const rows = [...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   document.querySelector("#paymentsTable tbody").innerHTML = rows.length
     ? rows.map(o => `
       <tr>
@@ -681,6 +680,14 @@ function renderPayments() {
         </td>
       </tr>`).join("")
     : emptyRow(6, "No transactions yet");
+}
+
+function renderPayments() {
+  // CHANGED: now uses the real paymentMethod / paymentStatus fields
+  // (falls back to status-derived logic for old orders created before
+  // the migration, which will have defaults COD/Pending).
+  const stats = calculatePaymentStats(ORDERS);
+  renderPaymentUI(stats, ORDERS);
 }
 
 // ADDED: flip an order's payment status via the new admin endpoint.
