@@ -1,0 +1,36 @@
+127.0.0.1 - - [29/Oct/2026 15:20:19] "GET /account.html HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:20:20] "GET /api.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:20:20] "GET /store.css HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:20:20] "GET /account.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:20:20] code 404, message File not found
+127.0.0.1 - - [29/Oct/2026 15:20:20] "GET /pwa.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Oct/2026 15:20:20] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:20:20] "GET /store.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:20:20] code 404, message File not found
+127.0.0.1 - - [29/Oct/2026 15:20:20] "GET /pwa.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Oct/2026 15:20:21] "GET /index.html HTTP/1.1" 304 -
+127.0.0.1 - - [29/Oct/2026 15:20:21] code 404, message File not found
+127.0.0.1 - - [29/Oct/2026 15:20:21] "GET /pwa.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Oct/2026 15:21:19] "GET /account.html HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:21:19] "GET /store.css HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:21:19] "GET /api.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:21:19] "GET /account.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:21:19] code 404, message File not found
+127.0.0.1 - - [29/Oct/2026 15:21:19] "GET /pwa.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Oct/2026 15:21:19] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:21:19] "GET /store.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:21:19] code 404, message File not found
+127.0.0.1 - - [29/Oct/2026 15:21:19] "GET /pwa.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Oct/2026 15:21:20] "GET /index.html HTTP/1.1" 304 -
+127.0.0.1 - - [29/Oct/2026 15:21:20] code 404, message File not found
+127.0.0.1 - - [29/Oct/2026 15:21:20] "GET /pwa.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Oct/2026 15:22:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:22:14] "GET /api.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:22:14] code 404, message File not found
+127.0.0.1 - - [29/Oct/2026 15:22:14] "GET /pwa.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Oct/2026 15:22:14] "GET /store.css HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:22:14] "GET /store.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:22:14] "GET /account.html HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:22:14] "GET /account.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Oct/2026 15:22:14] code 404, message File not found
+127.0.0.1 - - [29/Oct/2026 15:22:14] "GET /pwa.js HTTP/1.1" 404 -

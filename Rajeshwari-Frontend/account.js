@@ -130,7 +130,7 @@ async function saveProfile() {
     document.getElementById("helloTitle").textContent = `Hi, ${data.name?.split(" ")[0]} ✨`;
   } catch (e) {
     if (typeof Sentry !== "undefined") Sentry.captureException(e);
-    catchErr(e, "Couldn't reach the server");
+    toast("Couldn't reach the server");
   }
 }
 
