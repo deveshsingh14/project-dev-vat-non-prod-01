@@ -184,6 +184,38 @@ function applyFilters() {
   renderFeed(items);
 }
 
+function createProductCard(p) {
+  const h = pinHeight(p.id);
+  const saved = savedProductIds.has(p.id);
+  const out = p.stock <= 0;
+  return `
+  <div class="pin" data-id="${p.id}">
+    <div class="pin-img" style="height:${h}px" onclick="handlePinClick(event, ${p.id})">
+      <img src="${esc(imgSrc(p.image))}" alt="${esc(p.title)}" loading="lazy" style="height:${h}px">
+      ${out ? `<div class="pin-out">Out of stock</div>` : ""}
+      <div class="pin-veil">
+        <div class="veil-top">
+          <button class="save-btn ${saved ? "saved" : ""}" onclick="toggleSave(event, ${p.id})">
+            ${saved ? "Saved" : "Save"}
+          </button>
+        </div>
+        <div class="veil-bottom">
+          <button class="veil-round" title="Add to bag" onclick="quickAdd(event, ${p.id})">🛍</button>
+          <button class="veil-round" title="Share" onclick="shareProduct(event, ${p.id})">↗</button>
+        </div>
+      </div>
+      <div class="burst" id="burst-${p.id}">♥</div>
+    </div>
+    <div class="pin-meta">
+      <div class="pin-title">${esc(p.title)}</div>
+      <div class="pin-row">
+        <span class="pin-price">${inr(p.price)}</span>
+        <span class="pin-cat">${esc(p.category)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderFeed(items) {
   const m = document.getElementById("masonry");
   const end = document.getElementById("feedEnd");
@@ -200,37 +232,7 @@ function renderFeed(items) {
     return;
   }
 
-  m.innerHTML = items.map(p => {
-    const h = pinHeight(p.id);
-    const saved = savedProductIds.has(p.id);
-    const out = p.stock <= 0;
-    return `
-    <div class="pin" data-id="${p.id}">
-      <div class="pin-img" style="height:${h}px" onclick="handlePinClick(event, ${p.id})">
-        <img src="${esc(imgSrc(p.image))}" alt="${esc(p.title)}" loading="lazy" style="height:${h}px">
-        ${out ? `<div class="pin-out">Out of stock</div>` : ""}
-        <div class="pin-veil">
-          <div class="veil-top">
-            <button class="save-btn ${saved ? "saved" : ""}" onclick="toggleSave(event, ${p.id})">
-              ${saved ? "Saved" : "Save"}
-            </button>
-          </div>
-          <div class="veil-bottom">
-            <button class="veil-round" title="Add to bag" onclick="quickAdd(event, ${p.id})">🛍</button>
-            <button class="veil-round" title="Share" onclick="shareProduct(event, ${p.id})">↗</button>
-          </div>
-        </div>
-        <div class="burst" id="burst-${p.id}">♥</div>
-      </div>
-      <div class="pin-meta">
-        <div class="pin-title">${esc(p.title)}</div>
-        <div class="pin-row">
-          <span class="pin-price">${inr(p.price)}</span>
-          <span class="pin-cat">${esc(p.category)}</span>
-        </div>
-      </div>
-    </div>`;
-  }).join("");
+  m.innerHTML = items.map(createProductCard).join("");
 
   end.style.display = "block";
 
