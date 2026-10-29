@@ -105,7 +105,9 @@ async function loadProfile() {
     set("pfPhone", me.phone); set("pfAddress", me.address);
     set("pfCity", me.city); set("pfState", me.state); set("pfPincode", me.pincode);
   } catch (e) {
-    catchErr(e, "Couldn't load profile data");
+    if (typeof Sentry !== "undefined") Sentry.captureException(e);
+    console.error("Error:", e);
+    toast("Couldn't load profile data");
   }
 }
 function set(id, v) { document.getElementById(id).value = v || ""; }
