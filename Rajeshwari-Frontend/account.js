@@ -89,7 +89,8 @@ async function loadOrders() {
         </div>
       </div>`).join("");
   } catch (e) {
-    catchErr(e, null, box);
+    if (typeof Sentry !== "undefined") Sentry.captureException(e);
+    console.error("Error:", e);
     box.innerHTML = `<div class="empty-feed"><div class="big">⚠</div>Couldn't load your orders.</div>`;
   }
 }
@@ -161,6 +162,7 @@ async function changePassword() {
       toast(data.message || "Failed to update password");
     }
   } catch (err) {
+    if (typeof Sentry !== "undefined") Sentry.captureException(err);
     catchErr(err, "Something went wrong");
   }
 }
