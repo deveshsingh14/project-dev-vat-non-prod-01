@@ -163,7 +163,8 @@ async function changePassword() {
     }
   } catch (err) {
     if (typeof Sentry !== "undefined") Sentry.captureException(err);
-    catchErr(err, "Something went wrong");
+    console.error("Error:", err);
+    toast("Something went wrong");
   }
 }
 
