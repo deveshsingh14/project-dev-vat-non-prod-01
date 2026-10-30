@@ -90,7 +90,6 @@ async function loadOrders() {
       </div>`).join("");
   } catch (e) {
     if (typeof Sentry !== "undefined") Sentry.captureException(e);
-    console.error("Error:", e);
     box.innerHTML = `<div class="empty-feed"><div class="big">⚠</div>Couldn't load your orders.</div>`;
   }
 }
