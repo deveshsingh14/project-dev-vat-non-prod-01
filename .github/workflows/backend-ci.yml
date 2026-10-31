@@ -83,11 +83,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # The historical migrations can't be replayed on an empty database
-      # (tables were renamed outside of them), so build the schema
-      # straight from schema.prisma for this disposable DB.
-      - name: Create schema
-        run: npx prisma db push
+      # Build the schema the same way production gets it: by replaying
+      # the full migration history on an empty database.
+      - name: Apply all migrations to an empty database
+        run: npx prisma migrate deploy
+
+      # Fails if schema.prisma has changes that no migration captures
+      # (e.g. something applied with `db push`), so history can't
+      # silently drift from the schema again.
+      - name: Check migrations match schema.prisma
+        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
 
       - name: Database tests
         run: npm run test:db
