@@ -100,10 +100,14 @@ router.post("/checkout", authMiddleware, async (req, res) => {
 
       const totalAmount = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
+      // email snapshot (password-login tokens don't carry it)
+      const buyer = await tx.user.findUnique({ where: { id: req.user.id }, select: { email: true } });
+
       const created = await tx.order.create({
         data: {
           totalAmount,
           userId: req.user.id,
+          customerEmail: buyer ? buyer.email : null,
           fullName,
           phone,
           address,
