@@ -1,3 +1,7 @@
+// HISTORICAL — do not run. This one-off script renamed the original
+// PascalCase tables to lowercase outside of Prisma migrations. That step is
+// now captured by prisma/migrations/20260801000000_rename_tables_to_lowercase,
+// so the migration history replays on an empty database on its own.
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 

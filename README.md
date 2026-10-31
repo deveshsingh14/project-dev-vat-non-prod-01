@@ -316,7 +316,7 @@ docker run -d --name radha-testdb -e POSTGRES_USER=radha -e POSTGRES_PASSWORD=ra
   -e POSTGRES_DB=radha_test -p 5432:5432 postgres:16-alpine
 cd Rajeshwari-Backend
 export DATABASE_URL="postgresql://radha:radha@localhost:5432/radha_test"
-npx prisma db push && npm run test:db
+npx prisma migrate deploy && npm run test:db
 ```
 
 ⚠️ Never point these at the production Neon database. Any new test or
