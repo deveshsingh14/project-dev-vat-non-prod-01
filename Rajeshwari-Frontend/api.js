@@ -22,6 +22,11 @@ function imgSrc(image) {
   return image.startsWith("http") ? image : API_URL + image;
 }
 
+// Order lines keep a title/image snapshot (the product may since have been
+// edited or deleted). Prefer the snapshot, fall back to the live product.
+function itemTitle(i) { return (i && (i.title || (i.product && i.product.title))) || "Product (no longer listed)"; }
+function itemImage(i) { return (i && (i.image || (i.product && i.product.image))) || null; }
+
 function handle401(res) {
   if (res && res.status === 401 && localStorage.getItem("token")) {
     localStorage.removeItem("token");
@@ -99,6 +104,8 @@ if (typeof module !== "undefined") {
     authHeaders,
     toast,
     catchErr,
-    beforeLogout
+    beforeLogout,
+    itemTitle,
+    itemImage
   };
 }

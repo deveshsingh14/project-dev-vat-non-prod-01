@@ -1,6 +1,8 @@
 const bulkUpdateProductStock = async (tx, items, operation) => {
   const map = {};
   for (const item of items) {
+    // A line whose product has since been deleted has nothing to restock.
+    if (item.productId === null || item.productId === undefined) continue;
     if (!map[item.quantity]) {
       map[item.quantity] = [];
     }

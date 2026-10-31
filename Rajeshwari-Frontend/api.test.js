@@ -192,3 +192,20 @@ describe('catchErr', () => {
     expect(t.className).toBe('initial');
   });
 });
+
+describe('order line snapshot helpers', () => {
+  const { itemTitle, itemImage } = require('./api');
+  test('prefer the snapshot stored on the order line', () => {
+    expect(itemTitle({ title: 'Gold Bangle', product: { title: 'Renamed' } })).toBe('Gold Bangle');
+    expect(itemImage({ image: 'a.jpg', product: { image: 'b.jpg' } })).toBe('a.jpg');
+  });
+  test('fall back to the live product for older lines', () => {
+    expect(itemTitle({ product: { title: 'Kada' } })).toBe('Kada');
+    expect(itemImage({ product: { image: 'k.jpg' } })).toBe('k.jpg');
+  });
+  test('deleted product with no snapshot still renders something sensible', () => {
+    expect(itemTitle({ productId: null, product: null })).toBe('Product (no longer listed)');
+    expect(itemImage({ product: null })).toBeNull();
+    expect(itemTitle(undefined)).toBe('Product (no longer listed)');
+  });
+});

@@ -84,9 +84,9 @@ async function loadOrders() {
         <div class="oc-items">
           ${(o.orderItems || []).map(i => `
             <div class="sum-line">
-              <img src="${esc(imgSrc(i.product?.image))}" alt="">
+              <img src="${esc(imgSrc(itemImage(i)))}" alt="">
               <div style="flex:1;min-width:0;">
-                <div class="sl-t">${esc(i.product?.title || "Product")}</div>
+                <div class="sl-t">${esc(itemTitle(i))}</div>
                 <div class="sl-q">Qty ${i.quantity} × ${inr(i.price)}</div>
               </div>
               <div class="sl-p">${inr(i.price * i.quantity)}</div>
@@ -179,6 +179,7 @@ if (typeof module !== 'undefined') {
     payPill,
     timelineHTML,
     showTab,
-    logout
+    logout,
+    loadOrders
   };
 }
