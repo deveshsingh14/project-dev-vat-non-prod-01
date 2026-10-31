@@ -140,11 +140,11 @@ describe('account.js utilities', () => {
   });
 
   describe('logout', () => {
-    it('removes token from localStorage and redirects', () => {
+    it('removes token from localStorage and redirects', async () => {
       const originalRemoveItem = Storage.prototype.removeItem;
       Storage.prototype.removeItem = jest.fn();
 
-      logout();
+      await logout();
 
       expect(Storage.prototype.removeItem).toHaveBeenCalledWith('token');
       // Navigation is not fully implemented in jsdom, it usually errors

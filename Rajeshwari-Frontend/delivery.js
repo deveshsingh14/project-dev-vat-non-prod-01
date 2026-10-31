@@ -79,7 +79,8 @@ async function updateStatus(orderId, newStatus) {
   }
 }
 
-function logout() {
+async function logout() {
+  if (typeof beforeLogout === "function") await beforeLogout();
   localStorage.removeItem("token");
   window.location.assign("index.html");
 }

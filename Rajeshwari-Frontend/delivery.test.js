@@ -176,8 +176,8 @@ describe('delivery.js logout', () => {
     window.location = { assign: jest.fn(), href: 'http://localhost/' };
   });
 
-  it('removes token and redirects', () => {
-    logout();
+  it('removes token and redirects', async () => {
+    await logout();
     expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
   });
 });

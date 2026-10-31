@@ -106,6 +106,13 @@
     <h2>Order placed!</h2>
     <p>Your order <span class="order-no" id="successOrderNo">#—</span> is confirmed.<br>
       <span id="successPayNote"></span></p>
+    <div class="co-card install-slot notify-panel success-notify" data-push-panel data-push-hide="unsupported unavailable needs-login on" hidden>
+      <div>
+        <h3>🔔 Get notified when it ships</h3>
+        <p data-push-text></p>
+      </div>
+      <button class="btn-solid" data-push-toggle>Notify me</button>
+    </div>
     <div class="success-actions">
       <a class="btn-solid" style="flex:none;text-decoration:none;display:inline-block;" href="account.html">Track my order</a>
       <a class="btn-ghostline" style="text-decoration:none;" href="index.html">Keep exploring</a>
@@ -117,5 +124,6 @@
 <script src="api.js"></script>
 <script src="checkout.js"></script>
 <script src="pwa.js" defer></script>
+<script src="notifications.js" defer></script>
 </body>
 </html>

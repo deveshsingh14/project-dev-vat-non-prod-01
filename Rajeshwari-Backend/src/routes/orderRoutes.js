@@ -7,6 +7,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const deliveryMiddleware = require("../middleware/deliveryMiddleware");
 const { bulkUpdateProductStock } = require("../utils/stock");
+const push = require("../utils/push");
 
 const router = express.Router();
 
@@ -131,6 +132,10 @@ router.post("/checkout", authMiddleware, async (req, res) => {
       order
     });
 
+    // After commit + response: never delays or fails the checkout.
+    push.notifyAdmins(push.newOrderForShop(order));
+    push.notifyUser(req.user.id, push.orderPlacedForCustomer(order));
+
   } catch (error) {
 
     if (error && error.code === "EMPTY_CART") {
@@ -220,11 +225,19 @@ router.patch("/:id/delivery-status", authMiddleware, deliveryMiddleware, async (
       data.deliveryPartnerId = req.user.id;
     }
 
+    const orderId = parseInt(id, 10);
+    const before = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true } });
+    if (!before) return res.status(404).json({ message: "Order not found" });
+
     const updated = await prisma.order.update({
-      where: { id: parseInt(id, 10) },
+      where: { id: orderId },
       data
     });
     res.json(updated);
+
+    if (status === "Delivered" && before.status !== "Delivered") {
+      push.notifyUser(updated.userId, push.statusChangeForCustomer(updated));
+    }
   } catch (error) {
     logger.error("Failed to update delivery status: ", error);
     res.status(500).json({ message: "Failed to update order" });
@@ -333,13 +346,20 @@ router.put(
           await bulkUpdateProductStock(tx, order.orderItems, 'decrement');
         }
 
-        return tx.order.update({
+        const updated = await tx.order.update({
           where: { id },
           data: { status }
         });
+        return { previousStatus: order.status, updated };
       });
 
-      res.json(updatedOrder);
+      res.json(updatedOrder.updated);
+
+      // Tell the customer only when the status really changed to one
+      // they care about (re-saving the same status sends nothing).
+      if (updatedOrder.previousStatus !== status && push.NOTIFY_STATUSES.includes(status)) {
+        push.notifyUser(updatedOrder.updated.userId, push.statusChangeForCustomer(updatedOrder.updated));
+      }
 
     } catch (error) {
 

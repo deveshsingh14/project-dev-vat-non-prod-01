@@ -13,7 +13,7 @@
    Bump CACHE_VERSION whenever SHELL_ASSETS or this logic changes.
    ============================================================ */
 
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const SHELL_CACHE = `radha-shell-${CACHE_VERSION}`;
 const IMG_CACHE = `radha-img-${CACHE_VERSION}`;
 
@@ -26,6 +26,7 @@ const SHELL_ASSETS = [
   "store.css",
   "api.js",
   "section.js",
+  "notifications.js",
   "store.js",
   "checkout.js",
   "account.js",
@@ -145,3 +146,40 @@ self.addEventListener("fetch", event => {
   // pages, scripts, styles, manifest: network-first
   event.respondWith(networkFirst(req));
 });
+
+// ---------- push notifications (order updates) ----------
+// Payload from the backend (src/utils/push.js): { title, body, url, tag }.
+self.addEventListener("push", event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) { data = { body: event.data && event.data.text() }; }
+  const title = data.title || "Radha E-Commerce";
+  event.waitUntil(self.registration.showNotification(title, {
+    body: data.body || "",
+    icon: "icons/icon-192.png",
+    badge: "icons/favicon-64.png",
+    tag: data.tag || undefined,
+    renotify: !!data.tag,
+    data: { url: data.url || "index.html" }
+  }));
+});
+
+// Tapping a notification focuses an open tab of the app (navigating it to
+// the target page) or opens a new one. URLs resolve inside the app scope,
+// so this works under the GitHub Pages sub-path.
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || "index.html", self.registration.scope);
+  if (target.origin !== self.location.origin) return; // never open foreign URLs
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of windows) {
+      if (client.url.startsWith(self.registration.scope) && "focus" in client) {
+        await client.focus();
+        if ("navigate" in client && client.url !== target.href) await client.navigate(target.href).catch(() => {});
+        return;
+      }
+    }
+    await self.clients.openWindow(target.href);
+  })());
+});
+
