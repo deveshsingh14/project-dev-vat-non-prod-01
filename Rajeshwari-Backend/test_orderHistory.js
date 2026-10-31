@@ -19,6 +19,7 @@ const orders = new Map();
 let cart = [];
 let created = null;
 const tx = {
+  user: { findUnique: async ({ where }) => ({ email: `user${where.id}@x.test` }) },
   cart: { findMany: async () => cart, deleteMany: async () => { cart = []; } },
   product: {
     findMany: async ({ where }) => {
@@ -60,6 +61,7 @@ test("checkout stores a title/image snapshot on every order line", async () => {
   const r = await call("POST", "/checkout", "CUSTOMER",
     { fullName: "A", phone: "1", address: "x", city: "y", state: "z", pincode: "1" });
   assert.strictEqual(r.status, 200);
+  assert.strictEqual(created.customerEmail, "user9@x.test", "order keeps an email snapshot");
   assert.deepStrictEqual(created.orderItems.create, [
     { quantity: 2, price: 500, productId: 3, title: "Gold Bangle", image: "https://img/bangle.jpg" }
   ]);

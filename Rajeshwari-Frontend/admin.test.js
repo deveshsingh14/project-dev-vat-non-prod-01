@@ -264,3 +264,24 @@ describe('Customers: role dropdown is safe against hostile names', () => {
     expect(document.querySelector('#customersTable .badge').textContent).toBe('Delivery partner');
   });
 });
+
+describe('orders whose customer account was deleted', () => {
+  const { orderEmail, orderCustomer, deletedAccountTag } = require('./admin');
+  const live = { userId: 3, fullName: 'Asha K', user: { name: 'Asha', email: 'asha@x.test' }, customerEmail: 'old@x.test' };
+  const gone = { userId: null, user: null, fullName: 'Asha K', customerEmail: 'asha@x.test' };
+
+  it('uses the live account email when it exists, else the snapshot', () => {
+    expect(orderEmail(live)).toBe('asha@x.test');
+    expect(orderEmail(gone)).toBe('asha@x.test');
+    expect(orderEmail({ userId: null })).toBe('');
+  });
+  it('still names the customer', () => {
+    expect(orderCustomer(gone)).toBe('Asha K');
+    expect(orderCustomer({ userId: null, customerEmail: 'z@x.test' })).toBe('z@x.test');
+    expect(orderCustomer({})).toBe('—');
+  });
+  it('labels deleted accounts only', () => {
+    expect(deletedAccountTag(gone)).toMatch(/Deleted account/);
+    expect(deletedAccountTag(live)).toBe('');
+  });
+});

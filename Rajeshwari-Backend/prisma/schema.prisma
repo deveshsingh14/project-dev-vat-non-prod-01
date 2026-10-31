@@ -130,8 +130,13 @@ model Order {
   state    String?
   pincode  String?
 
-  userId Int
-  user   User @relation("CustomerOrders", fields: [userId], references: [id], onDelete: Cascade)
+  // Orders are business records: deleting the customer's account unlinks
+  // them (userId -> NULL) instead of deleting them. customerEmail is a
+  // snapshot so admins still know whose order it was.
+  customerEmail String?
+
+  userId Int?
+  user   User? @relation("CustomerOrders", fields: [userId], references: [id], onDelete: SetNull)
 
   deliveryPartnerId Int?
   deliveryPartner   User? @relation("DeliveryPartnerOrders", fields: [deliveryPartnerId], references: [id], onDelete: SetNull)

@@ -300,9 +300,10 @@ router.delete(
         return res.status(403).json({ message: "Cannot delete the Superadmin account" });
       }
 
-      // 3. Cart/wishlist/order(+items) for this user now cascade-delete
-      // at the DB level (onDelete: Cascade in schema.prisma) — no need
-      // to manually delete them first.
+      // 3. Cart, wishlist and push subscriptions cascade-delete at the DB
+      // level. Orders are kept as business records: the DB unlinks them
+      // (userId -> NULL); each order keeps its delivery details and a
+      // customerEmail snapshot.
 
       // 4. Finally delete user
       await prisma.user.delete({ where: { id } });

@@ -35,6 +35,7 @@ const orders = new Map();
 const product = { id: 3, title: "Bangle", price: 500, stock: 10 };
 let cart = [];
 const tx = {
+  user: { findUnique: async ({ where }) => ({ email: `user${where.id}@x.test` }) },
   cart: { findMany: async () => cart, deleteMany: async () => { cart = []; } },
   order: {
     create: async ({ data }) => {

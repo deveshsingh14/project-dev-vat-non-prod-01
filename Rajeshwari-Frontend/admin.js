@@ -53,6 +53,12 @@ async function api(path, opts) {
 const ORDER_STATUSES = ["Pending", "Shipped", "Out for Delivery", "Attempted", "Delivered", "Cancelled"];
 const ROLE_LABELS = { ADMIN: "Admin", OWNER: "Owner", DELIVERY_PARTNER: "Delivery partner", CUSTOMER: "Customer" };
 
+// Orders outlive customer accounts: when the account is deleted the order
+// keeps its delivery details and a customerEmail snapshot.
+function orderEmail(o) { return (o.user && o.user.email) || o.customerEmail || ""; }
+function orderCustomer(o) { return o.fullName || (o.user && o.user.name) || orderEmail(o) || "—"; }
+function deletedAccountTag(o) { return o.userId == null ? ` <span class="badge b-mute">Deleted account</span>` : ""; }
+
 function statusBadge(s) {
   const map = { Delivered: "b-ok", Shipped: "b-info", "Out for Delivery": "b-info", Attempted: "b-warn", Pending: "b-warn", Cancelled: "b-bad" };
   return `<span class="badge ${map[s] || "b-mute"}">${esc(s || "—")}</span>`;
@@ -192,7 +198,7 @@ function renderDashboard() {
     ? recent.map(o => `
       <tr>
         <td class="cell-strong">#${o.id}</td>
-        <td>${esc(o.fullName || o.user?.name || "—")}</td>
+        <td>${esc(orderCustomer(o))}</td>
         <td class="num">${inr(o.totalAmount)}</td>
         <td>${statusBadge(o.status)}</td>
         <td class="cell-sub">${shortDate(o.createdAt)}</td>
@@ -592,7 +598,7 @@ function filteredOrders() {
   const status = document.getElementById("orderStatusFilter").value;
   return ORDERS.filter(o => {
     if (status && o.status !== status) return false;
-    if (q && !(`#${o.id} ${o.fullName || ""} ${o.user?.name || ""} ${o.user?.email || ""}`.toLowerCase().includes(q))) return false;
+    if (q && !(`#${o.id} ${o.fullName || ""} ${o.user?.name || ""} ${orderEmail(o)}`.toLowerCase().includes(q))) return false;
     return true;
   }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
@@ -602,7 +608,7 @@ function renderOrders() {
     ? rows.map(o => `
       <tr>
         <td class="cell-strong">#${o.id}</td>
-        <td>${esc(o.fullName || o.user?.name || "—")}<div class="cell-sub">${esc(o.user?.email || "")}</div></td>
+        <td>${esc(orderCustomer(o))}${deletedAccountTag(o)}<div class="cell-sub">${esc(orderEmail(o))}</div></td>
         <td class="num">${(o.orderItems || []).reduce((s, i) => s + i.quantity, 0)}</td>
         <td class="num cell-strong">${inr(o.totalAmount)}</td>
         <td>
@@ -637,7 +643,8 @@ function viewOrder(id) {
       <div class="cell-strong">${inr(i.price * i.quantity)}</div>
     </div>`).join("");
   document.getElementById("detailsBody").innerHTML = `
-    <div class="detail-row"><span class="k">Customer</span><span>${esc(o.fullName || o.user?.name || "—")}</span></div>
+    <div class="detail-row"><span class="k">Customer</span><span>${esc(orderCustomer(o))}${deletedAccountTag(o)}</span></div>
+    <div class="detail-row"><span class="k">Email</span><span>${esc(orderEmail(o) || "—")}</span></div>
     <div class="detail-row"><span class="k">Phone</span><span>${esc(o.phone || "—")}</span></div>
     <div class="detail-row"><span class="k">Address</span><span style="text-align:right;max-width:60%">${esc([o.address, o.city, o.state, o.pincode].filter(Boolean).join(", ") || "—")}</span></div>
     <div class="detail-row"><span class="k">Status</span><span>${statusBadge(o.status)}</span></div>
@@ -650,7 +657,7 @@ function viewOrder(id) {
 function closeDetails() { document.getElementById("detailsModal").classList.remove("open"); }
 function exportOrdersCSV() {
   const rows = [["Order", "Customer", "Email", "Phone", "Amount", "Status", "Date", "City", "Pincode"]];
-  filteredOrders().forEach(o => rows.push([o.id, o.fullName || o.user?.name || "", o.user?.email || "",
+  filteredOrders().forEach(o => rows.push([o.id, orderCustomer(o), orderEmail(o),
     o.phone || "", o.totalAmount, o.status, shortDate(o.createdAt), o.city || "", o.pincode || ""]));
   downloadCSV("orders.csv", rows);
 }
@@ -705,7 +712,7 @@ function renderPaymentUI(stats, orders) {
     ? rows.map(o => `
       <tr>
         <td class="cell-strong">#${o.id}<div class="cell-sub">${esc(o.paymentMethod || "COD")}</div></td>
-        <td>${esc(o.fullName || o.user?.name || "—")}</td>
+        <td>${esc(orderCustomer(o))}</td>
         <td class="num cell-strong">${inr(o.totalAmount)}</td>
         <td>${pill(o)}</td>
         <td class="cell-sub">${shortDate(o.createdAt)}</td>
@@ -859,7 +866,7 @@ async function changeRole(id, newRole, oldRole, name) {
 }
 
 async function deleteCustomer(id, name) {
-  if (!confirm(`Are you absolutely sure you want to permanently delete ${name}? This will delete all their orders, wishlist items, and cart data forever.`)) {
+  if (!confirm(`Are you absolutely sure you want to permanently delete ${name}? Their account, bag and saved items are removed. Their past orders are kept for your records (marked "Deleted account").`)) {
     return;
   }
   try {
@@ -1077,6 +1084,9 @@ async function adminChangePassword() {
 }
 if (typeof module !== "undefined") {
   module.exports = {
+    orderEmail,
+    orderCustomer,
+    deletedAccountTag,
     ORDER_STATUSES,
     ROLE_LABELS,
     setCategoryJewellery,
