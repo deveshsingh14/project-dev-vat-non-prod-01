@@ -2,6 +2,8 @@
    PWA glue: registers the service worker, shows a branded
    "Install app" prompt, an offline banner, and an update notice.
    Include on every page: <script src="pwa.js" defer></script>
+   Must live at the site root (same folder as the HTML pages) so
+   the service worker scope covers every page.
    ============================================================ */
 
 (function () {
