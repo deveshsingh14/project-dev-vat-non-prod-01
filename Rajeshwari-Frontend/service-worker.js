@@ -13,17 +13,19 @@
    Bump CACHE_VERSION whenever SHELL_ASSETS or this logic changes.
    ============================================================ */
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const SHELL_CACHE = `radha-shell-${CACHE_VERSION}`;
 const IMG_CACHE = `radha-img-${CACHE_VERSION}`;
 
 const SHELL_ASSETS = [
   "index.html",
+  "jewellery.html",
   "checkout.html",
   "account.html",
   "offline.html",
   "store.css",
   "api.js",
+  "section.js",
   "store.js",
   "checkout.js",
   "account.js",

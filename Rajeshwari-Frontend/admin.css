@@ -375,6 +375,15 @@ label.field > span { display: block; font-size: 11.5px; font-weight: 600; color:
 }
 .cat-card h4 { font-size: 14px; }
 .cat-card .count { font-size: 11.5px; color: var(--muted); }
+.cat-card .cat-info { min-width: 0; }
+.cat-card.is-jewellery { border-color: var(--gold); }
+.jewel-toggle {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+  font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; user-select: none;
+}
+.jewel-toggle input { width: auto; accent-color: var(--gold); cursor: pointer; }
+.cat-card.is-jewellery .jewel-toggle { color: var(--ink); }
+.jewel-toggle.new-cat { margin-top: 0; padding: 0 6px; }
 
 /* ---------- Modal ---------- */
 .modal-back {

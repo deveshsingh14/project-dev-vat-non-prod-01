@@ -54,9 +54,11 @@ model Product {
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  // true -> shown on the Jewellery & Bangles page, hidden from the main feed
+  isJewellery Boolean  @default(false)
+  createdAt   DateTime @default(now())
   products  ProductCategory[]
 
   @@map("category")

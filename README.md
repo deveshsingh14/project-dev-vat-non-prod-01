@@ -3,9 +3,9 @@ This is our personal space to store Codes. Me and Vatsal will share this as clou
 
 # Here is an LLM generated short readme file.
 
-# 💍 Radha – Bangles & Jewellery E-Commerce Platform
+# 🛍 Radha E-Commerce Platform
 
-A full-stack e-commerce platform for **Radha – Bangles & Jewellery**, designed for bridal jewellery, cosmetics, and fashion accessories. The application provides a modern customer shopping experience along with a powerful admin dashboard for inventory, category, and order management.
+A full-stack e-commerce platform for **Radha E-Commerce** — skincare, haircare and everyday essentials, with a dedicated **Jewellery & Bangles** page (`jewellery.html`) for bridal jewellery and bangles. Admins choose which categories appear on the jewellery page with the "Jewellery & Bangles page" tick-box on each category. The application provides a modern customer shopping experience along with a powerful admin dashboard for inventory, category, and order management.
 
 ---
 

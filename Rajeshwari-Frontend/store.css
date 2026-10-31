@@ -565,3 +565,10 @@ img { display: block; }
 @media (max-width: 520px) {
   .install-slot { flex-direction: column; align-items: stretch; text-align: left; }
 }
+
+/* ============ SECTION SWITCH (main store <-> Jewellery & Bangles) ============ */
+a.bn-item, a.icon-btn { text-decoration: none; }
+.section-link .ib-ico { font-size: 16px; }
+@media (max-width: 880px) {
+  .section-link { display: none; } /* the bottom nav carries it on small screens */
+}

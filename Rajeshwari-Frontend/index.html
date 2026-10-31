@@ -1,11 +1,11 @@
-<!-- deployment trigger -->
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Radha — Bangles & Jewellery</title>
+  <title>Radha E-Commerce</title>
+  <meta name="description" content="Radha E-Commerce — skincare, haircare, baby care and everyday essentials, with a dedicated Jewellery &amp; Bangles collection.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,22 +25,25 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
-<body>
+<body data-section="general">
 
   <!-- ============ TOP BAR ============ -->
   <header class="topbar" id="topbar">
     <a class="logo" href="#" onclick="resetFeed(); return false;">
       <span class="logo-mark">R</span>
-      <span class="logo-text">Radha<em>Bangles &amp; Jewellery</em></span>
+      <span class="logo-text">Radha<em>E-Commerce</em></span>
     </a>
 
     <div class="search-wrap">
       <span class="s-ico">⌕</span>
-      <input type="text" id="searchInput" placeholder="Search bangles, earrings, skincare…" autocomplete="off">
+      <input type="text" id="searchInput" placeholder="Search skincare, haircare, baby care…" autocomplete="off">
       <button class="s-clear" id="searchClear" onclick="clearSearch()">×</button>
     </div>
 
     <nav class="top-actions">
+      <a class="icon-btn section-link" href="jewellery.html" title="Jewellery &amp; Bangles">
+        <span class="ib-ico">💍</span><span class="ib-label">Jewellery</span>
+      </a>
       <button class="icon-btn" onclick="openWishlist()" title="Saved">
         <span class="ib-ico">♥</span><span class="ib-label">Saved</span>
         <span class="count-dot" id="wishCount">0</span>
@@ -85,7 +88,8 @@
 
   <!-- ============ MOBILE BOTTOM NAV ============ -->
   <nav class="bottom-nav">
-    <button class="bn-item active" onclick="resetFeed()"><span>⌂</span>Home</button>
+    <button class="bn-item active" onclick="resetFeed()" aria-current="page"><span>⌂</span>Home</button>
+    <a class="bn-item" href="jewellery.html"><span>💍</span>Jewellery</a>
     <button class="bn-item" onclick="focusSearch()"><span>⌕</span>Search</button>
     <button class="bn-item" onclick="openWishlist()"><span>♥</span>Saved</button>
     <button class="bn-item" onclick="openCart()"><span>🛍</span>Bag</button>
@@ -129,7 +133,7 @@
   <div class="sheet-back" id="authModal">
     <div class="auth-card">
       <button class="sheet-close" onclick="closeAuth()">×</button>
-      <div class="auth-logo">Radha</div>
+      <div class="auth-logo">Radha E-Commerce</div>
       <h2 id="authTitle">Welcome back</h2>
       <p class="auth-sub" id="authSub">Log in to save products and shop.</p>
       <input type="text" id="authName" placeholder="Full name" style="display:none;">
@@ -155,6 +159,7 @@
   <div id="toast"></div>
 
   <script src="api.js"></script>
+  <script src="section.js"></script>
   <script src="store.js"></script>
   <script src="pwa.js" defer></script>
 </body>

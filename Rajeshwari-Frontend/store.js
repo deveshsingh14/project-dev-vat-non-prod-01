@@ -1,5 +1,9 @@
 /* ============================================================
-   Radha storefront — explore feed engine
+   Radha E-Commerce storefront — explore feed engine
+   Serves both storefront pages; <body data-section> picks which:
+     index.html     -> "general"   (everything except jewellery)
+     jewellery.html -> "jewellery" (Jewellery & Bangles)
+   Section rules live in section.js.
    Talks to the same backend as before:
      GET /products, /categories
      POST/GET/PUT/DELETE /cart      (auth)
@@ -10,11 +14,15 @@
    ============================================================ */
 
 // API_URL, esc(), NO_IMAGE_PLACEHOLDER and imgSrc() live in api.js.
+// SECTIONS / filterProductsBySection / categoriesForSection live in section.js.
 
 // ---------- state ----------
-let PRODUCTS = [];          // normalized products
-let productsByCategory = null; // index for "More like this"
-let CATEGORIES = [];
+let PRODUCTS = [];          // ALL normalized products (wishlist/cart/sheet lookups)
+let SECTION = sectionFromDocument(document); // "general" | "jewellery"
+let SECTION_PRODUCTS = [];  // products shown on this page
+let productsByCategory = null; // index for "More like this" (this section)
+let CATEGORIES = [];        // all categories
+let SECTION_CATEGORIES = []; // categories shown on this page
 let WISHLIST = [];          // raw wishlist rows {id, productId, product}
 let savedProductIds = new Map(); // maps productId -> wishlistItemId
 let activeCategory = "";    // category name; "" = all
@@ -26,7 +34,7 @@ function normalizeProduct(p) {
   const categoryList = (p.categories || [])
     .map(c => c.category && c.category.name).filter(Boolean);
   const _searchIndex = `${p.title} ${p.description || ""} ${p.keywords || ""} ${categoryList.join(" ")}`.toLowerCase();
-  return { ...p, categoryList, category: categoryList[0] || "", _searchIndex };
+  return { ...p, categoryList, category: categoryList[0] || "", jewellery: isJewelleryProduct(p), _searchIndex };
 }
 
 // Deterministic image height per pin so the masonry feels organic
@@ -64,9 +72,11 @@ async function boot() {
       fetch(`${API_URL}/categories`)
     ]);
     PRODUCTS = (await prodRes.json()).items.map(normalizeProduct);
-    productsByCategory = null; // invalidate cache when products reload
     CATEGORIES = await catRes.json();
-    categoryCoverMap = null; // Invalidate map when products reload
+    SECTION_PRODUCTS = filterProductsBySection(PRODUCTS, SECTION);
+    SECTION_CATEGORIES = categoriesForSection(CATEGORIES, SECTION);
+    productsByCategory = null; // invalidate caches when products reload
+    categoryCoverMap = null;
   } catch (e) {
     console.error("Error loading storefront data:", e);
     document.getElementById("masonry").innerHTML =
@@ -74,6 +84,7 @@ async function boot() {
        Couldn't reach the store. Is the backend running?</div>`;
     return;
   }
+  applyLaunchCategory();
   renderStories();
   renderChips();
   applyFilters();
@@ -97,7 +108,7 @@ function categoryCover(cat) {
   // Precompute map to avoid O(N*M) lookup
   if (!categoryCoverMap) {
     categoryCoverMap = {};
-    for (const pr of PRODUCTS) {
+    for (const pr of SECTION_PRODUCTS) {
       if (!pr.categoryList) continue;
       for (const c of pr.categoryList) {
         if (!categoryCoverMap[c]) {
@@ -110,8 +121,8 @@ function categoryCover(cat) {
 }
 function renderStories() {
   const rail = document.getElementById("storiesRail");
-  const stories = [{ name: "", label: "For You" }].concat(
-    CATEGORIES.map(c => ({ name: c.name, label: c.name }))
+  const stories = [{ name: "", label: SECTIONS[SECTION].allLabel }].concat(
+    SECTION_CATEGORIES.map(c => ({ name: c.name, label: c.name }))
   );
   rail.innerHTML = stories.map(s => {
     let face;
@@ -138,7 +149,7 @@ function renderStories() {
 function renderChips() {
   const bar = document.getElementById("chipBar");
   const chips = [{ name: "", label: "All" }].concat(
-    CATEGORIES.map(c => ({ name: c.name, label: c.name }))
+    SECTION_CATEGORIES.map(c => ({ name: c.name, label: c.name }))
   );
   bar.innerHTML = chips.map(c => `
     <button class="chip-btn ${activeCategory === c.name ? "active" : ""}" data-cat="${esc(c.name)}">
@@ -146,6 +157,21 @@ function renderChips() {
     </button>`).join("");
   bar.querySelectorAll(".chip-btn").forEach(btn =>
     btn.addEventListener("click", () => setCategory(btn.dataset.cat)));
+}
+// A category chip can point at the other section (e.g. a product tagged
+// both "Accessories" and "Bangles"): go to that page instead of showing
+// an empty feed here.
+function goToCategory(cat) {
+  const target = sectionOfCategoryName(CATEGORIES, cat);
+  if (cat && target !== SECTION) {
+    window.location.href = `${SECTIONS[target].page}?category=${encodeURIComponent(cat)}`;
+    return;
+  }
+  setCategory(cat);
+}
+function applyLaunchCategory() {
+  const cat = new URLSearchParams(window.location.search).get("category");
+  if (cat && SECTION_CATEGORIES.some(c => c.name === cat)) activeCategory = cat;
 }
 function setCategory(cat) {
   activeCategory = cat;
@@ -166,7 +192,7 @@ function resetFeed() {
 //  FEED
 // ============================================================
 function applyFilters() {
-  let items = [...PRODUCTS];
+  let items = [...SECTION_PRODUCTS];
 
   if (activeCategory) {
     items = items.filter(p => p.categoryList.includes(activeCategory));
@@ -216,6 +242,8 @@ function createProductCard(p) {
   </div>`;
 }
 
+function filtersActive() { return !!(activeCategory || searchQuery); }
+
 function renderFeed(items) {
   const m = document.getElementById("masonry");
   const end = document.getElementById("feedEnd");
@@ -223,10 +251,14 @@ function renderFeed(items) {
   if (!items.length) {
     m.innerHTML = `
       <div class="empty-feed" style="column-span:all">
-        <div class="big">⌕</div>
-        <h3>Nothing here yet</h3>
-        <p>Try a different search or category.</p>
-        <button class="btn-solid" style="flex:none" onclick="resetFeed()">Back to For You</button>
+        <div class="big">${SECTION === "jewellery" ? "💍" : "⌕"}</div>
+        <h3>${esc(filtersActive() ? "Nothing here yet" : SECTIONS[SECTION].emptyTitle)}</h3>
+        <p>${esc(filtersActive() ? "Try a different search or category." : SECTIONS[SECTION].emptyText)}</p>
+        ${filtersActive()
+          ? `<button class="btn-solid" style="flex:none" onclick="resetFeed()">Back to ${esc(SECTIONS[SECTION].allLabel)}</button>`
+          : SECTION === "jewellery"
+            ? `<a class="btn-solid" style="flex:none;text-decoration:none;display:inline-block" href="index.html">Shop the main store</a>`
+            : ""}
       </div>`;
     end.style.display = "none";
     return;
@@ -297,7 +329,7 @@ function focusSearch() {
 function moreLikeThisHTML(p) {
   if (!productsByCategory) {
     productsByCategory = {};
-    for (const prod of PRODUCTS) {
+    for (const prod of SECTION_PRODUCTS) {
       if (!prod.categoryList) continue;
       for (const c of prod.categoryList) {
         if (!productsByCategory[c]) productsByCategory[c] = [];
@@ -357,7 +389,7 @@ function openSheet(id) {
       </div>
       <div class="sh-cats">
         ${p.categoryList.map(c =>
-          `<button class="sh-chip" onclick="closeSheet(); setCategory('${esc(c)}')">${esc(c)}</button>`).join("")}
+          `<button class="sh-chip" data-cat="${esc(c)}">${esc(c)}</button>`).join("")}
       </div>
       <div class="sh-actions">
         <button class="btn-solid" ${p.stock <= 0 ? "disabled" : ""} onclick="addToCart(${p.id})">
@@ -367,6 +399,10 @@ function openSheet(id) {
       </div>
       ${moreLikeThisHTML(p)}
     </div>`;
+  // data-attribute + listener (not inline onclick) so a category name can
+  // never be interpreted as script.
+  document.querySelectorAll("#sheetGrid .sh-chip").forEach(btn =>
+    btn.addEventListener("click", () => { closeSheet(); goToCategory(btn.dataset.cat); }));
   document.getElementById("productSheet").classList.add("open");
   document.body.style.overflow = "hidden";
 }
@@ -595,7 +631,7 @@ function shareProduct(e, id) {
   const p = PRODUCTS.find(x => x.id === id);
   if (!p) return;
   if (navigator.share) {
-    navigator.share({ title: p.title, text: `${p.title} — ${inr(p.price)} at Radha Bangles & Jewellery` })
+    navigator.share({ title: p.title, text: `${p.title} — ${inr(p.price)} at Radha E-Commerce` })
       .catch(() => {});
   } else {
     toast("Sharing isn't supported on this browser");
@@ -743,6 +779,7 @@ function handleLaunchParams() {
 }
 
 // ---------- boot ----------
+document.getElementById("searchInput").placeholder = SECTIONS[SECTION].searchPlaceholder;
 boot();
 handleLaunchParams();
 

@@ -37,6 +37,19 @@
   ],
   "shortcuts": [
     {
+      "name": "Jewellery & Bangles",
+      "short_name": "Jewellery",
+      "description": "Bangles, earrings and bridal jewellery",
+      "url": "jewellery.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
       "name": "My orders",
       "short_name": "Orders",
       "description": "Track your orders",

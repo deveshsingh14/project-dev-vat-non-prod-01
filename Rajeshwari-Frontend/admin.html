@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Radha · Admin</title>
+<title>Radha E-Commerce · Admin</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -191,11 +191,12 @@
 
     <!-- ---------- CATEGORIES ---------- -->
     <section class="view" id="view-categories">
-      <div class="view-head"><div><h2>Categories</h2><p>Organise products into collections.</p></div></div>
+      <div class="view-head"><div><h2>Categories</h2><p>Organise products into collections. Tick <strong>Jewellery &amp; Bangles page</strong> to show a category on the jewellery page; everything else appears in the main Radha E-Commerce store.</p></div></div>
       <div class="toolbar">
         <div class="search-field" style="max-width:320px;flex:none;width:100%;">
           <input type="text" id="categoryName" placeholder="New category name" style="padding-left:12px;">
         </div>
+        <label class="jewel-toggle new-cat"><input type="checkbox" id="categoryIsJewellery"><span>💍 Jewellery</span></label>
         <button class="btn btn-gold" onclick="createCategory()">Add category</button>
       </div>
       <div class="cat-list" id="categoryList"></div>

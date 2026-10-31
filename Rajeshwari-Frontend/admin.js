@@ -326,7 +326,7 @@ function populateCategoryFilters() {
     CATEGORIES.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
 
   const boxes = CATEGORIES.map(c => `
-    <label class="cat-option"><input type="checkbox" value="${c.id}"> ${esc(c.name)}</label>`).join("");
+    <label class="cat-option"><input type="checkbox" value="${c.id}"> ${c.isJewellery ? "💍 " : ""}${esc(c.name)}</label>`).join("");
   document.getElementById("productCategoryOptions").innerHTML = boxes || `<span class="cell-sub">Create a category first.</span>`;
 }
 function filteredProducts() {
@@ -422,7 +422,7 @@ function openEdit(p) {
   document.getElementById("editProductKeywords").value = p.keywords || "";
   const checked = new Set((p.categories || []).map(c => c.category.id));
   document.getElementById("editCategoryOptions").innerHTML = CATEGORIES.map(c => `
-    <label class="cat-option"><input type="checkbox" value="${c.id}" ${checked.has(c.id) ? "checked" : ""}> ${esc(c.name)}</label>`).join("");
+    <label class="cat-option"><input type="checkbox" value="${c.id}" ${checked.has(c.id) ? "checked" : ""}> ${c.isJewellery ? "💍 " : ""}${esc(c.name)}</label>`).join("");
   document.getElementById("editProductImageFile").value = "";
   document.getElementById("editUploadStatus").textContent = "";
   document.getElementById("editModal").classList.add("open");
@@ -475,8 +475,16 @@ function renderCategories() {
   }));
   document.getElementById("categoryList").innerHTML = CATEGORIES.length
     ? CATEGORIES.map(c => `
-      <div class="cat-card">
-        <div><h4>${esc(c.name)}</h4><div class="count">${counts[c.id] || 0} products</div></div>
+      <div class="cat-card ${c.isJewellery ? "is-jewellery" : ""}">
+        <div class="cat-info">
+          <h4>${c.isJewellery ? "💍 " : ""}${esc(c.name)}</h4>
+          <div class="count">${counts[c.id] || 0} products · ${c.isJewellery ? "Jewellery page" : "Main store"}</div>
+          <label class="jewel-toggle" title="Show this category on the Jewellery &amp; Bangles page">
+            <input type="checkbox" ${c.isJewellery ? "checked" : ""}
+              onchange="setCategoryJewellery(${c.id}, this.checked, this)">
+            <span>Jewellery &amp; Bangles page</span>
+          </label>
+        </div>
         <button class="btn btn-sm btn-danger" onclick="deleteCategory(${c.id})">Delete</button>
       </div>`).join("")
     : `<div class="empty" style="grid-column:1/-1;"><div class="big">❖</div>No categories yet — add one above.</div>`;
@@ -484,12 +492,33 @@ function renderCategories() {
 async function createCategory() {
   const name = val("categoryName").trim();
   if (!name) return toast("Enter a category name", "err");
+  const jewelBox = document.getElementById("categoryIsJewellery");
+  const isJewellery = !!(jewelBox && jewelBox.checked);
   try {
-    await api("/categories", { method: "POST", headers: authHeaders(true), body: JSON.stringify({ name }) });
+    await api("/categories", { method: "POST", headers: authHeaders(true), body: JSON.stringify({ name, isJewellery }) });
     document.getElementById("categoryName").value = "";
+    if (jewelBox) jewelBox.checked = false;
     toast("Category added");
     await loadAll();
   } catch (e) { catchErr(e, "Couldn't add category"); }
+}
+// Moves a category between the main store and the Jewellery & Bangles
+// page. Optimistic: the checkbox flips immediately and is reverted if
+// the save fails.
+async function setCategoryJewellery(id, isJewellery, checkbox) {
+  try {
+    const updated = await api(`/categories/${id}`, {
+      method: "PATCH", headers: authHeaders(true), body: JSON.stringify({ isJewellery })
+    });
+    const cat = CATEGORIES.find(c => c.id === id);
+    if (cat) cat.isJewellery = updated && typeof updated.isJewellery === "boolean" ? updated.isJewellery : isJewellery;
+    toast(isJewellery ? "Now shown on the Jewellery & Bangles page" : "Now shown on the main store");
+    renderCategories();
+    populateCategoryFilters();
+  } catch (e) {
+    if (checkbox) checkbox.checked = !isJewellery;
+    catchErr(e, "Couldn't update category");
+  }
 }
 async function deleteCategory(id) {
   if (!confirm("Delete this category?")) return;
@@ -1037,6 +1066,9 @@ async function adminChangePassword() {
 }
 if (typeof module !== "undefined") {
   module.exports = {
+    setCategoryJewellery,
+    renderCategories,
+    _setState: (state) => { if (state.CATEGORIES) CATEGORIES = state.CATEGORIES; if (state.PRODUCTS) PRODUCTS = state.PRODUCTS; },
     shortDate,
     statusBadge,
     stockBadge,
