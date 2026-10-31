@@ -284,6 +284,31 @@ PUT    /orders/:id/status
 
 ---
 
+# 🧪 Testing
+
+```bash
+cd Rajeshwari-Frontend && npx jest      # frontend unit tests
+cd Rajeshwari-Backend && npm test       # backend unit tests (no database)
+```
+
+Backend tests that **write to the database** run separately and only
+against a local/throwaway Postgres — they abort if `DATABASE_URL` points
+anywhere else (see `Rajeshwari-Backend/scripts/testDbSafety.js`):
+
+```bash
+docker run -d --name radha-testdb -e POSTGRES_USER=radha -e POSTGRES_PASSWORD=radha \
+  -e POSTGRES_DB=radha_test -p 5432:5432 postgres:16-alpine
+cd Rajeshwari-Backend
+export DATABASE_URL="postgresql://radha:radha@localhost:5432/radha_test"
+npx prisma db push && npm run test:db
+```
+
+⚠️ Never point these at the production Neon database. Any new test or
+script that writes data must call `assertSafeTestDb()` before creating a
+Prisma client.
+
+---
+
 # 🚀 Installation
 
 ## Clone Repository
