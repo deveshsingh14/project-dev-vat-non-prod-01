@@ -1,3 +1,7 @@
+// Writes to the database (upserts users, resets passwords/roles) — must
+// never run against Neon/production.
+require('./scripts/testDbSafety').assertSafeTestDb();
+
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();

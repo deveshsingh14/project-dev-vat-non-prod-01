@@ -1,3 +1,6 @@
+// Writes to the database — must never run against Neon/production.
+require('./scripts/testDbSafety').assertSafeTestDb();
+
 const test = require('node:test');
 const assert = require('assert');
 const { spawn } = require('child_process');
@@ -6,9 +9,15 @@ const prisma = new PrismaClient();
 
 const PORT = 5002;
 const BASE_URL = `http://localhost:${PORT}`;
+const TEST_EMAILS = ["test.exists@example.com", "does.not.exist@example.com"];
+
+// Only ever touch this test's own rows — never wipe whole tables.
+async function cleanupTestUsers() {
+  await prisma.user.deleteMany({ where: { email: { in: TEST_EMAILS } } });
+}
 
 async function setupTestDb() {
-  await prisma.user.deleteMany({});
+  await cleanupTestUsers();
 
   // Create a known user
   await prisma.user.create({
@@ -23,7 +32,15 @@ async function setupTestDb() {
 
 function startServer() {
   return new Promise((resolve, reject) => {
-    const env = { ...process.env, PORT: PORT.toString(), JWT_SECRET: "test_secret", NODE_ENV: "test" };
+    // Cloudinary is required at boot but unused by this test; dummies let it
+    // start in CI, where no real credentials exist.
+    const env = {
+      CLOUDINARY_CLOUD_NAME: "test", CLOUDINARY_API_KEY: "test", CLOUDINARY_API_SECRET: "test",
+      ...process.env, PORT: PORT.toString(), JWT_SECRET: "test_secret", NODE_ENV: "test",
+      // Never send real email or Sentry events from tests. dotenv does not
+      // override variables that are already set, even to "".
+      EMAIL_USER: "", EMAIL_PASS: "", SENTRY_DSN: ""
+    };
     const server = spawn('node', ['src/index.js'], { env, cwd: __dirname });
 
     server.stdout.on('data', (data) => {
@@ -49,7 +66,7 @@ test('Forgot Password Email Enumeration Protection', async (t) => {
 
   t.after(async () => {
     serverProcess.kill();
-    await prisma.user.deleteMany({});
+    await cleanupTestUsers();
     await prisma.$disconnect();
   });
 
