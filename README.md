@@ -284,6 +284,22 @@ PUT    /orders/:id/status
 
 ---
 
+# 🔔 Order notifications (Web Push)
+
+Customers get a notification when their order is **placed, shipped, delivered or cancelled**;
+the shop owner (every ADMIN / OWNER account that switched on **🔔 New-order alerts** in the
+admin header) gets one for **every new order**. Customers opt in on **My account → Order
+notifications** or right after checkout. Logging out unsubscribes that device.
+
+Setup (once): set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` on the backend
+(Render dashboard → Environment). Generate keys with `npx web-push generate-vapid-keys`; the
+private key is a secret. Without them the feature switches itself off and the site works as before.
+
+Browser support: Chrome/Edge/Firefox on Android and desktop. iPhone/iPad (iOS 16.4+) only after
+the site is added to the Home Screen and opened from there.
+
+---
+
 # 🧪 Testing
 
 ```bash

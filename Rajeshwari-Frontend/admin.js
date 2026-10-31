@@ -92,7 +92,11 @@ function showView(view) {
 document.querySelectorAll("[data-view]").forEach(el =>
   el.addEventListener("click", () => showView(el.dataset.view)));
 function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
-function adminLogout() { localStorage.removeItem("token"); window.location.href = "index.html"; }
+async function adminLogout() {
+  if (typeof beforeLogout === "function") await beforeLogout();
+  localStorage.removeItem("token");
+  window.location.href = "index.html";
+}
 
 // ============================================================
 //  DATA LOADING

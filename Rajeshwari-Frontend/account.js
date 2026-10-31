@@ -5,7 +5,8 @@
 function fmtDate(d) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
-function logout() {
+async function logout() {
+  if (typeof beforeLogout === "function") await beforeLogout();
   localStorage.removeItem("token");
   window.location.href = "index.html";
 }

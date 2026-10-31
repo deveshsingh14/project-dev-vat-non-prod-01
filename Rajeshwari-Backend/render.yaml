@@ -39,3 +39,10 @@ services:
         sync: false
       - key: ENABLE_OWNER_PROMOTION
         sync: false
+      # Web Push (order notifications) — optional; disabled when unset.
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false

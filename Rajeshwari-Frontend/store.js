@@ -755,7 +755,8 @@ function finishLogin(jwt) {
   refreshWishlist().then(applyFilters);
   refreshCartCount();
 }
-function logout() {
+async function logout() {
+  await beforeLogout();
   localStorage.removeItem("token");
   savedProductIds = new Map(); WISHLIST = [];
   updateAuthUI(); updateWishCount(); refreshCartCount(); applyFilters();

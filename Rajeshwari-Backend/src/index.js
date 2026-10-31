@@ -39,6 +39,7 @@ const wishlistRoutes = require("./routes/wishlistRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
 const pincodeRoutes = require("./routes/pincodeRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 const prisma = require("./config/db");
 const logger = require("./config/logger");
 const errorHandler = require("./middleware/errorHandler");
@@ -83,6 +84,7 @@ app.use("/wishlist", wishlistRoutes);
 app.use("/orders", orderRoutes);
 app.use("/users", userRoutes);
 app.use("/pincode-restrictions", pincodeRoutes);
+app.use("/notifications", notificationRoutes);
 
 
 app.get("/", (req, res) => {

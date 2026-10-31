@@ -71,6 +71,17 @@ function toast(msg, kind = "ok") {
   }, 2500);
 }
 
+// Every logout calls this first: it unsubscribes this device from order
+// notifications (needs the token, so it must run before the token is
+// removed). Capped at 1.5s and never throws — logout must always work.
+async function beforeLogout() {
+  try {
+    if (typeof window !== "undefined" && window.RadhaPush) {
+      await Promise.race([window.RadhaPush.disable(), new Promise(r => setTimeout(r, 1500))]);
+    }
+  } catch (e) { /* ignore */ }
+}
+
 function catchErr(e, msg, el = null) {
   console.error("Error:", e);
   if (el) el.textContent = msg;
@@ -87,6 +98,7 @@ if (typeof module !== "undefined") {
     token,
     authHeaders,
     toast,
-    catchErr
+    catchErr,
+    beforeLogout
   };
 }

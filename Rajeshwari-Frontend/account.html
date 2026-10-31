@@ -42,6 +42,14 @@
     <button class="btn-solid" data-pwa-install-btn>Install app</button>
   </div>
 
+  <div class="co-card install-slot notify-panel" data-push-panel hidden>
+    <div>
+      <h3>🔔 Order notifications</h3>
+      <p data-push-text></p>
+    </div>
+    <button class="btn-solid" data-push-toggle>Turn on</button>
+  </div>
+
   <div class="acct-tabs">
     <button class="acct-tab active" id="tab-orders" onclick="showTab('orders')">My orders</button>
     <button class="acct-tab" id="tab-profile" onclick="showTab('profile')">Profile</button>
@@ -87,5 +95,6 @@
 <script src="api.js"></script>
 <script src="account.js"></script>
 <script src="pwa.js" defer></script>
+<script src="notifications.js" defer></script>
 </body>
 </html>

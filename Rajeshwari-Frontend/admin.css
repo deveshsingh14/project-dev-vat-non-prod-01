@@ -461,3 +461,11 @@ label.field > span { display: block; font-size: 11.5px; font-weight: 600; color:
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* New-order alerts (notifications.js) */
+.push-admin { display: flex; align-items: center; gap: 8px; }
+.push-admin[hidden] { display: none; }
+.push-admin .push-note { display: none; font-size: 11.5px; color: var(--muted); max-width: 260px; }
+.push-admin[data-state="ios-install"] .push-note,
+.push-admin[data-state="blocked"] .push-note { display: block; }
+@media (max-width: 700px) { .push-admin .push-note { display: none !important; } }

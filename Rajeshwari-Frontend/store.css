@@ -552,7 +552,7 @@ img { display: block; }
 @media (display-mode: standalone) {
   .topbar { padding-top: max(12px, env(safe-area-inset-top)); }
 }
-/* "Get the app" card (account page) — shown by pwa.js only when installable */
+/* "Get the app" (pwa.js) and "Order notifications" (notifications.js) cards */
 .install-slot {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   margin-bottom: 20px; border-color: rgba(201,154,63,.45);
@@ -572,3 +572,6 @@ a.bn-item, a.icon-btn { text-decoration: none; }
 @media (max-width: 880px) {
   .section-link { display: none; } /* the bottom nav carries it on small screens */
 }
+
+.notify-panel[hidden] { display: none; }
+.success-notify { max-width: 520px; margin: 22px auto 0; text-align: left; }
