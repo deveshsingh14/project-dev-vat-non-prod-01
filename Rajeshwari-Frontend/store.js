@@ -734,8 +734,17 @@ function updateAuthUI() {
 }
 
 
+// Home-screen shortcut "Saved items" opens index.html?open=saved.
+// The wishlist API returns full product rows, so this doesn't need to
+// wait for the catalogue to load.
+function handleLaunchParams() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("open") === "saved") openWishlist();
+}
+
 // ---------- boot ----------
 boot();
+handleLaunchParams();
 
 if (typeof module !== "undefined") {
   module.exports = {

@@ -548,60 +548,20 @@ img { display: block; }
 }
 .mlt-price { font-size: 11.5px; font-weight: 700; color: var(--muted); }
 
-/* ============================================================
-   PWA UI (install card, offline banner, update bar)
-   ============================================================ */
-#pwaInstallCard {
-  position: fixed; left: 50%; bottom: 90px; z-index: 300;
-  transform: translateX(-50%) translateY(20px);
-  display: flex; align-items: center; gap: 12px;
-  width: calc(100% - 32px); max-width: 420px;
-  background: #fff; border: 1px solid var(--line); border-radius: 18px;
-  padding: 12px 14px; box-shadow: 0 12px 40px rgba(33,26,32,.18);
-  opacity: 0; transition: opacity .3s ease, transform .3s ease;
-}
-#pwaInstallCard.in { opacity: 1; transform: translateX(-50%) translateY(0); }
-#pwaInstallCard .pwa-ico {
-  flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px;
-  background: radial-gradient(circle at 32% 26%, #a03355, var(--maroon));
-  color: #fff; font-family: "Cinzel", serif; font-weight: 700; font-size: 20px;
-  display: grid; place-items: center;
-  box-shadow: inset 0 0 0 1.5px rgba(201,154,63,.85);
-}
-#pwaInstallCard .pwa-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-#pwaInstallCard .pwa-copy strong { font-size: 13.5px; color: var(--ink); }
-#pwaInstallCard .pwa-copy span { font-size: 11.5px; color: var(--muted); }
-#pwaInstallCard .pwa-yes {
-  flex: 0 0 auto; border: none; border-radius: 999px;
-  background: var(--maroon); color: #fff; font-weight: 700; font-size: 13px;
-  padding: 9px 17px;
-}
-#pwaInstallCard .pwa-yes:hover { background: #5f172f; }
-#pwaInstallCard .pwa-no {
-  flex: 0 0 auto; border: none; background: none; color: var(--muted);
-  font-size: 20px; line-height: 1; padding: 0 2px;
-}
-#pwaInstallCard .pwa-no:hover { color: var(--ink); }
-
-#pwaOfflineBar, #pwaUpdateBar {
-  position: fixed; left: 0; right: 0; top: 0; z-index: 310;
-  padding: 9px 16px; text-align: center;
-  font-size: 12.5px; font-weight: 600;
-  transform: translateY(-100%); transition: transform .3s ease;
-}
-#pwaOfflineBar.in, #pwaUpdateBar.in { transform: none; }
-#pwaOfflineBar { background: #3d353c; color: #fff; }
-#pwaUpdateBar {
-  background: var(--gold); color: #2b2008;
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-}
-#pwaUpdateBar button {
-  border: none; border-radius: 999px; background: #2b2008; color: #fff;
-  font-family: inherit; font-size: 12px; font-weight: 700; padding: 5px 14px;
-}
-
 /* in installed/standalone mode, respect the device safe areas */
 @media (display-mode: standalone) {
   .topbar { padding-top: max(12px, env(safe-area-inset-top)); }
-  #pwaInstallCard { display: none !important; }
+}
+/* "Get the app" card (account page) — shown by pwa.js only when installable */
+.install-slot {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-bottom: 20px; border-color: rgba(201,154,63,.45);
+  background: linear-gradient(135deg, #fff 0%, var(--soft) 100%);
+}
+.install-slot[hidden] { display: none; }
+.install-slot h3 { margin: 0 0 4px; }
+.install-slot p { margin: 0; font-size: 13px; color: var(--muted); }
+.install-slot .btn-solid { flex: none; white-space: nowrap; }
+@media (max-width: 520px) {
+  .install-slot { flex-direction: column; align-items: stretch; text-align: left; }
 }

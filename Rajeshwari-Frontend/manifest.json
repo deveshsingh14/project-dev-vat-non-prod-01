@@ -1,8 +1,9 @@
 {
-  "name": "Radha — Bangles & Jewellery",
-  "short_name": "Radha",
-  "description": "Bridal jewellery, bangles, makeup and skincare. Explore and shop the collection.",
-  "start_url": "index.html",
+  "id": "./index.html",
+  "name": "Radha E-Commerce",
+  "short_name": "Radha E-Commerce",
+  "description": "Radha E-Commerce — beauty, skincare, daily essentials, plus bridal jewellery and bangles. Shop the collection.",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
@@ -10,7 +11,10 @@
   "theme_color": "#7a1f3d",
   "lang": "en-IN",
   "dir": "ltr",
-  "categories": ["shopping", "lifestyle"],
+  "categories": [
+    "shopping",
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -36,13 +40,43 @@
       "name": "My orders",
       "short_name": "Orders",
       "description": "Track your orders",
-      "url": "account.html"
+      "url": "account.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Saved items",
       "short_name": "Saved",
       "description": "Your saved products",
-      "url": "index.html?open=saved"
+      "url": "index.html?open=saved",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/screenshot-narrow.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Browse the Radha E-Commerce collection"
+    },
+    {
+      "src": "icons/screenshot-wide.jpg",
+      "sizes": "1280x800",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Radha E-Commerce on desktop"
     }
   ]
 }
