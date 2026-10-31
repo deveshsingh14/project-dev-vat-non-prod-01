@@ -140,3 +140,23 @@ describe("install flow", () => {
     expect(document.getElementById("slot").hidden).toBe(true);
   });
 });
+
+describe("home-screen naming", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, "manifest.json"), "utf8"));
+
+  test("the app is Radha E-Commerce, the shortcut label is Radha", () => {
+    expect(manifest.name).toBe("Radha E-Commerce");
+    expect(manifest.short_name).toBe("Radha");
+  });
+
+  test("iOS home-screen label is Radha on every page that sets one", () => {
+    const pages = fs.readdirSync(__dirname).filter(f => f.endsWith(".html") && f !== "sample.html");
+    const titled = pages.filter(f => /apple-mobile-web-app-title/.test(fs.readFileSync(path.join(__dirname, f), "utf8")));
+    expect(titled.length).toBeGreaterThanOrEqual(6);
+    for (const f of titled) {
+      expect(fs.readFileSync(path.join(__dirname, f), "utf8")).toMatch(/<meta name="apple-mobile-web-app-title" content="Radha">/);
+    }
+  });
+});
