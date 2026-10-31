@@ -1,7 +1,7 @@
 {
   "id": "./index.html",
   "name": "Radha E-Commerce",
-  "short_name": "Radha E-Commerce",
+  "short_name": "Radha",
   "description": "Radha E-Commerce — beauty, skincare, daily essentials, plus bridal jewellery and bangles. Shop the collection.",
   "start_url": "./index.html",
   "scope": "./",
