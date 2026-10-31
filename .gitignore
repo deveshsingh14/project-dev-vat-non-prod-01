@@ -1,2 +1,9 @@
 node_modules/
 package-lock.json
+
+# Logs (may capture user data or tokens)
+*.log
+
+# Merge/patch leftovers
+*.orig
+*.rej
