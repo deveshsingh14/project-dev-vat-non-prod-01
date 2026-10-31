@@ -31,8 +31,5 @@
   },
   "overrides": {
     "deepmerge-ts": "^8.0.0"
-  },
-  "devDependencies": {
-    "autocannon": "^8.0.0"
   }
 }
