@@ -116,7 +116,11 @@ router.post("/checkout", authMiddleware, async (req, res) => {
             create: cartItems.map(item => ({
               quantity: item.quantity,
               price: item.product.price,
-              productId: item.product.id
+              productId: item.product.id,
+              // snapshot: the order keeps its line even if the product is
+              // later renamed or deleted
+              title: item.product.title,
+              image: item.product.image
             }))
           }
         },
@@ -364,13 +368,15 @@ router.put(
 
         if (wasCancelled && !willBeCancelled) {
           // taking it back out of stock — verify first
-          const productIds = order.orderItems.map(item => item.productId);
+          // lines whose product was deleted have no stock to take back
+          const stockedItems = order.orderItems.filter(item => item.productId !== null);
+          const productIds = stockedItems.map(item => item.productId);
           const products = await tx.product.findMany({
             where: { id: { in: productIds } }
           });
           const productMap = new Map(products.map(p => [p.id, p]));
 
-          for (const item of order.orderItems) {
+          for (const item of stockedItems) {
             const product = productMap.get(item.productId);
             if (!product || product.stock < item.quantity) {
               throw { code: "RESTOCK_FAIL", title: product ? product.title : "A product" };

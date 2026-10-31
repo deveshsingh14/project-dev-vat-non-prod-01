@@ -168,11 +168,16 @@ model OrderItem {
   quantity Int
   price    Float
 
-  orderId   Int
-  productId Int
+  // Snapshot of the product at order time, so order history survives the
+  // product being edited or deleted (productId becomes null on delete).
+  title String?
+  image String?
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId   Int
+  productId Int?
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
   @@index([productId])

@@ -169,3 +169,27 @@ describe('account.js utilities', () => {
     });
   });
 });
+
+describe('order history rendering', () => {
+  const { loadOrders } = require('./account');
+  const api = require('./api');
+  beforeAll(() => {
+    global.itemTitle = api.itemTitle; global.itemImage = api.itemImage;
+    global.esc = api.esc; global.fmtDate = undefined;
+  });
+
+  it('shows lines whose product was deleted, using the stored snapshot', async () => {
+    global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve([{
+      id: 8, status: 'Pending', createdAt: '2026-09-18T00:00:00Z', totalAmount: 448, paymentMethod: 'COD', paymentStatus: 'Pending',
+      orderItems: [
+        { quantity: 1, price: 299, productId: null, product: null, title: 'Glass Bangle Set', image: null },
+        { quantity: 1, price: 149, productId: 15, product: { title: 'Joy Skin Fruit', image: 'j.jpg' }, title: 'Joy Skin Fruit' }
+      ]
+    }]) }));
+    await loadOrders();
+    const html = document.getElementById('ordersList').innerHTML;
+    expect(html).toContain('Glass Bangle Set');
+    expect(html).toContain('Joy Skin Fruit');
+    expect(html).toContain('2 items');
+  });
+});

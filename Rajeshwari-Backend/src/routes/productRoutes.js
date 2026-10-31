@@ -418,9 +418,10 @@ router.delete(
     try {
       const id = Number(req.params.id);
 
-      // CHANGED: cart/wishlist/orderItem/productCategory rows for this
-      // product now cascade-delete at the DB level (onDelete: Cascade
-      // in schema.prisma) — no need to manually delete them first.
+      // Cart/wishlist/productCategory rows for this product cascade-delete
+      // at the DB level. Order lines are NOT deleted: they keep their
+      // title/image snapshot and productId is set to NULL (order history
+      // must survive product deletion).
       await prisma.product.delete({ where: { id } });
 
       res.json({ message: "Product deleted" });

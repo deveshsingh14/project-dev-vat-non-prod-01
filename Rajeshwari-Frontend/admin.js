@@ -631,8 +631,8 @@ function viewOrder(id) {
   document.getElementById("detailsTitle").textContent = `Order #${o.id}`;
   const items = (o.orderItems || []).map(i => `
     <div class="order-line">
-      <img class="thumb" src="${esc(imgSrc(i.product?.image))}" alt="">
-      <div style="flex:1"><div class="cell-strong">${esc(i.product?.title || "Product")}</div>
+      <img class="thumb" src="${esc(imgSrc(itemImage(i)))}" alt="">
+      <div style="flex:1"><div class="cell-strong">${esc(itemTitle(i))}</div>
       <div class="cell-sub">Qty ${i.quantity} × ${inr(i.price)}</div></div>
       <div class="cell-strong">${inr(i.price * i.quantity)}</div>
     </div>`).join("");
@@ -995,8 +995,10 @@ function runReport() {
   // top products
   const agg = {};
   inRange.forEach(o => (o.orderItems || []).forEach(i => {
-    const key = i.productId ?? i.product?.id;
-    if (!agg[key]) agg[key] = { title: i.product?.title || productById[key]?.title || `#${key}`, units: 0, revenue: 0 };
+    // deleted products have no id any more: group them by their snapshot title
+    const id = i.productId ?? i.product?.id;
+    const key = id != null ? `id:${id}` : `title:${itemTitle(i)}`;
+    if (!agg[key]) agg[key] = { title: i.title || i.product?.title || (id != null && productById[id]?.title) || itemTitle(i), units: 0, revenue: 0 };
     agg[key].units += i.quantity;
     agg[key].revenue += i.price * i.quantity;
   }));
