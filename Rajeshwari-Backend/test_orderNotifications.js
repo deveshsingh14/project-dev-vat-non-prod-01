@@ -14,7 +14,7 @@ function stub(modPath, exportsObj) {
 
 // ---- spy push (keeps the real message builders) ----
 const realBuilders = (() => {
-  const statuses = ["Shipped", "Delivered", "Cancelled"];
+  const statuses = ["Shipped", "Out for Delivery", "Attempted", "Delivered", "Cancelled"];
   return {
     newOrderForShop: o => ({ kind: "shop-new", id: o.id }),
     orderPlacedForCustomer: o => ({ kind: "customer-placed", id: o.id }),
@@ -53,7 +53,18 @@ const tx = {
 };
 stub(path.join(__dirname, "src/config/db"), {
   ...tx,
-  user: { update: () => Promise.resolve() },
+  order: {
+    ...tx.order,
+    updateMany: async ({ where, data }) => {
+      const o = orders.get(where.id);
+      const ok = o && where.status.in.includes(o.status) &&
+        (where.deliveryPartnerId === undefined || o.deliveryPartnerId === where.deliveryPartnerId) &&
+        (!where.OR || where.OR.some(c => (o.deliveryPartnerId ?? null) === c.deliveryPartnerId));
+      if (ok) Object.assign(o, data);
+      return { count: ok ? 1 : 0 };
+    }
+  },
+  user: { update: () => Promise.resolve(), findUnique: async ({ where }) => ({ role: where.id === 50 ? "DELIVERY_PARTNER" : "ADMIN" }) },
   pincodeRestriction: { findUnique: async () => null },
   $transaction: async (fn) => fn(tx)
 });
@@ -126,15 +137,16 @@ test("customers can't change status (and nothing is sent)", async () => {
   assert.strictEqual(pushed.length, 0);
 });
 
-test("delivery partner marking Delivered notifies once; unknown order is 404", async () => {
+test("delivery partner: out for delivery + delivered each notify once; unknown order is 404", async () => {
   cart = [{ quantity: 1, product }];
   const { body } = await call("POST", "/checkout", { id: 9, role: "CUSTOMER", body: DETAILS });
   const id = body.order.id;
+  await call("PUT", `/${id}/status`, { id: 1, role: "ADMIN", body: { status: "Shipped" } });
   pushed.length = 0;
   await call("PATCH", `/${id}/delivery-status`, { id: 50, role: "DELIVERY_PARTNER", body: { status: "Out for Delivery" } });
-  assert.strictEqual(pushed.length, 0);
   await call("PATCH", `/${id}/delivery-status`, { id: 50, role: "DELIVERY_PARTNER", body: { status: "Delivered" } });
-  await call("PATCH", `/${id}/delivery-status`, { id: 50, role: "DELIVERY_PARTNER", body: { status: "Delivered" } });
-  assert.deepStrictEqual(pushed, [["user", 9, { kind: "customer-Delivered", id }]]);
+  const again = await call("PATCH", `/${id}/delivery-status`, { id: 50, role: "DELIVERY_PARTNER", body: { status: "Delivered" } });
+  assert.strictEqual(again.status, 409);
+  assert.deepStrictEqual(pushed, [["user", 9, { kind: "customer-Out for Delivery", id }], ["user", 9, { kind: "customer-Delivered", id }]]);
   assert.strictEqual((await call("PATCH", "/99999/delivery-status", { id: 50, role: "DELIVERY_PARTNER", body: { status: "Delivered" } })).status, 404);
 });

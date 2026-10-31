@@ -121,7 +121,9 @@ test("message builders", () => {
   assert.match(push.statusChangeForCustomer({ id: 42, status: "Delivered" }).title, /#42 delivered/);
   assert.match(push.statusChangeForCustomer({ id: 42, status: "Cancelled" }).title, /#42 was cancelled/);
   assert.strictEqual(push.statusChangeForCustomer({ id: 42, status: "Pending" }), null);
-  assert.deepStrictEqual(push.NOTIFY_STATUSES, ["Shipped", "Delivered", "Cancelled"]);
+  assert.match(push.statusChangeForCustomer({ id: 42, status: "Out for Delivery" }).title, /#42 is out for delivery/);
+  assert.match(push.statusChangeForCustomer({ id: 42, status: "Attempted" }).title, /#42: delivery attempted/);
+  assert.deepStrictEqual(push.NOTIFY_STATUSES, ["Shipped", "Out for Delivery", "Attempted", "Delivered", "Cancelled"]);
 
   assert.match(push.newOrderForShop({ id: 1, totalAmount: 5, orderItems: [{ quantity: 1 }] }).body, /^A customer ordered 1 item ·/);
 });

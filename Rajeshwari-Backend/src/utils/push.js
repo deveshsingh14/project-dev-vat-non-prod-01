@@ -122,6 +122,8 @@ function orderPlacedForCustomer(order) {
 
 const STATUS_MESSAGES = {
   Shipped: o => ({ title: `📦 Order #${o.id} has shipped`, body: "Your order is on its way." }),
+  "Out for Delivery": o => ({ title: `🚚 Order #${o.id} is out for delivery`, body: "It will reach you today. Please keep your phone handy." }),
+  Attempted: o => ({ title: `Order #${o.id}: delivery attempted`, body: "We couldn't reach you — we'll try again soon." }),
   Delivered: o => ({ title: `✅ Order #${o.id} delivered`, body: "Enjoy! Thank you for shopping with Radha E-Commerce." }),
   Cancelled: o => ({ title: `Order #${o.id} was cancelled`, body: "Questions? Reply from your account page or contact the shop." })
 };

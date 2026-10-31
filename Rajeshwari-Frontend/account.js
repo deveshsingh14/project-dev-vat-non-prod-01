@@ -22,22 +22,26 @@ function showTab(which) {
 }
 
 // ---- orders ----
-const STEPS = ["Pending", "Shipped", "Delivered"];
+const STEPS = ["Pending", "Shipped", "Out for Delivery", "Delivered"];
+const STEP_LABELS = { Pending: "Placed", Shipped: "Shipped", "Out for Delivery": "Out for delivery", Delivered: "Delivered" };
 function timelineHTML(status) {
   if (status === "Cancelled") {
     return `<div class="timeline cancelled">
-      ${STEPS.map(s => `<div class="tl-step"><div class="tl-dot">•</div><div class="tl-label">${s}</div></div>`).join("")}
+      ${STEPS.map(s => `<div class="tl-step"><div class="tl-dot">•</div><div class="tl-label">${STEP_LABELS[s]}</div></div>`).join("")}
     </div>
     <p style="font-size:12.5px;color:#cf4b48;font-weight:700;margin:6px 0 0;">This order was cancelled.</p>`;
   }
-  const reached = STEPS.indexOf(status);
+  // "Attempted" = was out for delivery, couldn't be handed over; we'll retry.
+  const reached = status === "Attempted" ? STEPS.indexOf("Shipped") : STEPS.indexOf(status);
   return `<div class="timeline">
     ${STEPS.map((s, i) => `
       <div class="tl-step ${i <= reached ? "done" : ""}">
         <div class="tl-dot">${i <= reached ? "✓" : "•"}</div>
-        <div class="tl-label">${s}</div>
+        <div class="tl-label">${STEP_LABELS[s]}</div>
       </div>`).join("")}
-  </div>`;
+  </div>${status === "Attempted"
+    ? `<p style="font-size:12.5px;color:#b25400;font-weight:700;margin:6px 0 0;">We tried to deliver but couldn't reach you — we'll try again soon.</p>`
+    : ""}`;
 }
 function payPill(o) {
   if (o.paymentStatus === "Paid") return `<span class="pill pl-ok">Paid · ${esc(o.paymentMethod || "COD")}</span>`;
@@ -45,7 +49,7 @@ function payPill(o) {
   return `<span class="pill pl-warn">${o.paymentMethod === "UPI" ? "Awaiting UPI payment" : "Pay on delivery"}</span>`;
 }
 function statusPill(s) {
-  const cls = { Delivered: "pl-ok", Shipped: "pl-info", Pending: "pl-warn", Cancelled: "pl-bad" }[s] || "pl-mute";
+  const cls = { Delivered: "pl-ok", Shipped: "pl-info", "Out for Delivery": "pl-info", Attempted: "pl-warn", Pending: "pl-warn", Cancelled: "pl-bad" }[s] || "pl-mute";
   return `<span class="pill ${cls}">${esc(s)}</span>`;
 }
 

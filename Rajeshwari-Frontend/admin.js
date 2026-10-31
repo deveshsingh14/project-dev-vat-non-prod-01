@@ -49,8 +49,12 @@ async function api(path, opts) {
   return res.json();
 }
 
+// Mirrors Rajeshwari-Backend/src/utils/orderStatus.js
+const ORDER_STATUSES = ["Pending", "Shipped", "Out for Delivery", "Attempted", "Delivered", "Cancelled"];
+const ROLE_LABELS = { ADMIN: "Admin", OWNER: "Owner", DELIVERY_PARTNER: "Delivery partner", CUSTOMER: "Customer" };
+
 function statusBadge(s) {
-  const map = { Delivered: "b-ok", Shipped: "b-info", Pending: "b-warn", Cancelled: "b-bad" };
+  const map = { Delivered: "b-ok", Shipped: "b-info", "Out for Delivery": "b-info", Attempted: "b-warn", Pending: "b-warn", Cancelled: "b-bad" };
   return `<span class="badge ${map[s] || "b-mute"}">${esc(s || "—")}</span>`;
 }
 function stockBadge(stock) {
@@ -167,7 +171,7 @@ function renderDashboard() {
   const kpis = [
     { label: "Revenue", value: revenue, cur: true, foot: `${live.length} paid orders` },
     { label: "Orders", value: ORDERS.length, foot: `${live.length} active` },
-    { label: "Customers", value: CUSTOMERS.length, foot: "registered accounts" },
+    { label: "Customers", value: CUSTOMERS.filter(c => !c.role || c.role === "CUSTOMER").length, foot: "customer accounts" },
     { label: "Products", value: PRODUCTS.length, foot: `${CATEGORIES.length} categories` },
     { label: "Avg order value", value: aov, cur: true, foot: "excl. cancelled" },
     { label: "Low stock", value: lowStock.length, alert: lowStock.length > 0, foot: `≤ ${LOW_STOCK} units` }
@@ -251,8 +255,8 @@ function drawRevenueChart(days) {
 }
 function drawStatusChart() {
   if (typeof Chart === "undefined") return;
-  const order = ["Pending", "Shipped", "Delivered", "Cancelled"];
-  const colors = { Pending: "#c98a1e", Shipped: "#3f6bb0", Delivered: "#2f9e6f", Cancelled: "#cf4b48" };
+  const order = ORDER_STATUSES;
+  const colors = { Pending: "#c98a1e", Shipped: "#3f6bb0", "Out for Delivery": "#6b5bb0", Attempted: "#d9822b", Delivered: "#2f9e6f", Cancelled: "#cf4b48" };
   const counts = order.map(s => ORDERS.filter(o => o.status === s).length);
   const ctx = document.getElementById("statusChart");
   charts.status?.destroy();
@@ -603,7 +607,7 @@ function renderOrders() {
         <td class="num cell-strong">${inr(o.totalAmount)}</td>
         <td>
           <select onchange="updateOrderStatus(${o.id}, this.value)" style="padding:5px 8px;font-size:12px;">
-            ${["Pending", "Shipped", "Delivered", "Cancelled"].map(s => `<option ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}
+            ${ORDER_STATUSES.map(s => `<option ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}
           </select>
         </td>
         <td class="cell-sub">${shortDate(o.createdAt)}</td>
@@ -780,12 +784,13 @@ function renderCustomers() {
         </td>
         <td>
           ${adminUser.role === "ADMIN" && c.email !== "devesh141singh@gmail.com" && c.id !== adminUser.id ? 
-            `<select class="role-select" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; background:var(--surface);" onchange="changeRole(${c.id}, this.value, '${c.role}', '${esc(c.name)}')">
+            `<select class="role-select" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; background:var(--surface);" onchange="changeRole(${c.id}, this.value, ${esc(JSON.stringify(c.role))}, ${esc(JSON.stringify(c.name || ""))})">
               <option value="ADMIN" ${c.role === 'ADMIN' ? 'selected' : ''}>Admin</option>
               <option value="OWNER" ${c.role === 'OWNER' ? 'selected' : ''}>Owner</option>
               <option value="CUSTOMER" ${c.role === 'CUSTOMER' ? 'selected' : ''}>Customer</option>
+              <option value="DELIVERY_PARTNER" ${c.role === 'DELIVERY_PARTNER' ? 'selected' : ''}>Delivery partner</option>
             </select>` :
-            (c.role === "ADMIN" ? '<span class="badge b-info">Admin</span>' : c.role === "OWNER" ? '<span class="badge b-ok">Owner</span>' : '<span class="badge b-mute">Customer</span>')
+            `<span class="badge ${c.role === "ADMIN" ? "b-info" : c.role === "OWNER" ? "b-ok" : c.role === "DELIVERY_PARTNER" ? "b-warn" : "b-mute"}">${esc(ROLE_LABELS[c.role] || "Customer")}</span>`
           }
         </td>
         <td class="num">${c.orderCount}</td>
@@ -840,7 +845,7 @@ async function changeRole(id, newRole, oldRole, name) {
       body: JSON.stringify({ role: newRole })
     });
     if (res.ok) {
-      toast(`${name} is now an ${newRole}`);
+      toast(`${name} is now ${ROLE_LABELS[newRole] || newRole} — takes effect at their next login`);
       await loadAll();
     } else {
       const data = await res.json();
@@ -1070,9 +1075,17 @@ async function adminChangePassword() {
 }
 if (typeof module !== "undefined") {
   module.exports = {
+    ORDER_STATUSES,
+    ROLE_LABELS,
     setCategoryJewellery,
     renderCategories,
-    _setState: (state) => { if (state.CATEGORIES) CATEGORIES = state.CATEGORIES; if (state.PRODUCTS) PRODUCTS = state.PRODUCTS; },
+    renderCustomers,
+    _setState: (state) => {
+      if (state.CATEGORIES) CATEGORIES = state.CATEGORIES;
+      if (state.PRODUCTS) PRODUCTS = state.PRODUCTS;
+      if (state.CUSTOMERS) CUSTOMERS = state.CUSTOMERS;
+      if (state.adminUser) adminUser = state.adminUser;
+    },
     shortDate,
     statusBadge,
     stockBadge,

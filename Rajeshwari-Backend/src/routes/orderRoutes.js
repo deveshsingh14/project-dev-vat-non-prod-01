@@ -8,6 +8,9 @@ const adminOrOwnerMiddleware = require("../middleware/adminOrOwnerMiddleware");
 const deliveryMiddleware = require("../middleware/deliveryMiddleware");
 const { bulkUpdateProductStock } = require("../utils/stock");
 const push = require("../utils/push");
+const { z } = require("zod");
+const { validateBody } = require("../middleware/validate");
+const { ORDER_STATUSES, DELIVERY_QUEUE, PARTNER_TRANSITIONS, UNASSIGN_ON } = require("../utils/orderStatus");
 
 const router = express.Router();
 
@@ -179,67 +182,100 @@ router.get("/", authMiddleware, async (req, res) => {
 
 });
 
-// ---- DELIVERY PARTNER: GET PENDING DELIVERIES ----
+// ---- DELIVERY PARTNER: WORK QUEUE ----
+// Partners see orders ready to pick up (Shipped, unassigned), their own
+// Out for Delivery / Attempted orders, and any Out for Delivery / Attempted
+// order that has lost its partner (e.g. partner account removed).
+// Admin/owner see the whole delivery queue.
 router.get("/delivery", authMiddleware, deliveryMiddleware, async (req, res) => {
   try {
+    const isStaff = req.user.role === "ADMIN" || req.user.role === "OWNER";
+    const where = isStaff
+      ? { status: { in: DELIVERY_QUEUE } }
+      : {
+          OR: [
+            { status: "Shipped", deliveryPartnerId: null },
+            { status: { in: ["Out for Delivery", "Attempted"] }, deliveryPartnerId: req.user.id },
+            { status: { in: ["Out for Delivery", "Attempted"] }, deliveryPartnerId: null }
+          ]
+        };
     const orders = await prisma.order.findMany({
-      where: {
-        OR: [
-          { status: "Dispatched" },
-          { status: "Out for Delivery" }
-        ],
-      },
+      where,
       include: {
         orderItems: { include: { product: true } },
+        deliveryPartner: { select: { id: true, name: true } }
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" } // oldest first: deliver in order
     });
     res.json(orders);
   } catch (error) {
-    logger.error("Failed to fetch delivery orders: ", error);
+    logger.error(error, "Failed to fetch delivery orders");
     res.status(500).json({ message: "Failed to fetch orders" });
   }
 });
 
 // ---- DELIVERY PARTNER: UPDATE STATUS ----
-router.patch("/:id/delivery-status", authMiddleware, deliveryMiddleware, async (req, res) => {
+// Transitions (utils/orderStatus.js):
+//   Shipped | Attempted -> Out for Delivery   (claims the order for this partner)
+//   Out for Delivery    -> Delivered | Attempted   (assigned partner only)
+// Admin/owner may act on any order in the queue. Delivering a cash-on-
+// delivery order records the cash as collected (paymentStatus "Paid").
+// Each update is a single conditional UPDATE, so two partners can't claim
+// the same order and a stale screen can't skip a step.
+const deliveryStatusSchema = z.object({
+  status: z.enum(Object.keys(PARTNER_TRANSITIONS))
+}).strict();
+
+router.patch("/:id/delivery-status", authMiddleware, deliveryMiddleware, validateBody(deliveryStatusSchema), async (req, res) => {
+  const orderId = Number(req.params.id);
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return res.status(400).json({ message: "Invalid order id" });
+  }
+
   try {
-    const { id } = req.params;
-    const { status, paymentStatus } = req.body;
-
-    const validStatuses = ["Out for Delivery", "Delivered", "Attempted"];
-    if (status && !validStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid delivery status" });
-    }
-
-    const validPaymentStatuses = ["Pending", "Paid", "Refunded"];
-    if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
-      return res.status(400).json({ message: "Invalid payment status" });
-    }
-
-    const data = {};
-    if (status) data.status = status;
-    if (paymentStatus) data.paymentStatus = paymentStatus;
-
-    if (status === "Out for Delivery") {
-      data.deliveryPartnerId = req.user.id;
-    }
-
-    const orderId = parseInt(id, 10);
-    const before = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true } });
+    const { status } = req.body;
+    const isStaff = req.user.role === "ADMIN" || req.user.role === "OWNER";
+    const before = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { status: true, deliveryPartnerId: true, paymentMethod: true }
+    });
     if (!before) return res.status(404).json({ message: "Order not found" });
 
-    const updated = await prisma.order.update({
-      where: { id: orderId },
-      data
-    });
+    const from = PARTNER_TRANSITIONS[status];
+    const where = { id: orderId, status: { in: from } };
+    const data = { status };
+
+    if (status === "Out for Delivery") {
+      // claim: only if unassigned or already mine (staff may reassign)
+      if (!isStaff) where.OR = [{ deliveryPartnerId: null }, { deliveryPartnerId: req.user.id }];
+      data.deliveryPartnerId = req.user.id;
+    } else if (!isStaff) {
+      // Delivered / Attempted: only the partner carrying the order
+      where.deliveryPartnerId = req.user.id;
+    }
+    if (status === "Delivered" && before.paymentMethod === "COD") {
+      data.paymentStatus = "Paid"; // cash collected on delivery
+    }
+
+    const { count } = await prisma.order.updateMany({ where, data });
+    if (count === 0) {
+      const mine = before.deliveryPartnerId === null || before.deliveryPartnerId === req.user.id || isStaff;
+      return res.status(409).json({
+        message: !from.includes(before.status)
+          ? `Can't mark a "${before.status}" order as "${status}".`
+          : mine ? "This order was just updated — refresh and try again."
+                 : "This order is assigned to another delivery partner."
+      });
+    }
+
+    const updated = await prisma.order.findUnique({ where: { id: orderId } });
     res.json(updated);
 
-    if (status === "Delivered" && before.status !== "Delivered") {
+    if (before.status !== status && push.NOTIFY_STATUSES.includes(status)) {
       push.notifyUser(updated.userId, push.statusChangeForCustomer(updated));
     }
   } catch (error) {
-    logger.error("Failed to update delivery status: ", error);
+    logger.error(error, "Failed to update delivery status");
     res.status(500).json({ message: "Failed to update order" });
   }
 });
@@ -305,8 +341,7 @@ router.put(
       const id = Number(req.params.id);
       const { status } = req.body;
 
-      const allowed = ["Pending", "Shipped", "Delivered", "Cancelled"];
-      if (!allowed.includes(status)) {
+      if (!ORDER_STATUSES.includes(status)) {
         return res.status(400).json({ message: "Invalid status value" });
       }
 
@@ -346,9 +381,13 @@ router.put(
           await bulkUpdateProductStock(tx, order.orderItems, 'decrement');
         }
 
+        const data = { status };
+        // Moving an order back before pickup releases the delivery partner.
+        if (UNASSIGN_ON.includes(status)) data.deliveryPartnerId = null;
+
         const updated = await tx.order.update({
           where: { id },
-          data: { status }
+          data
         });
         return { previousStatus: order.status, updated };
       });
