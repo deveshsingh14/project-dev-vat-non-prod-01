@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const prisma = require("../config/db");
 const logger = require("../config/logger");
 const { sendEmail } = require("../utils/email");
+const { appLink } = require("../utils/siteUrl");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter } = require("../middleware/authRateLimiter");
@@ -178,8 +179,9 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
           }
         });
 
-        // Frontend URL format for resetting password
-        const resetUrl = `${req.protocol}://${req.get("host")}/reset-password.html?token=${resetToken}`;
+        // The reset page lives on the storefront (GitHub Pages), not on this
+        // API server — previously this pointed at the API host, a dead link.
+        const resetUrl = appLink(`reset-password.html?token=${encodeURIComponent(resetToken)}`, { absolute: true });
         const message = `
           <h1>You requested a password reset</h1>
           <p>Please go to this link to reset your password:</p>
