@@ -170,3 +170,55 @@ describe('Admin panel helpers', () => {
       jest.useRealTimers();
     });
   });
+
+describe('Category section toggle (Jewellery & Bangles page)', () => {
+  const admin = require('./admin');
+
+  beforeEach(() => {
+    for (const id of ['categoryList', 'productCategoryOptions']) {
+      if (!document.getElementById(id)) {
+        const el = document.createElement('div'); el.id = id; document.body.appendChild(el);
+      }
+    }
+    global.catchErr = jest.fn();
+    global.toast = jest.fn(); // provided by api.js in the browser
+    admin._setState({
+      CATEGORIES: [{ id: 1, name: 'Bangles', isJewellery: false }, { id: 2, name: 'Skin <b>care</b>', isJewellery: false }],
+      PRODUCTS: []
+    });
+    global.fetch.mockClear();
+  });
+
+  it('renders a jewellery switch per category and escapes names', () => {
+    admin.renderCategories();
+    const list = document.getElementById('categoryList');
+    expect(list.querySelectorAll('.jewel-toggle input[type=checkbox]')).toHaveLength(2);
+    expect(list.innerHTML).toContain('Skin &lt;b&gt;care&lt;/b&gt;');
+    expect(list.innerHTML).toContain('Main store');
+  });
+
+  it('PATCHes the category and re-renders it as jewellery', async () => {
+    global.fetch.mockImplementationOnce(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve({ id: 1, name: 'Bangles', isJewellery: true })
+    }));
+    await admin.setCategoryJewellery(1, true, { checked: true });
+
+    const [url, opts] = global.fetch.mock.calls[0];
+    expect(url).toMatch(/\/categories\/1$/);
+    expect(opts.method).toBe('PATCH');
+    expect(JSON.parse(opts.body)).toEqual({ isJewellery: true });
+    const list = document.getElementById('categoryList');
+    expect(list.querySelector('.cat-card.is-jewellery h4').textContent).toContain('Bangles');
+    expect(list.innerHTML).toContain('Jewellery page');
+    expect(global.toast).toHaveBeenCalledWith('Now shown on the Jewellery & Bangles page');
+    expect(global.catchErr).not.toHaveBeenCalled();
+  });
+
+  it('reverts the checkbox when saving fails', async () => {
+    global.fetch.mockImplementationOnce(() => Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({}) }));
+    const box = { checked: true };
+    await admin.setCategoryJewellery(2, true, box);
+    expect(box.checked).toBe(false);
+    expect(global.catchErr).toHaveBeenCalled();
+  });
+});

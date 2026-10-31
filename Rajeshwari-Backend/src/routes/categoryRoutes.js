@@ -1,4 +1,5 @@
 const express = require("express");
+const { z } = require("zod");
 
 const prisma = require("../config/db");
 const logger = require("../config/logger");
@@ -9,7 +10,21 @@ const authMiddleware =
 const adminOrOwnerMiddleware =
   require("../middleware/adminOrOwnerMiddleware");
 
+const { validateBody } = require("../middleware/validate");
+
 const router = express.Router();
+
+// isJewellery decides which storefront section a category belongs to:
+// true  -> the Jewellery & Bangles page (jewellery.html)
+// false -> the main Radha E-Commerce feed (index.html)
+const categoryCreateSchema = z.object({
+  name: z.string().trim().min(1, "Category name is required").max(60, "Category name is too long"),
+  isJewellery: z.boolean().optional()
+});
+
+const categoryUpdateSchema = z.object({
+  isJewellery: z.boolean({ message: "isJewellery must be true or false" })
+}).strict();
 
 
 
@@ -18,11 +33,12 @@ router.post(
   "/",
   authMiddleware,
   adminOrOwnerMiddleware,
+  validateBody(categoryCreateSchema),
   async (req, res) => {
 
     try {
 
-      const { name } = req.body;
+      const { name, isJewellery } = req.body;
 
       const existingCategory =
         await prisma.category.findUnique({
@@ -45,7 +61,7 @@ router.post(
       const category =
         await prisma.category.create({
 
-          data: { name }
+          data: { name, isJewellery: isJewellery ?? false }
 
         });
 
@@ -105,6 +121,44 @@ router.get(
 
 
 
+// UPDATE CATEGORY SECTION (jewellery or not)
+router.patch(
+  "/:id",
+  authMiddleware,
+  adminOrOwnerMiddleware,
+  validateBody(categoryUpdateSchema),
+  async (req, res) => {
+
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ message: "Invalid category id" });
+    }
+
+    try {
+
+      const category = await prisma.category.update({
+        where: { id },
+        data: { isJewellery: req.body.isJewellery }
+      });
+
+      res.json(category);
+
+    } catch (error) {
+
+      if (error && error.code === "P2025") {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      logger.error(error);
+      res.status(500).json({ message: "Failed to update category" });
+
+    }
+
+  }
+);
+
+
+
 // DELETE CATEGORY
 router.delete(
   "/:id",
@@ -155,3 +209,4 @@ router.delete(
 );
 
 module.exports = router;
+module.exports.schemas = { categoryCreateSchema, categoryUpdateSchema };
