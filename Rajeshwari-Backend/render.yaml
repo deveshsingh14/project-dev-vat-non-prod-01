@@ -46,3 +46,7 @@ services:
         sync: false
       - key: VAPID_SUBJECT
         sync: false
+      # Public site address, e.g. https://deveshsingh14.github.io/radha-e-commerce/
+      # Makes notification links absolute (optional; relative when unset).
+      - key: FRONTEND_URL
+        sync: false

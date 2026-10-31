@@ -97,6 +97,22 @@ async function notifyAdmins(payload) {
   }
 }
 
+// ---------- links ----------
+// FRONTEND_URL (optional, e.g. https://deveshsingh14.github.io/radha-e-commerce/)
+// makes notification links absolute, so tapping a notification opens the
+// current site even on devices whose app was installed from an older address
+// (the service worker only opens same-origin URLs). Unset = relative links,
+// resolved against wherever the app is installed.
+function appLink(path) {
+  const base = process.env.FRONTEND_URL;
+  if (!base) return path;
+  try {
+    return new URL(path, base.endsWith("/") ? base : base + "/").href;
+  } catch (e) {
+    return path; // malformed FRONTEND_URL: fall back rather than break pushes
+  }
+}
+
 // ---------- message builders (no personal data beyond first name) ----------
 const inr = n => "₹" + Number(n || 0).toLocaleString("en-IN");
 const firstName = s => String(s || "").trim().split(/\s+/)[0] || "A customer";
@@ -106,7 +122,7 @@ function newOrderForShop(order) {
   return {
     title: `🛍 New order #${order.id}`,
     body: `${firstName(order.fullName)} ordered ${items} item${items === 1 ? "" : "s"} · ${inr(order.totalAmount)} (${order.paymentMethod || "COD"})`,
-    url: "admin.html",
+    url: appLink("admin.html"),
     tag: `order-${order.id}-new`
   };
 }
@@ -115,7 +131,7 @@ function orderPlacedForCustomer(order) {
   return {
     title: `Order #${order.id} placed ✓`,
     body: `Thank you! ${inr(order.totalAmount)} · we'll let you know when it ships.`,
-    url: "account.html",
+    url: appLink("account.html"),
     tag: `order-${order.id}`
   };
 }
@@ -132,10 +148,11 @@ const STATUS_MESSAGES = {
 function statusChangeForCustomer(order) {
   const build = STATUS_MESSAGES[order.status];
   if (!build) return null;
-  return { ...build(order), url: "account.html", tag: `order-${order.id}` };
+  return { ...build(order), url: appLink("account.html"), tag: `order-${order.id}` };
 }
 
 module.exports = {
+  appLink,
   isPushConfigured,
   getPublicKey,
   notifyUser,

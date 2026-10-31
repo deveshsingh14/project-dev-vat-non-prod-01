@@ -127,3 +127,18 @@ test("message builders", () => {
 
   assert.match(push.newOrderForShop({ id: 1, totalAmount: 5, orderItems: [{ quantity: 1 }] }).body, /^A customer ordered 1 item ·/);
 });
+
+test("notification links: relative by default, absolute with FRONTEND_URL", () => {
+  delete process.env.FRONTEND_URL;
+  assert.strictEqual(push.appLink("account.html"), "account.html");
+  assert.strictEqual(push.orderPlacedForCustomer({ id: 1, totalAmount: 5 }).url, "account.html");
+
+  process.env.FRONTEND_URL = "https://deveshsingh14.github.io/radha-e-commerce";   // no trailing slash
+  assert.strictEqual(push.appLink("account.html"), "https://deveshsingh14.github.io/radha-e-commerce/account.html");
+  assert.strictEqual(push.newOrderForShop({ id: 1, totalAmount: 5, orderItems: [] }).url, "https://deveshsingh14.github.io/radha-e-commerce/admin.html");
+  assert.strictEqual(push.statusChangeForCustomer({ id: 1, status: "Shipped" }).url, "https://deveshsingh14.github.io/radha-e-commerce/account.html");
+
+  process.env.FRONTEND_URL = "not a url";
+  assert.strictEqual(push.appLink("account.html"), "account.html");
+  delete process.env.FRONTEND_URL;
+});

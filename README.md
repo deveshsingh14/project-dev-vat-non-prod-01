@@ -1,4 +1,7 @@
-# project-dev-vat-non-prod-01
+# radha-e-commerce
+
+Live site: https://deveshsingh14.github.io/radha-e-commerce/
+(formerly `project-dev-vat-non-prod-01` — see `tools/old-url-redirect/` for keeping old links working)
 This is our personal space to store Codes. Me and Vatsal will share this as cloud repository for smooth development of our new project.
 
 # Here is an LLM generated short readme file.
