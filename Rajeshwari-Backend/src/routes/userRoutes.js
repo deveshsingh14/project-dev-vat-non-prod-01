@@ -204,7 +204,7 @@ router.put(
       const id = Number(req.params.id);
       const { role } = req.body;
       
-      if (!["ADMIN", "OWNER", "CUSTOMER"].includes(role)) {
+      if (!["ADMIN", "OWNER", "CUSTOMER", "DELIVERY_PARTNER"].includes(role)) {
         return res.status(400).json({ message: "Invalid role specified" });
       }
 

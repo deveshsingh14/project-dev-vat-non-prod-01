@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Delivery Partner Portal — Radha E-Commerce</title>
+  <title>Deliveries — Radha E-Commerce</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7a1f3d">
@@ -13,31 +13,54 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" href="icons/favicon-64.png" type="image/png">
   <link rel="stylesheet" href="store.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap" rel="stylesheet">
   <style>
-    body { background: #fdfdfc; padding: 20px; font-family: 'Inter', sans-serif; }
-    h1 { font-family: 'Cinzel', serif; color: var(--ink); text-align: center; margin-bottom: 30px; }
-    .card { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-    .card h3 { margin: 0 0 10px 0; font-size: 16px; color: var(--ink); }
-    .card p { margin: 5px 0; font-size: 14px; color: #555; }
-    .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-    .status-Dispatched { background: #e3f2fd; color: #1565c0; }
-    .status-Out-for-Delivery { background: #fff3e0; color: #e65100; }
-    .btn-update { background: var(--ink); color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 13px; }
-    .btn-update:hover { background: #000; }
-    nav { text-align: right; margin-bottom: 20px; }
-    nav a { color: var(--ink); text-decoration: underline; cursor: pointer; font-size: 14px; }
+    body { background: var(--soft); padding: 0 16px 40px; font-family: "DM Sans", system-ui, sans-serif; }
+    .dl-top { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      max-width: 720px; margin: 0 auto; padding: 16px 0; }
+    .dl-top h1 { font-family: "Cinzel", serif; color: var(--ink); font-size: 19px; margin: 0; }
+    .dl-top .who { font-size: 13px; color: var(--muted); }
+    .dl-top button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 14px;
+      font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; }
+    #deliveriesContainer { max-width: 720px; margin: 0 auto; }
+    .dl-section { font-size: 15px; color: var(--ink); margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
+    .dl-section span { background: var(--ink); color: #fff; border-radius: 999px; font-size: 11px; padding: 2px 8px; }
+    .dl-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 18px 0; }
+    .dl-error { color: #cf4b48; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(33,26,32,.04); }
+    .card h3 { margin: 0 0 10px; font-size: 16px; color: var(--ink); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .card p { margin: 5px 0; font-size: 14px; color: var(--body); line-height: 1.45; }
+    .card a { color: var(--maroon); font-weight: 600; }
+    .dl-cash.due { background: #fff6e5; border-radius: 8px; padding: 6px 10px; color: #8a5a00; }
+    .dl-note { color: var(--muted); font-size: 13px; }
+    .status-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .status-Shipped { background: #e7eefb; color: #2f5596; }
+    .status-Out-for-Delivery { background: #fff1e0; color: #b25400; }
+    .status-Attempted { background: #fdeaea; color: #b23a37; }
+    .dl-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .btn-update { flex: 1 1 160px; background: var(--maroon); color: #fff; border: none; padding: 12px 14px;
+      border-radius: 10px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; min-height: 44px; }
+    .btn-update:hover { background: #5f172f; }
+    .btn-update.btn-warn { background: #fff; color: #b23a37; border: 1px solid #f0c9c8; }
   </style>
 </head>
 <body>
 
-  <nav>
-    <a onclick="logout()">Log out</a>
-  </nav>
+  <header class="dl-top">
+    <div>
+      <h1>Deliveries</h1>
+      <div class="who" id="partnerName"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button type="button" onclick="loadDeliveries()">↻ Refresh</button>
+      <button type="button" onclick="logout()">Log out</button>
+    </div>
+  </header>
 
-  <h1>Delivery Partner Portal</h1>
-  
   <div id="deliveriesContainer">
-    <p style="text-align:center; color:#888;">Loading deliveries...</p>
+    <p class="dl-empty">Loading deliveries…</p>
   </div>
 
   <div id="toast"></div>

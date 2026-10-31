@@ -117,7 +117,19 @@ describe('account.js utilities', () => {
 
     it('returns timeline with correct steps completed for Delivered', () => {
       const html = timelineHTML('Delivered');
-      expect((html.match(/done/g) || []).length).toBe(3);
+      expect((html.match(/done/g) || []).length).toBe(4); // Placed, Shipped, Out for delivery, Delivered
+    });
+
+    it('marks Out for Delivery as the third step', () => {
+      const html = timelineHTML('Out for Delivery');
+      expect((html.match(/tl-step done/g) || []).length).toBe(3);
+      expect(html).toContain('Out for delivery');
+    });
+
+    it('explains an attempted delivery without breaking the timeline', () => {
+      const html = timelineHTML('Attempted');
+      expect((html.match(/tl-step done/g) || []).length).toBe(2);
+      expect(html).toMatch(/tried to deliver/);
     });
   });
 

@@ -222,3 +222,45 @@ describe('Category section toggle (Jewellery & Bangles page)', () => {
     expect(global.catchErr).toHaveBeenCalled();
   });
 });
+
+describe('Customers: role dropdown is safe against hostile names', () => {
+  const admin = require('./admin');
+  const realEsc = require('./api').esc; // the browser uses api.js's esc (escapes quotes too)
+  let stubEsc;
+  beforeAll(() => { stubEsc = global.esc; global.esc = realEsc; });
+  afterAll(() => { global.esc = stubEsc; });
+  beforeEach(() => {
+    const search = document.getElementById('customerSearch');
+    if (search && search.tagName !== 'INPUT') search.outerHTML = '<input id="customerSearch" value="">';
+    if (!document.getElementById('customersTable')) {
+      document.body.insertAdjacentHTML('beforeend', '<table id="customersTable"><tbody></tbody></table>');
+    }
+  });
+
+  it.each([
+    [`x');alert(1);//`],
+    [`a"); alert(1); ("`],
+    [`</select><img src=x onerror=alert(1)>`]
+  ])('name %s reaches changeRole as plain text and runs nothing', (evil) => {
+    admin._setState({ adminUser: { id: 1, role: 'ADMIN' }, CUSTOMERS: [{ id: 5, name: evil, email: 'e@x.test', role: 'CUSTOMER' }] });
+    admin.renderCustomers();
+    const select = document.querySelector('#customersTable select.role-select');
+    expect(select).not.toBeNull();
+    expect(document.querySelector('#customersTable img')).toBeNull();
+    expect([...select.options].map(o => o.value)).toContain('DELIVERY_PARTNER');
+
+    // Execute the browser-decoded handler exactly as the page would, with spies.
+    const changeRole = jest.fn();
+    const alert = jest.fn();
+    const handler = new Function('changeRole', 'alert', select.getAttribute('onchange'));
+    handler.call({ value: 'DELIVERY_PARTNER' }, changeRole, alert);
+    expect(alert).not.toHaveBeenCalled();
+    expect(changeRole).toHaveBeenCalledWith(5, 'DELIVERY_PARTNER', 'CUSTOMER', evil);
+  });
+
+  it('shows a Delivery partner badge for partners (when not editable)', () => {
+    admin._setState({ adminUser: { id: 1, role: 'OWNER' }, CUSTOMERS: [{ id: 6, name: 'Ravi', email: 'r@x.test', role: 'DELIVERY_PARTNER' }] });
+    admin.renderCustomers();
+    expect(document.querySelector('#customersTable .badge').textContent).toBe('Delivery partner');
+  });
+});

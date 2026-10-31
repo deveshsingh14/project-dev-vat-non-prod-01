@@ -751,6 +751,7 @@ function finishLogin(jwt) {
   let payload = null;
   try { payload = JSON.parse(atob(jwt.split(".")[1])); } catch (e) { console.error("Error decoding JWT:", e); }
   if (payload && (payload.role === "ADMIN" || payload.role === "OWNER")) { window.location.href = "admin.html"; return; }
+  if (payload && payload.role === "DELIVERY_PARTNER") { window.location.href = "delivery.html"; return; }
   updateAuthUI();
   refreshWishlist().then(applyFilters);
   refreshCartCount();
@@ -762,8 +763,15 @@ async function logout() {
   updateAuthUI(); updateWishCount(); refreshCartCount(); applyFilters();
   toast("Logged out");
 }
+// Role from the token, for showing links only — every server route checks
+// the real role itself.
+function tokenRole() {
+  try { return JSON.parse(atob(String(token()).split(".")[1])).role || ""; } catch (e) { return ""; }
+}
 function updateAuthUI() {
   const authed = !!token();
+  const portal = document.getElementById("portalBtn");
+  if (portal) portal.style.display = authed && tokenRole() === "DELIVERY_PARTNER" ? "flex" : "none";
   document.getElementById("loginBtn").style.display = authed ? "none" : "flex";
   document.getElementById("logoutBtn").style.display = authed ? "flex" : "none";
   const acct = document.getElementById("accountBtn");

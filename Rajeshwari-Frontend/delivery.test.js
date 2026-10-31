@@ -1,302 +1,179 @@
-// Setup DOM first
+/**
+ * Delivery partner portal (delivery.js)
+ */
 document.body.innerHTML = `
+  <div id="partnerName"></div>
   <div id="deliveriesContainer"></div>
   <div id="toast"></div>
 `;
 
-// Mock globals
+const api = require("./api");
 global.API_URL = "http://localhost:5000";
-global.authHeaders = jest.fn(() => ({ Authorization: "Bearer mock" }));
+global.esc = api.esc;
+global.inr = api.inr;
+global.authHeaders = jest.fn(json => (json ? { Authorization: "Bearer t", "Content-Type": "application/json" } : { Authorization: "Bearer t" }));
 global.toast = jest.fn();
+global.beforeLogout = jest.fn(async () => {});
 
-// Mock localStorage
-Object.defineProperty(window, 'localStorage', {
-  value: {
-    getItem: jest.fn(() => "mock-token"),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
-  },
+Object.defineProperty(window, "localStorage", {
+  value: { getItem: jest.fn(() => "mock-token"), setItem: jest.fn(), removeItem: jest.fn() },
   writable: true
 });
+jest.spyOn(console, "error").mockImplementation(() => {});
+global.fetch = jest.fn(() => Promise.resolve({ ok: false, json: () => Promise.resolve({}) }));
+window.confirm = jest.fn(() => true);
 
-// Avoid jsdom "not implemented" error and suppress expected errors
-jest.spyOn(console, 'error').mockImplementation((msg) => {
-  if (msg && msg.toString().includes('Not implemented: navigation')) return;
+const mod = require("./delivery");
+const flush = () => new Promise(r => setTimeout(r, 0));
+const container = () => document.getElementById("deliveriesContainer");
+const ok = body => Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
+
+const PARTNER = { id: 10, name: "Ravi Kumar", role: "DELIVERY_PARTNER" };
+const order = (over = {}) => ({
+  id: 7, status: "Shipped", deliveryPartnerId: null, fullName: "Asha", phone: "+91 98765 43210",
+  address: "12 MG Road", city: "Pune", state: "MH", pincode: "411001",
+  paymentMethod: "COD", paymentStatus: "Pending", totalAmount: 1250,
+  orderItems: [{ quantity: 2, title: "Bridal Bangles" }], ...over
 });
 
-// Mock fetch, fetchAuth and confirm
-global.fetch = jest.fn();
-global.fetchAuth = jest.fn();
-window.confirm = jest.fn();
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.spyOn(mod.nav, "to").mockImplementation(() => {});
+  window.confirm.mockReturnValue(true);
+  container().innerHTML = "";
+  mod._setMe(PARTNER);
+});
 
-
-const { updateStatus, boot, loadDeliveries, renderDeliveries, logout } = require('./delivery');
-
-describe('delivery.js boot', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    delete window.location;
-    const assignMock = jest.fn();
-    window.location = { assign: assignMock, href: 'http://localhost/' };
-    global.mockAssign = assignMock;
-    document.getElementById('deliveriesContainer').innerHTML = '';
-  });
-
-  it('redirects to index.html if token is missing', async () => {
+describe("boot", () => {
+  test("no token -> back to the store", async () => {
     window.localStorage.getItem.mockReturnValueOnce(null);
-    await boot();
-    expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
+    await mod.boot();
+    expect(mod.nav.to).toHaveBeenCalledWith("index.html");
   });
 
-  it('redirects to index.html on unauthorized role', async () => {
-    window.localStorage.getItem.mockReturnValueOnce('mock-token');
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ role: 'USER' })
-    });
-
-    await boot();
-
-    expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
+  test("uses /users/me (the old /auth/me route never existed)", async () => {
+    global.fetch.mockReturnValueOnce(ok(PARTNER)).mockReturnValueOnce(ok([]));
+    await mod.boot(); await flush();
+    expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:5000/users/me");
+    expect(global.fetch.mock.calls[1][0]).toBe("http://localhost:5000/orders/delivery");
+    expect(document.getElementById("partnerName").textContent).toBe("Hi, Ravi");
   });
 
-  it('redirects to index.html on fetch failure', async () => {
-    window.localStorage.getItem.mockReturnValueOnce('mock-token');
-    global.fetch.mockResolvedValueOnce({
-      ok: false
-    });
-
-    await boot();
-
-    expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
+  test("customers are sent away and their token cleared", async () => {
+    global.fetch.mockReturnValueOnce(ok({ id: 1, role: "CUSTOMER" }));
+    await mod.boot();
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith("token");
+    expect(mod.nav.to).toHaveBeenCalledWith("index.html");
   });
 
-  it('calls loadDeliveries for authorized role', async () => {
-    window.localStorage.getItem.mockReturnValue('mock-token');
-    global.fetch.mockImplementation((url) => {
-      if (url.includes('/auth/me')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ role: 'DELIVERY_PARTNER' })
-        });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-    });
-
-    await boot();
-
-    expect(global.fetch).toHaveBeenCalledWith(`${global.API_URL}/auth/me`, expect.any(Object));
-    expect(global.fetch).toHaveBeenCalledWith(`${global.API_URL}/orders/delivery`, expect.any(Object));
+  test("a failed profile request also sends them away", async () => {
+    global.fetch.mockReturnValueOnce(Promise.resolve({ ok: false, status: 401 }));
+    await mod.boot();
+    expect(mod.nav.to).toHaveBeenCalledWith("index.html");
   });
 });
 
-describe('delivery.js loadDeliveries & renderDeliveries', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    document.getElementById('deliveriesContainer').innerHTML = '';
+describe("rendering", () => {
+  test("splits 'My deliveries' and 'Ready to pick up' with the right buttons", () => {
+    mod._setDeliveries([
+      order({ id: 1, status: "Shipped" }),
+      order({ id: 2, status: "Out for Delivery", deliveryPartnerId: 10 }),
+      order({ id: 3, status: "Attempted", deliveryPartnerId: 10 })
+    ]);
+    mod.renderDeliveries();
+    const html = container().innerHTML;
+    expect(html.indexOf("My deliveries")).toBeLessThan(html.indexOf("Ready to pick up"));
+    const buttons = id => [...container().querySelectorAll(`[data-order="${id}"] button`)].map(b => b.dataset.status);
+    expect(buttons(1)).toEqual(["Out for Delivery"]);
+    expect(buttons(2)).toEqual(["Delivered", "Attempted"]);
+    expect(buttons(3)).toEqual(["Out for Delivery"]);
   });
 
-  it('handles empty deliveries array', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve([])
-    });
-
-    await loadDeliveries();
-
-    const container = document.getElementById('deliveriesContainer');
-    expect(container.innerHTML).toContain('No deliveries assigned or pending.');
+  test("someone else's order shows who has it and no buttons", () => {
+    mod._setDeliveries([order({ id: 4, status: "Out for Delivery", deliveryPartnerId: 11, deliveryPartner: { id: 11, name: "Sita" } })]);
+    mod.renderDeliveries();
+    expect(container().querySelectorAll("button").length).toBe(0);
+    expect(container().textContent).toContain("With Sita");
   });
 
-  it('renders deliveries successfully', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve([
-        {
-          id: 101,
-          status: 'Dispatched',
-          fullName: 'John Doe',
-          phone: '1234567890',
-          address: '123 St',
-          city: 'City',
-          state: 'State',
-          pincode: '123456',
-          paymentMethod: 'Cash',
-          paymentStatus: 'Pending',
-          totalAmount: 500
-        }
-      ])
-    });
-
-    await loadDeliveries();
-
-    const container = document.getElementById('deliveriesContainer');
-    expect(container.innerHTML).toContain('Order #101');
-    expect(container.innerHTML).toContain('Mark Out for Delivery');
+  test("customer-entered text is escaped (no script injection)", () => {
+    mod._setDeliveries([order({ fullName: '<img src=x onerror="alert(1)">', address: "<script>bad()</script>",
+      orderItems: [{ quantity: 1, title: "<b>x</b>" }] })]);
+    mod.renderDeliveries();
+    expect(container().querySelector("img")).toBeNull();
+    expect(container().querySelector("script")).toBeNull();
+    expect(container().querySelector("b")).toBeNull();
+    expect(container().textContent).toContain('<img src=x onerror="alert(1)">');
   });
 
-  it('renders deliveries with missing fields (N/A fallback)', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve([
-        {
-          id: 103,
-          status: 'Dispatched',
-          paymentMethod: 'Cash',
-          paymentStatus: 'Paid',
-          totalAmount: 500
-        }
-      ])
-    });
-
-    await loadDeliveries();
-
-    const container = document.getElementById('deliveriesContainer');
-    expect(container.innerHTML).toContain('Order #103');
-    expect(container.innerHTML).toContain('N/A');
+  test("cash to collect only for unpaid COD orders; tel and map links", () => {
+    expect(mod.cashToCollect(order())).toBe(1250);
+    expect(mod.cashToCollect(order({ paymentStatus: "Paid" }))).toBe(0);
+    expect(mod.cashToCollect(order({ paymentMethod: "UPI" }))).toBe(0);
+    mod._setDeliveries([order()]);
+    mod.renderDeliveries();
+    expect(container().querySelector(".dl-cash").textContent).toMatch(/Collect cash:\s*₹1,250/);
+    expect(container().querySelector('a[href^="tel:"]').getAttribute("href")).toBe("tel:+919876543210");
+    expect(container().querySelector('a[href*="google.com/maps"]').getAttribute("href")).toContain(encodeURIComponent("12 MG Road, Pune, MH - 411001"));
   });
 
-  it('handles fetch failure and shows error', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: false
-    });
-
-    await loadDeliveries();
-
-    const container = document.getElementById('deliveriesContainer');
-    expect(console.error).toHaveBeenCalled();
-    expect(container.innerHTML).toContain('Failed to load deliveries');
+  test("empty and error states", async () => {
+    mod._setDeliveries([]);
+    mod.renderDeliveries();
+    expect(container().textContent).toMatch(/No deliveries right now/);
+    global.fetch.mockReturnValueOnce(Promise.resolve({ ok: false, status: 500 }));
+    await mod.loadDeliveries();
+    expect(container().textContent).toMatch(/Couldn't load deliveries/);
   });
 });
 
-describe('delivery.js logout', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    delete window.location;
-    window.location = { assign: jest.fn(), href: 'http://localhost/' };
+describe("actions", () => {
+  test("clicking a button PATCHes the status with JSON and refreshes", async () => {
+    mod._setDeliveries([order()]);
+    mod.renderDeliveries();
+    global.fetch.mockReturnValueOnce(ok({})).mockReturnValueOnce(ok([]));
+    container().querySelector('button[data-status="Out for Delivery"]').click();
+    await flush(); await flush();
+    const [url, opts] = global.fetch.mock.calls[0];
+    expect(url).toBe("http://localhost:5000/orders/7/delivery-status");
+    expect(opts.method).toBe("PATCH");
+    expect(opts.headers["Content-Type"]).toBe("application/json");
+    expect(JSON.parse(opts.body)).toEqual({ status: "Out for Delivery" });
+    expect(global.toast).toHaveBeenCalledWith("Order #7: Out for Delivery");
+    expect(global.fetch.mock.calls[1][0]).toBe("http://localhost:5000/orders/delivery");
   });
 
-  it('removes token and redirects', async () => {
-    await logout();
-    expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
+  test("delivering a COD order asks to confirm the cash", async () => {
+    mod._setDeliveries([order({ status: "Out for Delivery", deliveryPartnerId: 10 })]);
+    window.confirm.mockReturnValueOnce(false);
+    await mod.updateStatus(7, "Delivered");
+    expect(window.confirm.mock.calls[0][0]).toMatch(/₹1,250 cash collected/);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test("server refusal (e.g. taken by another partner) is shown and the list refreshed", async () => {
+    mod._setDeliveries([order()]);
+    global.fetch
+      .mockReturnValueOnce(Promise.resolve({ ok: false, status: 409, json: () => Promise.resolve({ message: "This order is assigned to another delivery partner." }) }))
+      .mockReturnValueOnce(ok([]));
+    await mod.updateStatus(7, "Out for Delivery");
+    expect(global.toast).toHaveBeenCalledWith("This order is assigned to another delivery partner.", "err");
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test("network error is reported", async () => {
+    mod._setDeliveries([order()]);
+    global.fetch.mockReturnValueOnce(Promise.reject(new Error("offline"))).mockReturnValueOnce(ok([]));
+    await mod.updateStatus(7, "Out for Delivery");
+    expect(global.toast).toHaveBeenCalledWith("Something went wrong", "err");
   });
 });
 
-describe('delivery.js updateStatus', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('Scenario 1: User cancels confirmation dialog', async () => {
-    window.confirm.mockReturnValue(false);
-
-    await updateStatus(1, 'Delivered');
-
-    expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to mark this order as Delivered?');
-    expect(global.fetchAuth).not.toHaveBeenCalled();
-    expect(global.toast).not.toHaveBeenCalled();
-  });
-
-  it('Scenario 2: Successful delivery status update', async () => {
-    window.confirm.mockReturnValue(true);
-
-    global.fetchAuth.mockImplementation((url) => {
-      if (url.includes('/orders/1/delivery-status')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({})
-        });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
-    });
-
-    global.fetch.mockImplementation((url) => {
-      if (url.includes('/orders/delivery')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([])
-        });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
-    });
-
-    await updateStatus(1, 'Delivered');
-
-    expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to mark this order as Delivered?');
-    expect(global.fetchAuth).toHaveBeenCalledWith(
-      `${global.API_URL}/orders/1/delivery-status`,
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify({ status: 'Delivered' })
-      })
-    );
-    expect(global.toast).toHaveBeenCalledWith('Order updated to Delivered');
-
-    // Also expect loadDeliveries to be called, which calls fetch
-    expect(global.fetch).toHaveBeenCalledWith(
-      `${global.API_URL}/orders/delivery`,
-      expect.anything()
-    );
-  });
-
-  it('Scenario 3: Failed update API response with an error message in payload', async () => {
-    window.confirm.mockReturnValue(true);
-
-    global.fetchAuth.mockImplementation((url) => {
-      if (url.includes('/orders/1/delivery-status')) {
-        return Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ message: "Invalid status" })
-        });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
-    });
-
-    await updateStatus(1, 'Attempted');
-
-    expect(global.fetchAuth).toHaveBeenCalledWith(
-      `${global.API_URL}/orders/1/delivery-status`,
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify({ status: 'Attempted' })
-      })
-    );
-    expect(global.toast).toHaveBeenCalledWith('Invalid status');
-  });
-
-
-  it('Scenario 5: Failed update API response with NO error message in payload', async () => {
-    window.confirm.mockReturnValue(true);
-
-    global.fetchAuth.mockImplementation((url) => {
-      if (url.includes('/orders/1/delivery-status')) {
-        return Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({})
-        });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
-    });
-
-    await updateStatus(1, 'Attempted');
-
-    expect(global.fetchAuth).toHaveBeenCalledWith(
-      `${global.API_URL}/orders/1/delivery-status`,
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify({ status: 'Attempted' })
-      })
-    );
-    expect(global.toast).toHaveBeenCalledWith('Failed to update status');
-  });
-
-  it('Scenario 4: Exception/network error during the request', async () => {
-    window.confirm.mockReturnValue(true);
-    global.fetchAuth.mockRejectedValue(new Error("Network error"));
-
-    await updateStatus(1, 'Delivered');
-
-    expect(console.error).toHaveBeenCalledWith(expect.any(Error));
-    expect(global.toast).toHaveBeenCalledWith('Something went wrong');
+describe("logout", () => {
+  test("unsubscribes notifications first, then clears the token", async () => {
+    await mod.logout();
+    expect(global.beforeLogout).toHaveBeenCalled();
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith("token");
+    expect(mod.nav.to).toHaveBeenCalledWith("index.html");
   });
 });
